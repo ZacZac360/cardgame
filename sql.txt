@@ -1,0 +1,224 @@
+mysql> create database cardgame;
+Query OK, 1 row affected (0.01 sec)
+
+mysql> use cardgame;
+Database changed
+mysql> -- ============================================================
+mysql> -- 1) USERS
+mysql> -- ============================================================
+mysql> CREATE TABLE users (
+    ->   id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+    ->   username VARCHAR(32) NOT NULL,
+    ->   email VARCHAR(255) NOT NULL,
+    ->   password_hash VARCHAR(255) NOT NULL,          -- bcrypt/argon2 hash
+    ->   display_name VARCHAR(64) NULL,
+    ->
+    ->   -- security/account controls
+    ->   email_verified_at DATETIME NULL,
+    ->   is_active TINYINT(1) NOT NULL DEFAULT 1,
+    ->   banned_until DATETIME NULL,                   -- player penalty support
+    ->   last_login_at DATETIME NULL,
+    ->
+    ->   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    ->   updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    ->
+    ->   UNIQUE KEY uq_users_username (username),
+    ->   UNIQUE KEY uq_users_email (email),
+    ->   KEY idx_users_active (is_active),
+    ->   KEY idx_users_banned_until (banned_until)
+    -> ) ENGINE=InnoDB;
+Query OK, 0 rows affected, 1 warning (0.05 sec)
+
+mysql>
+mysql>
+mysql> -- ============================================================
+mysql> -- 2) ROLES (RBAC)
+mysql> -- ============================================================
+mysql> CREATE TABLE roles (
+    ->   id SMALLINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+    ->   name VARCHAR(32) NOT NULL,                    -- e.g., admin, moderator, player
+    ->   description VARCHAR(255) NULL,
+    ->   UNIQUE KEY uq_roles_name (name)
+    -> ) ENGINE=InnoDB;
+Query OK, 0 rows affected (0.04 sec)
+
+mysql>
+mysql> -- ============================================================
+mysql> -- 3) USER_ROLES (RBAC mapping)
+mysql> -- ============================================================
+mysql> CREATE TABLE user_roles (
+    ->   user_id BIGINT UNSIGNED NOT NULL,
+    ->   role_id SMALLINT UNSIGNED NOT NULL,
+    ->   assigned_by BIGINT UNSIGNED NULL,             -- admin user id
+    ->   assigned_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    ->
+    ->   PRIMARY KEY (user_id, role_id),
+    ->   KEY idx_user_roles_role (role_id),
+    ->   CONSTRAINT fk_user_roles_user
+    ->     FOREIGN KEY (user_id) REFERENCES users(id)
+    ->     ON DELETE CASCADE,
+    ->   CONSTRAINT fk_user_roles_role
+    ->     FOREIGN KEY (role_id) REFERENCES roles(id)
+    ->     ON DELETE RESTRICT,
+    ->   CONSTRAINT fk_user_roles_assigned_by
+    ->     FOREIGN KEY (assigned_by) REFERENCES users(id)
+    ->     ON DELETE SET NULL
+    -> ) ENGINE=InnoDB;
+Query OK, 0 rows affected (0.04 sec)
+
+mysql>
+mysql>
+mysql> -- ============================================================
+mysql> -- 4) AUTH_SESSIONS (refresh token sessions)
+mysql> -- Store ONLY hashed refresh token (never plaintext)
+mysql> -- ============================================================
+mysql> CREATE TABLE auth_sessions (
+    ->   id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+    ->   user_id BIGINT UNSIGNED NOT NULL,
+    ->
+    ->   refresh_token_hash CHAR(64) NOT NULL,         -- e.g., SHA-256 hex of refresh token
+    ->   user_agent VARCHAR(255) NULL,
+    ->   ip_address VARBINARY(16) NULL,                -- supports IPv4/IPv6 (store INET6_ATON)
+    ->   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    ->   last_seen_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    ->   expires_at DATETIME NOT NULL,
+    ->   revoked_at DATETIME NULL,
+    ->
+    ->   UNIQUE KEY uq_auth_sessions_rth (refresh_token_hash),
+    ->   KEY idx_auth_sessions_user (user_id),
+    ->   KEY idx_auth_sessions_expires (expires_at),
+    ->   KEY idx_auth_sessions_revoked (revoked_at),
+    ->
+    ->   CONSTRAINT fk_auth_sessions_user
+    ->     FOREIGN KEY (user_id) REFERENCES users(id)
+    ->     ON DELETE CASCADE
+    -> ) ENGINE=InnoDB;
+Query OK, 0 rows affected (0.05 sec)
+
+mysql>
+mysql>
+mysql> -- ============================================================
+mysql> -- 5) LOGIN_ATTEMPTS (rate-limit, brute force, suspicious activity)
+mysql> -- ============================================================
+mysql> CREATE TABLE login_attempts (
+    ->   id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+    ->
+    ->   -- Sometimes user_id is unknown on failed login; keep both:
+    ->   user_id BIGINT UNSIGNED NULL,
+    ->   identifier VARCHAR(255) NOT NULL,             -- email/username as typed
+    ->   success TINYINT(1) NOT NULL DEFAULT 0,
+    ->
+    ->   ip_address VARBINARY(16) NULL,
+    ->   user_agent VARCHAR(255) NULL,
+    ->
+    ->   failure_reason VARCHAR(64) NULL,              -- wrong_password, locked, banned, 2fa_required
+    ->   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    ->
+    ->   KEY idx_login_attempts_user (user_id, created_at),
+    ->   KEY idx_login_attempts_identifier (identifier, created_at),
+    ->   KEY idx_login_attempts_ip (ip_address, created_at),
+    ->
+    ->   CONSTRAINT fk_login_attempts_user
+    ->     FOREIGN KEY (user_id) REFERENCES users(id)
+    ->     ON DELETE SET NULL
+    -> ) ENGINE=InnoDB;
+Query OK, 0 rows affected, 1 warning (0.05 sec)
+
+mysql>
+mysql>
+mysql> -- ============================================================
+mysql> -- 6) TWO_FACTOR_SECRETS (Ranked requires 2FA)
+mysql> -- If using TOTP: store encrypted secret + metadata
+mysql> -- ============================================================
+mysql> CREATE TABLE two_factor_secrets (
+    ->   user_id BIGINT UNSIGNED PRIMARY KEY,
+    ->
+    ->   is_enabled TINYINT(1) NOT NULL DEFAULT 0,
+    ->   method ENUM('totp') NOT NULL DEFAULT 'totp',
+    ->
+    ->   -- store encrypted secret (application-layer encryption) OR at least base64 with KMS later
+    ->   secret_enc VARBINARY(255) NULL,
+    ->
+    ->   enabled_at DATETIME NULL,
+    ->   last_used_at DATETIME NULL,
+    ->
+    ->   CONSTRAINT fk_2fa_user
+    ->     FOREIGN KEY (user_id) REFERENCES users(id)
+    ->     ON DELETE CASCADE
+    -> ) ENGINE=InnoDB;
+Query OK, 0 rows affected, 1 warning (0.02 sec)
+
+mysql>
+mysql>
+mysql> -- ============================================================
+mysql> -- 7) AUDIT_LOGS (RBAC changes, penalties, admin actions, etc.)
+mysql> -- ============================================================
+mysql> CREATE TABLE audit_logs (
+    ->   id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+    ->
+    ->   actor_user_id BIGINT UNSIGNED NULL,           -- who did it (admin/mod/system)
+    ->   action VARCHAR(64) NOT NULL,                  -- e.g., ROLE_GRANT, ROLE_REVOKE, PENALTY_APPLY, CARD_CHANGE
+    ->   target_type VARCHAR(32) NOT NULL,             -- e.g., user, card, match
+    ->   target_id BIGINT UNSIGNED NULL,
+    ->
+    ->   metadata_json JSON NULL,                      -- flexible details
+    ->   ip_address VARBINARY(16) NULL,
+    ->   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    ->
+    ->   KEY idx_audit_actor (actor_user_id, created_at),
+    ->   KEY idx_audit_target (target_type, target_id, created_at),
+    ->   KEY idx_audit_action (action, created_at),
+    ->
+    ->   CONSTRAINT fk_audit_actor
+    ->     FOREIGN KEY (actor_user_id) REFERENCES users(id)
+    ->     ON DELETE SET NULL
+    -> ) ENGINE=InnoDB;
+Query OK, 0 rows affected (0.05 sec)
+
+mysql>
+mysql>
+mysql> -- ============================================================
+mysql> -- 8) DASHBOARD_NOTIFICATIONS (your dashboard feed)
+mysql> -- ============================================================
+mysql> CREATE TABLE dashboard_notifications (
+    ->   id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+    ->   user_id BIGINT UNSIGNED NOT NULL,
+    ->
+    ->   type VARCHAR(32) NOT NULL,                    -- match_result, penalty, system, role_update
+    ->   title VARCHAR(120) NOT NULL,
+    ->   body VARCHAR(500) NULL,
+    ->
+    ->   link_url VARCHAR(255) NULL,
+    ->   is_read TINYINT(1) NOT NULL DEFAULT 0,
+    ->
+    ->   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    ->   read_at DATETIME NULL,
+    ->
+    ->   KEY idx_dash_user (user_id, is_read, created_at),
+    ->   CONSTRAINT fk_dash_user
+    ->     FOREIGN KEY (user_id) REFERENCES users(id)
+    ->     ON DELETE CASCADE
+    -> ) ENGINE=InnoDB;
+Query OK, 0 rows affected, 1 warning (0.04 sec)
+
+
+ALTER TABLE users
+  ADD COLUMN approval_status ENUM('pending','approved','rejected') NOT NULL DEFAULT 'pending' AFTER email_verified_at,
+  ADD COLUMN approved_by BIGINT UNSIGNED NULL AFTER approval_status,
+  ADD COLUMN approved_at DATETIME NULL AFTER approved_by,
+  ADD COLUMN rejected_reason VARCHAR(255) NULL AFTER approved_at,
+
+  ADD COLUMN is_guest TINYINT(1) NOT NULL DEFAULT 0 AFTER is_active,
+
+  -- skeleton “ready for ranked” dependencies (don’t store sensitive bank data)
+  ADD COLUMN bank_link_status ENUM('none','pending','linked','failed') NOT NULL DEFAULT 'none' AFTER banned_until,
+  ADD COLUMN bank_linked_at DATETIME NULL AFTER bank_link_status;
+
+ALTER TABLE users
+  ADD CONSTRAINT fk_users_approved_by
+    FOREIGN KEY (approved_by) REFERENCES users(id)
+    ON DELETE SET NULL;
+
+CREATE INDEX idx_users_approval_status ON users (approval_status, created_at);
+CREATE INDEX idx_users_is_guest ON users (is_guest, created_at);
+CREATE INDEX idx_users_bank_link_status ON users (bank_link_status, created_at);
