@@ -1,163 +1,124 @@
 // assets/main.js
-function $(sel){ return document.querySelector(sel); }
-function $all(sel){ return Array.from(document.querySelectorAll(sel)); }
+(function () {
+  "use strict";
 
-async function postForm(url, data){
-  const form = new URLSearchParams();
-  Object.entries(data).forEach(([k,v]) => form.append(k, v));
-  const res = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: form.toString()
+  const $ = (sel, root = document) => root.querySelector(sel);
+  const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
+
+  // -------------------------
+  // Modal open/close + tabbing
+  // -------------------------
+  const modal = $("#authModal");
+  const openBtns = $$("[data-open-auth]");
+  const closeBtns = $$("[data-close-auth]");
+  const tabs = $$("[data-tab]");
+  const panes = $$("[data-pane]");
+
+  function setTab(which) {
+    tabs.forEach((t) => t.classList.toggle("is-active", t.dataset.tab === which));
+    panes.forEach((p) => p.classList.toggle("is-active", p.dataset.pane === which));
+  }
+
+  function openModal(which = "login") {
+    if (!modal) return;
+    modal.classList.add("is-open");
+    modal.setAttribute("aria-hidden", "false");
+    document.body.style.overflow = "hidden";
+    setTab(which);
+
+    // focus first field
+    const focusSel = which === "register" ? "#reg_user" : "#login_ident";
+    const el = $(focusSel);
+    if (el) setTimeout(() => el.focus(), 50);
+  }
+
+  function closeModal() {
+    if (!modal) return;
+    modal.classList.remove("is-open");
+    modal.setAttribute("aria-hidden", "true");
+    document.body.style.overflow = "";
+  }
+
+  openBtns.forEach((b) =>
+    b.addEventListener("click", () => openModal(b.dataset.openAuth))
+  );
+  closeBtns.forEach((b) => b.addEventListener("click", closeModal));
+
+  tabs.forEach((t) =>
+    t.addEventListener("click", () => setTab(t.dataset.tab))
+  );
+
+  // ESC closes
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closeModal();
   });
-  return res.json().catch(() => ({ ok:false, error:"Bad JSON" }));
-}
 
-function closeDropdown(el){
-  if (!el) return;
-  el.classList.remove("open");
-}
-
-function toggleDropdown(el){
-  if (!el) return;
-  el.classList.toggle("open");
-}
-
-function clickOutsideClose(trigger, menu){
-  document.addEventListener("click", (e) => {
-    const t = e.target;
-    if (menu.classList.contains("open")) {
-      const inside = menu.contains(t) || trigger.contains(t);
-      if (!inside) closeDropdown(menu);
-    }
+  // -------------------------
+  // FAQ accordion
+  // -------------------------
+  $$("[data-acc]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const isOpen = btn.classList.contains("is-open");
+      // close others for a clean look
+      $$("[data-acc].is-open").forEach((b) => b.classList.remove("is-open"));
+      if (!isOpen) btn.classList.add("is-open");
+    });
   });
-}
 
-/* ======================
-   Logged-in navbar UI
-   ====================== */
-document.addEventListener("DOMContentLoaded", () => {
-  const notifBtn = $("#notifBtn");
-  const notifMenu = $("#notifMenu");
-  const userMenuBtn = $("#userMenuBtn");
-  const userMenu = $("#userMenu");
+  // -------------------------
+  // Password strength rules (your existing UI, but stable)
+  // -------------------------
+  const pw = $("#reg_password");
+  const pw2 = $("#reg_password2");
+  const pwBar = $("#pwBar");
+  const pwReq = $("#pwReq");
+  const match = $("#pwMatch");
+  const regBtn = $("#regBtn");
 
-  if (notifBtn && notifMenu) {
-    notifBtn.addEventListener("click", (e) => {
-      e.preventDefault();
-      // close other menu if open
-      if (userMenu) closeDropdown(userMenu);
-      toggleDropdown(notifMenu);
-      notifBtn.setAttribute("aria-expanded", notifMenu.classList.contains("open") ? "true" : "false");
-    });
-    clickOutsideClose(notifBtn, notifMenu);
+  if (pw && pw2 && pwReq && pwBar && match && regBtn) {
+    const reqItem = (key) => pwReq.querySelector(`[data-req="${key}"]`);
 
-    // Mark one read when clicked
-    $all(".notif[data-notif-id]").forEach((a) => {
-      a.addEventListener("click", async (e) => {
-        const id = a.getAttribute("data-notif-id");
-        const hasLink = a.getAttribute("data-has-link") === "1";
-        // if no link, prevent jump
-        if (!hasLink) e.preventDefault();
+    function hasLower(s) { return /[a-z]/.test(s); }
+    function hasUpper(s) { return /[A-Z]/.test(s); }
+    function hasNum(s) { return /[0-9]/.test(s); }
+    function hasSym(s) { return /[^A-Za-z0-9]/.test(s); }
 
-        if (!a.classList.contains("read")) {
-          await postForm("notifications_action.php", { action: "mark_one", id });
-          a.classList.add("read");
-          a.classList.remove("unread");
-          const pill = a.querySelector(".notif__pill");
-          if (pill) pill.remove();
-        }
-      });
-    });
-
-    const markAllBtn = $("#markAllReadBtn");
-    if (markAllBtn) {
-      markAllBtn.addEventListener("click", async () => {
-        await postForm("notifications_action.php", { action: "mark_all" });
-        $all(".notif.unread").forEach((n) => {
-          n.classList.add("read");
-          n.classList.remove("unread");
-          const pill = n.querySelector(".notif__pill");
-          if (pill) pill.remove();
-        });
-        const dot = notifBtn.querySelector(".dot");
-        if (dot) dot.remove();
-      });
-    }
-  }
-
-  if (userMenuBtn && userMenu) {
-    userMenuBtn.addEventListener("click", (e) => {
-      e.preventDefault();
-      if (notifMenu) closeDropdown(notifMenu);
-      toggleDropdown(userMenu);
-      userMenuBtn.setAttribute("aria-expanded", userMenu.classList.contains("open") ? "true" : "false");
-    });
-    clickOutsideClose(userMenuBtn, userMenu);
-  }
-
-  /* ======================
-     Register password meter (index.php)
-     ====================== */
-  const form = $("#regForm");
-  const pw1  = $("#reg_password");
-  const pw2  = $("#reg_password2");
-  const bar  = $("#pwBar");
-  const req  = $("#pwReq");
-  const matchText = $("#pwMatch");
-  const btn  = $("#regBtn");
-
-  function rulesFor(pw){
-    return {
-      len: (pw.length >= 16),
-      low: /[a-z]/.test(pw),
-      up:  /[A-Z]/.test(pw),
-      num: /[0-9]/.test(pw),
-      sym: /[^A-Za-z0-9]/.test(pw),
-    };
-  }
-  function score(r){
-    let s = 0;
-    for (const k in r) if (r[k]) s++;
-    return s; // 0..5
-  }
-  function setReq(reqList, key, ok){
-    if (!reqList) return;
-    const li = reqList.querySelector(`[data-req="${key}"]`);
-    if (!li) return;
-    li.classList.toggle("ok", ok);
-    li.classList.toggle("bad", !ok);
-  }
-
-  if (form && pw1 && pw2 && bar && req && matchText && btn) {
-    function sync(){
-      const p = pw1.value || "";
-      const r = rulesFor(p);
-      setReq(req, "len", r.len);
-      setReq(req, "low", r.low);
-      setReq(req, "up",  r.up);
-      setReq(req, "num", r.num);
-      setReq(req, "sym", r.sym);
-
-      const s = score(r);
-      bar.style.width = ((s / 5) * 100) + "%";
-
-      const hasConfirm = (pw2.value || "") !== "";
-      const match = (pw2.value === p) && p.length > 0;
-
-      if (!hasConfirm) {
-        matchText.textContent = "";
-      } else {
-        matchText.textContent = match ? "Passwords match." : "Passwords do not match.";
-        matchText.style.color = match ? "rgba(61,220,151,.95)" : "rgba(255,107,107,.92)";
-      }
-
-      btn.disabled = !((s === 5) && match);
+    function setReq(key, ok) {
+      const li = reqItem(key);
+      if (!li) return;
+      li.classList.toggle("ok", ok);
+      li.classList.toggle("bad", !ok);
     }
 
-    pw1.addEventListener("input", sync);
-    pw2.addEventListener("input", sync);
-    form.addEventListener("input", sync);
-    sync();
+    function update() {
+      const v = pw.value || "";
+      const v2 = pw2.value || "";
+
+      const okLen = v.length >= 16;
+      const okLow = hasLower(v);
+      const okUp  = hasUpper(v);
+      const okNum = hasNum(v);
+      const okSym = hasSym(v);
+
+      setReq("len", okLen);
+      setReq("low", okLow);
+      setReq("up", okUp);
+      setReq("num", okNum);
+      setReq("sym", okSym);
+
+      const checks = [okLen, okLow, okUp, okNum, okSym].filter(Boolean).length;
+      const pct = Math.min(100, Math.round((checks / 5) * 100));
+      pwBar.style.width = pct + "%";
+
+      const same = v.length > 0 && v === v2;
+      match.textContent = v2.length ? (same ? "Passwords match ✓" : "Passwords do not match") : "";
+      match.style.color = same ? "rgba(62,229,139,.95)" : "rgba(255,107,107,.92)";
+
+      const allOk = okLen && okLow && okUp && okNum && okSym && same;
+      regBtn.disabled = !allOk;
+    }
+
+    pw.addEventListener("input", update);
+    pw2.addEventListener("input", update);
   }
-});
+})();

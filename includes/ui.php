@@ -44,8 +44,8 @@ function count_unread_notifications(mysqli $mysqli, int $user_id): int {
 }
 
 function ranked_requirements(mysqli $mysqli, array $u): array {
-  // 2FA
   $uid = (int)$u['id'];
+
   $stmt = $mysqli->prepare("SELECT is_enabled FROM two_factor_secrets WHERE user_id = ? LIMIT 1");
   $stmt->bind_param("i", $uid);
   $stmt->execute();
@@ -57,10 +57,10 @@ function ranked_requirements(mysqli $mysqli, array $u): array {
   $twofa_ok = ($twofa === 1);
 
   return [
-    'email_ok' => $email_ok,
-    'bank_ok'  => $bank_ok,
-    'twofa_ok' => $twofa_ok,
-    'ranked_ok' => ($u['approval_status'] === 'approved') && $email_ok && $bank_ok && $twofa_ok
+    'email_ok'  => $email_ok,
+    'bank_ok'   => $bank_ok,
+    'twofa_ok'  => $twofa_ok,
+    'ranked_ok' => (($u['approval_status'] ?? '') === 'approved') && $email_ok && $bank_ok && $twofa_ok
   ];
 }
 
@@ -68,136 +68,276 @@ function ui_header(string $title = 'Dashboard'): void {
   global $mysqli;
 
   $bp = base_path();
-  $u = current_user();
-  if (!$u) {
-    redirect($bp . "/index.php");
-  }
+  $u  = current_user();
+  if (!$u) redirect($bp . "/index.php");
 
   $uid = (int)$u['id'];
   $unread = count_unread_notifications($mysqli, $uid);
-  $notes = fetch_notifications($mysqli, $uid, 8);
 
   $is_guest = ((int)($u['is_guest'] ?? 0) === 1);
-  $roles = $u['roles'] ?? [];
-  $role_label = $is_guest ? 'Guest' : (in_array('admin', $roles, true) ? 'Admin' : 'Player');
+  $role_label = $is_guest ? 'Guest' : 'Player';
 
-  // ranked gate status (for navbar badge)
+  $level   = (int)($u['level'] ?? 12);
+  $exp_pct = (int)($u['exp_pct'] ?? 55);
+
   $req = ranked_requirements($mysqli, $u);
+  $ranked_ok = (!$is_guest && !empty($req['ranked_ok']));
 
-  ?><!doctype html>
+  $is_hub = (stripos($title, 'dashboard') !== false);
+  $dd_notes = fetch_notifications($mysqli, $uid, 6);
+  ?>
+<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title><?= h($title) ?> — CardGame</title>
+
   <link rel="stylesheet" href="<?= h($bp) ?>/assets/style.css"/>
+  <link rel="stylesheet" href="<?= h($bp) ?>/assets/hub.css"/>
 </head>
-<body>
 
-<header class="app-topbar">
-  <div class="app-topbar__inner">
+<body class="<?= $is_hub ? 'hub' : '' ?>">
 
-    <a class="brand" href="<?= h($bp) ?>/dashboard.php">
-      <span class="brand__logo">🂡</span>
-      <span class="brand__name">CardGame</span>
-      <span class="pill"><?= h($role_label) ?></span>
-      <?php if ($is_guest): ?>
-        <span class="pill pill-warn">Casual Only</span>
-      <?php endif; ?>
+<header class="topnav">
+  <div class="topnav__inner" style="display:flex; align-items:center; justify-content:space-between; gap:14px;">
+
+    <!-- Player block -->
+    <a href="<?= h($bp) ?>/profile.php" title="Profile & Stats" style="display:flex; align-items:center; gap:12px; text-decoration:none;">
+      <div style="
+        width:44px; height:44px; border-radius:14px;
+        display:grid; place-items:center;
+        border:1px solid rgba(255,255,255,.12);
+        background: rgba(255,255,255,.06);
+        font-weight:950;
+      "><?= h(strtoupper(substr((string)$u['username'], 0, 1))) ?></div>
+
+      <div style="display:grid; gap:4px; min-width:0;">
+        <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; min-width:0;">
+          <div style="font-weight:950; letter-spacing:.01em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:240px;">
+            <?= h($u['username']) ?>
+          </div>
+
+          <span class="pill"><?= h($role_label) ?></span>
+          <span class="pill" style="opacity:.9;">Lv. <?= (int)$level ?></span>
+
+          <?php if ($is_guest): ?>
+            <span class="pill" style="border-color: rgba(255,205,102,.45); background: rgba(255,205,102,.10);">Casual Only</span>
+          <?php elseif (!$ranked_ok): ?>
+            <span class="pill" style="border-color: rgba(255,77,109,.40); background: rgba(255,77,109,.10);">Ranked Locked</span>
+          <?php endif; ?>
+        </div>
+
+        <div style="display:flex; align-items:center; gap:10px; opacity:.9;">
+          <div style="
+            width:180px; max-width: 30vw;
+            height:8px; border-radius:999px;
+            background: rgba(255,255,255,.10);
+            overflow:hidden;
+            border:1px solid rgba(255,255,255,.10);
+          ">
+            <i style="display:block; height:100%; width: <?= max(0, min(100, $exp_pct)) ?>%; background: rgba(139,92,255,.55);"></i>
+          </div>
+          <div style="color: var(--muted); font-size:12px;">Profile & Stats</div>
+        </div>
+      </div>
     </a>
 
-    <nav class="nav">
-      <a class="nav__link" href="<?= h($bp) ?>/dashboard.php">Dashboard</a>
-      <a class="nav__link" href="<?= h($bp) ?>/play.php">Play</a>
-      <a class="nav__link" href="<?= h($bp) ?>/rooms.php">Rooms</a>
-      <a class="nav__link" href="<?= h($bp) ?>/security.php">Security</a>
-      <?php if (!$is_guest): ?>
-        <a class="nav__link" href="<?= h($bp) ?>/credits.php">Credits</a>
-      <?php endif; ?>
-    </nav>
+    <!-- Icons -->
+    <div class="md-icons">
 
-    <div class="actions">
-      <a class="btn btn-primary" href="<?= h($bp) ?>/play.php">
-        Play Now
-        <?php if (!$is_guest && !$req['ranked_ok']): ?>
-          <span class="btn-badge">Ranked Locked</span>
-        <?php endif; ?>
-      </a>
-
-      <button class="icon-btn" id="notifBtn" type="button" aria-haspopup="true" aria-expanded="false" title="Notifications">
-        🔔
+      <!-- Notifications dropdown -->
+      <div class="md-ico-wrap" data-dd-wrap>
+        <button class="md-ico" type="button" data-dd-btn="notif" title="Notifications">🔔</button>
         <?php if ($unread > 0): ?>
-          <span class="dot"><?= (int)$unread ?></span>
+          <span class="md-badge"><?= (int)$unread ?></span>
         <?php endif; ?>
-      </button>
 
-      <div class="userchip" id="userChip">
-        <div class="avatar"><?= h(strtoupper(substr((string)$u['username'], 0, 1))) ?></div>
-        <div class="userchip__meta">
-          <div class="userchip__name"><?= h($u['username']) ?></div>
-          <div class="userchip__sub"><?= h($u['email']) ?></div>
-        </div>
-        <button class="icon-btn" id="userMenuBtn" type="button" aria-haspopup="true" aria-expanded="false" title="Menu">▾</button>
+        <div class="dd" id="dd-notif" role="menu" aria-hidden="true">
+          <div class="dd__head">
+            <div>
+              <div class="dd__title">Notifications</div>
+              <div class="dd__sub">Latest updates</div>
+            </div>
+            <a class="btn btn-ghost" href="<?= h($bp) ?>/notifications.php">View all</a>
+          </div>
 
-        <div class="dropdown" id="userMenu" role="menu">
-          <a class="dropdown__item" href="<?= h($bp) ?>/profile.php">Profile</a>
-          <a class="dropdown__item" href="<?= h($bp) ?>/security.php">Security</a>
-          <?php if (!$is_guest): ?>
-            <a class="dropdown__item" href="<?= h($bp) ?>/credits.php">Credits</a>
-          <?php endif; ?>
-          <div class="dropdown__sep"></div>
-          <a class="dropdown__item danger" href="<?= h($bp) ?>/logout.php">Logout</a>
+          <div class="dd__body">
+            <?php if (!$dd_notes): ?>
+              <div style="color: var(--muted); font-size: 13px; padding: 6px 2px;">No notifications yet.</div>
+            <?php else: ?>
+              <?php foreach ($dd_notes as $n): ?>
+                <?php
+                  $icon = notif_icon((string)$n['type']);
+                  $when = $n['created_at'] ? date("M d • g:i A", strtotime((string)$n['created_at'])) : '';
+                  $link = (string)($n['link_url'] ?? '');
+                  $href = $link ? ($bp . $link) : ($bp . "/notifications.php");
+                ?>
+                <a href="<?= h($href) ?>" class="card-soft" style="display:block; padding:12px; text-decoration:none;">
+                  <div style="display:flex; gap:10px; align-items:flex-start;">
+                    <div style="width:36px; height:36px; border-radius: 14px; display:grid; place-items:center; border:1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.06);">
+                      <?= $icon ?>
+                    </div>
+                    <div style="flex:1; min-width:0;">
+                      <div style="font-weight:900; font-size: 13px; color: var(--text);">
+                        <?= h($n['title']) ?>
+                      </div>
+                      <?php if (!empty($n['body'])): ?>
+                        <div style="color: var(--muted); font-size: 12px; margin-top:4px; line-height:1.35;">
+                          <?= h($n['body']) ?>
+                        </div>
+                      <?php endif; ?>
+                      <div style="color: rgba(238,243,255,.55); font-size: 11px; margin-top:6px;">
+                        <?= h($when) ?>
+                      </div>
+                    </div>
+                    <?php if (((int)$n['is_read']) === 0): ?>
+                      <span class="pill" style="border-color: rgba(57,255,106,.35); background: rgba(57,255,106,.10); font-size:11px;">NEW</span>
+                    <?php endif; ?>
+                  </div>
+                </a>
+              <?php endforeach; ?>
+            <?php endif; ?>
+          </div>
         </div>
       </div>
 
-      <div class="dropdown dropdown--wide" id="notifMenu" aria-label="Notifications">
-        <div class="dropdown__head">
-          <div>
-            <div class="dropdown__title">Notifications</div>
-            <div class="dropdown__sub"><?= $unread ?> unread</div>
-          </div>
-          <div class="dropdown__headActions">
-            <button class="mini-btn" id="markAllReadBtn" type="button">Mark all read</button>
-            <a class="mini-btn" href="<?= h($bp) ?>/notifications.php">View all</a>
-          </div>
+      <!-- Friends placeholder -->
+      <?php if (!$is_guest): ?>
+        <div class="md-ico-wrap">
+          <button class="md-ico" type="button" title="Friends (placeholder)">👥</button>
         </div>
+      <?php else: ?>
+        <div class="md-ico-wrap" title="Friends (Guest)">
+          <div class="md-ico" style="opacity:.55; cursor:not-allowed;">👥</div>
+        </div>
+      <?php endif; ?>
 
-        <div class="dropdown__list">
-          <?php if (!$notes): ?>
-            <div class="empty">No notifications yet.</div>
-          <?php else: ?>
-            <?php foreach ($notes as $n): ?>
-              <?php
-                $icon = notif_icon((string)$n['type']);
-                $is_read = ((int)$n['is_read'] === 1);
-                $when = $n['created_at'] ? date("M d • g:i A", strtotime((string)$n['created_at'])) : '';
-                $link = (string)($n['link_url'] ?? '');
-                $href = $link ? ($bp . $link) : '#';
-              ?>
-              <a class="notif <?= $is_read ? 'read' : 'unread' ?>"
-                 href="<?= h($href) ?>"
-                 data-notif-id="<?= (int)$n['id'] ?>"
-                 data-has-link="<?= $link ? '1' : '0' ?>">
-                <div class="notif__icon"><?= $icon ?></div>
-                <div class="notif__body">
-                  <div class="notif__title"><?= h($n['title']) ?></div>
-                  <?php if (!empty($n['body'])): ?>
-                    <div class="notif__text"><?= h($n['body']) ?></div>
-                  <?php endif; ?>
-                  <div class="notif__time"><?= h($when) ?></div>
+      <!-- Mail dropdown -->
+      <div class="md-ico-wrap" data-dd-wrap>
+        <?php if (!$is_guest): ?>
+          <button class="md-ico" type="button" data-dd-btn="mail" title="Mailbox">✉️</button>
+
+          <div class="dd" id="dd-mail" role="menu" aria-hidden="true">
+            <div class="dd__head">
+              <div>
+                <div class="dd__title">Mailbox</div>
+                <div class="dd__sub">System vs Friends</div>
+              </div>
+              <a class="btn btn-ghost" href="<?= h($bp) ?>/mailbox.php">View all</a>
+            </div>
+
+            <div class="dd__body" style="gap:12px;">
+              <div class="ddtabs">
+                <span class="pill ddtab is-active" data-mailtab="system">System</span>
+                <span class="pill ddtab" data-mailtab="friends">Friends</span>
+              </div>
+
+              <div data-mailpanel="system" style="display:grid; gap:10px;">
+                <?php if (!$dd_notes): ?>
+                  <div style="color: var(--muted); font-size:13px;">No system messages yet.</div>
+                <?php else: ?>
+                  <?php foreach ($dd_notes as $n): ?>
+                    <?php
+                      $icon = notif_icon((string)$n['type']);
+                      $when = $n['created_at'] ? date("M d • g:i A", strtotime((string)$n['created_at'])) : '';
+                    ?>
+                    <div class="card-soft" style="padding:12px;">
+                      <div style="display:flex; gap:10px; align-items:flex-start;">
+                        <div style="width:36px; height:36px; border-radius: 14px; display:grid; place-items:center; border:1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.06);">
+                          <?= $icon ?>
+                        </div>
+                        <div style="flex:1; min-width:0;">
+                          <div style="font-weight:900; font-size: 13px;"><?= h($n['title']) ?></div>
+                          <div style="color: rgba(238,243,255,.55); font-size: 11px; margin-top:6px;"><?= h($when) ?></div>
+                        </div>
+                      </div>
+                    </div>
+                  <?php endforeach; ?>
+                <?php endif; ?>
+              </div>
+
+              <div data-mailpanel="friends" style="display:none; gap:10px;">
+                <div class="card-soft" style="padding:12px;">
+                  <div style="font-weight:900;">DocSeven</div>
+                  <div style="color: var(--muted); font-size:13px; margin-top:6px;">“yo queue later?” (placeholder)</div>
                 </div>
-                <?php if (!$is_read): ?><div class="notif__pill">NEW</div><?php endif; ?>
-              </a>
-            <?php endforeach; ?>
-          <?php endif; ?>
-        </div>
+                <div class="card-soft" style="padding:12px;">
+                  <div style="font-weight:900;">PlayerTwo</div>
+                  <div style="color: var(--muted); font-size:13px; margin-top:6px;">“gg earlier” (placeholder)</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        <?php else: ?>
+          <div class="md-ico" style="opacity:.55; cursor:not-allowed;" title="Mailbox (Guest)">✉️</div>
+        <?php endif; ?>
       </div>
+
+      <!-- Logout -->
+      <a class="md-ico-wrap" href="<?= h($bp) ?>/logout.php" title="Logout">
+        <div class="md-ico">⎋</div>
+      </a>
 
     </div>
   </div>
 </header>
 
-<main class="app-shell">
+<main class="container" style="padding-top: 18px;">
+
+<script>
+(function(){
+  "use strict";
+  const $  = (sel, root=document) => root.querySelector(sel);
+  const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
+
+  function closeAllDropdowns(){
+    $$(".dd.is-open").forEach(dd => dd.classList.remove("is-open"));
+  }
+
+  $$("[data-dd-btn]").forEach(btn => {
+    btn.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      const key = btn.getAttribute("data-dd-btn");
+      const dd  = document.getElementById("dd-" + key);
+      if(!dd) return;
+
+      const isOpen = dd.classList.contains("is-open");
+      closeAllDropdowns();
+      if(!isOpen) dd.classList.add("is-open");
+    });
+  });
+
+  document.addEventListener("click", () => closeAllDropdowns());
+  $$(".dd").forEach(dd => dd.addEventListener("click", (e) => e.stopPropagation()));
+  document.addEventListener("keydown", (e) => { if(e.key === "Escape") closeAllDropdowns(); });
+
+  // Mail tabs
+  const mail = $("#dd-mail");
+  if(mail){
+    const tabs = $$(".ddtab", mail);
+    const panels = {
+      system: $("[data-mailpanel='system']", mail),
+      friends: $("[data-mailpanel='friends']", mail),
+    };
+
+    function setTab(which){
+      tabs.forEach(t => t.classList.remove("is-active"));
+      const active = tabs.find(t => t.getAttribute("data-mailtab") === which);
+      if(active) active.classList.add("is-active");
+
+      if(panels.system)  panels.system.style.display  = (which === "system") ? "grid" : "none";
+      if(panels.friends) panels.friends.style.display = (which === "friends") ? "grid" : "none";
+    }
+
+    tabs.forEach(t => t.addEventListener("click", () => setTab(t.getAttribute("data-mailtab"))));
+    setTab("system");
+  }
+})();
+</script>
+
 <?php
 }
 
@@ -206,11 +346,23 @@ function ui_footer(): void {
   ?>
 </main>
 
-<footer class="app-footer">
-  <div class="app-footer__inner">
-    <div class="muted">© <?= date('Y') ?> CardGame • MVP</div>
-    <div class="muted">Security: RBAC • Audit Logs • Admin Approval • Session Tracking</div>
-    <div class="muted"><a href="<?= h($bp) ?>/dashboard.php">Home</a></div>
+<footer class="sitefooter">
+  <!-- IMPORTANT: no .container here. hub.css centers this -->
+  <div class="sitefooter__inner" style="display:flex; align-items:center; justify-content:space-between; gap:14px;">
+    <div>
+      <div class="footbrand">CardGame</div>
+      <div class="footmuted">© <?= date('Y') ?> • Platform shell</div>
+    </div>
+
+    <div class="footmuted" style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+      <a href="<?= h($bp) ?>/dashboard.php">Dashboard</a>
+      <span class="sep">•</span>
+      <a href="<?= h($bp) ?>/notifications.php">Notifications</a>
+      <span class="sep">•</span>
+      <a href="<?= h($bp) ?>/mailbox.php">Mailbox</a>
+      <span class="sep">•</span>
+      <a href="<?= h($bp) ?>/logout.php">Logout</a>
+    </div>
   </div>
 </footer>
 

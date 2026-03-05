@@ -1,0 +1,215 @@
+/* assets/hub.css */
+
+/* Hub pages use a wider frame (so it feels like a game home, not a skinny website section) */
+body.hub .container,
+body.hub .topnav__inner {
+  max-width: 1520px;
+  width: calc(100% - 36px);
+}
+
+/* ===== Hub Footer Fix =====
+   Make footer content align with hub width, not the base .container quirks */
+body.hub .sitefooter__inner {
+  width: calc(100% - 36px);
+  max-width: 1520px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* ===== Hub Layout Grid ===== */
+.hub-grid{
+  display:grid;
+  grid-template-columns: 260px minmax(560px, 1fr) 420px;
+  gap: 14px;
+  align-items:start;
+}
+
+@media (max-width: 1180px){
+  .hub-grid{ grid-template-columns: 240px 1fr; }
+  .hub-right{ grid-column: 1 / -1; }
+}
+@media (max-width: 860px){
+  .hub-grid{ grid-template-columns: 1fr; }
+  .hub-left{ position:static !important; }
+}
+
+/* ===== Left Menu (Game Rail) ===== */
+.hub-left .hub-item{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  width:100%;
+  padding: 12px 12px;
+  border-radius: 14px;
+  border:1px solid rgba(255,255,255,.10);
+  background: rgba(255,255,255,.05);
+  text-decoration:none;
+  font-weight: 900;
+  color: var(--text);
+}
+
+.hub-left .hub-item:hover{ background: rgba(255,255,255,.08); }
+
+.hub-left .hub-item.is-active{
+  border-color: rgba(57,255,106,.35);
+  background: rgba(57,255,106,.14);
+}
+
+.hub-ico{
+  width:34px;
+  height:34px;
+  border-radius: 12px;
+  display:grid;
+  place-items:center;
+  border:1px solid rgba(255,255,255,.10);
+  background: rgba(0,0,0,.15);
+}
+
+/* ===== Hero ===== */
+.hub-hero{
+  position:relative;
+  overflow:hidden;
+  border-radius: calc(var(--radius) + 12px);
+  padding: 18px;
+  min-height: 240px;
+}
+
+.hub-hero::after{
+  content:"";
+  position:absolute;
+  inset:-140px -140px auto auto;
+  width:520px;
+  height:520px;
+  background: radial-gradient(circle at 30% 30%, rgba(139,92,255,.22), transparent 60%);
+  transform: rotate(12deg);
+  pointer-events:none;
+}
+
+.hub-hero .hero-actions{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-top: 14px;
+  position:relative;
+  z-index:1;
+}
+
+.hub-hero h2{
+  margin:12px 0 6px;
+  font-size: 30px;
+  font-weight: 950;
+  line-height:1.12;
+  position:relative;
+  z-index:1;
+}
+
+/* ===== Topbar icon buttons (gamey) ===== */
+.md-icons{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+.md-ico-wrap{
+  position:relative;
+  display:inline-block;
+}
+.md-ico{
+  width: 40px;
+  height: 40px;
+  display:grid;
+  place-items:center;
+  border-radius: 12px;
+  border:1px solid rgba(255,255,255,.12);
+  background: rgba(255,255,255,.06);
+  cursor:pointer;
+  user-select:none;
+}
+.md-ico:hover{ background: rgba(255,255,255,.09); }
+.md-ico:active{ transform: translateY(1px); }
+
+.md-badge{
+  position:absolute;
+  top:-7px;
+  right:-7px;
+  font-size:11px;
+  padding:3px 7px;
+  border-radius:999px;
+  border:1px solid rgba(57,255,106,.35);
+  background: rgba(57,255,106,.10);
+  line-height: 1;
+  font-weight: 900;
+}
+
+/* ===== Dropdowns (Notif + Mail) ===== */
+.dd{
+  position:absolute;
+  right:0;
+  top: 48px;
+  width: 360px;
+  max-width: calc(100vw - 24px);
+  border-radius: calc(var(--radius) + 10px);
+  border:1px solid rgba(255,255,255,.12);
+  background: rgba(12,14,22,.96);
+  box-shadow: 0 30px 80px rgba(0,0,0,.55);
+  overflow:hidden;
+  display:none;
+  z-index: 9999;
+}
+
+.dd.is-open{ display:block; }
+
+.dd__head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap: 10px;
+  padding: 12px 12px 10px;
+  border-bottom:1px solid rgba(255,255,255,.08);
+}
+
+.dd__title{ font-weight: 950; }
+.dd__sub{
+  margin-top:4px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.dd__body{
+  padding: 10px;
+  display:grid;
+  gap: 10px;
+  max-height: 420px;
+  overflow:auto;
+}
+
+/* Mail tabs */
+.ddtabs{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+}
+.ddtab{
+  cursor:pointer;
+  user-select:none;
+}
+.ddtab.is-active{
+  border-color: rgba(139,92,255,.50) !important;
+  background: rgba(139,92,255,.14) !important;
+}
+
+/* Footer refinement */
+.sitefooter .footmuted a{ opacity:.9; }
+body.hub .sitefooter{ margin-top: 26px; }
+
+/* =========================
+   Hub Footer Alignment Fix
+   ========================= */
+body.hub .sitefooter__inner{
+  max-width: 1520px;
+  width: calc(100% - 36px);
+  margin-left: auto;
+  margin-right: auto;
+
+  /* keep your existing padding vibe */
+  padding: 16px 18px;
+}
