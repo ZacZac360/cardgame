@@ -45,7 +45,6 @@ load_user_into_session($mysqli, $uid);
 
 $cu = current_user();
 if (!$cu || !user_has_role($cu, 'admin')) {
-  // kick non-admins out
   unset($_SESSION['user_id'], $_SESSION['user']);
   flash_set('err', "Admins only.");
   redirect($bp . "/admin/login.php");

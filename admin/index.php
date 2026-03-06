@@ -1,26 +1,198 @@
 <?php
-// index.php
+// admin/index.php
 session_start();
-require_once __DIR__ . "/includes/helpers.php";
+require_once __DIR__ . "/../includes/helpers.php";
+require_once __DIR__ . "/../includes/auth.php";
+
+$user = current_user();
+if (!$user || !user_has_role($user, 'admin')) {
+  flash_set('err', 'Please sign in as an administrator.');
+  header("Location: {$bp}/admin/login.php");
+  exit;
+}
 
 $bp  = base_path();
 $err = flash_get('err');
 $msg = flash_get('msg');
 
-// After auth, send to choose.php (no DB changes).
-$next = $bp . "/choose.php";
+$user = current_user();
+if (!$user || !user_has_role($user, 'admin')) {
+  flash_set('err', 'Please sign in as an administrator.');
+  header("Location: {$bp}/admin/login.php");
+  exit;
+}
+
+$adminId   = (int)($user['id'] ?? 0);
+$adminName = $user['username'] ?? $user['email'] ?? 'Administrator';
+
+function scalar_query(mysqli $mysqli, string $sql, string $types = '', ...$params): int {
+  $stmt = $mysqli->prepare($sql);
+  if (!$stmt) return 0;
+
+  if ($types !== '') {
+    $stmt->bind_param($types, ...$params);
+  }
+
+  $stmt->execute();
+  $stmt->bind_result($value);
+  $stmt->fetch();
+  $stmt->close();
+
+  return (int)$value;
+}
+
+function recent_audit_rows(mysqli $mysqli, int $limit = 4): array {
+  $sql = "
+    SELECT
+      a.action,
+      a.target_type,
+      a.target_id,
+      a.created_at,
+      u.username AS actor_name
+    FROM audit_logs a
+    LEFT JOIN users u ON u.id = a.actor_user_id
+    ORDER BY a.created_at DESC
+    LIMIT ?
+  ";
+  $stmt = $mysqli->prepare($sql);
+  if (!$stmt) return [];
+
+  $stmt->bind_param("i", $limit);
+  $stmt->execute();
+  $res = $stmt->get_result();
+  $rows = $res ? $res->fetch_all(MYSQLI_ASSOC) : [];
+  $stmt->close();
+
+  return $rows;
+}
+
+function nice_action_label(?string $action): string {
+  $action = strtoupper(trim((string)$action));
+  if ($action === '') return 'System activity';
+
+  return match ($action) {
+    'ROLE_GRANT'        => 'Role granted',
+    'ROLE_REVOKE'       => 'Role revoked',
+    'LOGIN_SUCCESS'     => 'Login success',
+    'LOGIN_FAILED'      => 'Login failed',
+    'APPROVAL_APPROVE'  => 'User approved',
+    'APPROVAL_REJECT'   => 'User rejected',
+    'PENALTY_APPLY'     => 'Penalty applied',
+    'PENALTY_REMOVE'    => 'Penalty removed',
+    default             => ucwords(strtolower(str_replace('_', ' ', $action))),
+  };
+}
+
+function nice_target_label(?string $targetType, $targetId): string {
+  $targetType = trim((string)$targetType);
+  if ($targetType === '') return 'No target';
+  if ($targetId === null || $targetId === '') return $targetType;
+  return $targetType . ' #' . $targetId;
+}
+
+/* =========================
+   Live DB-backed stats
+   ========================= */
+
+$pendingApprovals = scalar_query(
+  $mysqli,
+  "SELECT COUNT(*) FROM users WHERE approval_status='pending' AND is_guest=0"
+);
+
+$approvedUsers = scalar_query(
+  $mysqli,
+  "SELECT COUNT(*) FROM users WHERE approval_status='approved' AND is_guest=0"
+);
+
+$guestUsers = scalar_query(
+  $mysqli,
+  "SELECT COUNT(*) FROM users WHERE is_guest=1"
+);
+
+$bannedUsers = scalar_query(
+  $mysqli,
+  "SELECT COUNT(*) FROM users WHERE banned_until IS NOT NULL AND banned_until > NOW()"
+);
+
+$failedLogins24h = scalar_query(
+  $mysqli,
+  "SELECT COUNT(*) FROM login_attempts WHERE success=0 AND created_at >= (NOW() - INTERVAL 1 DAY)"
+);
+
+$activeSessions = scalar_query(
+  $mysqli,
+  "SELECT COUNT(*) FROM auth_sessions WHERE revoked_at IS NULL AND expires_at > NOW()"
+);
+
+$audit24h = scalar_query(
+  $mysqli,
+  "SELECT COUNT(*) FROM audit_logs WHERE created_at >= (NOW() - INTERVAL 1 DAY)"
+);
+
+$unreadAdminNotifications = scalar_query(
+  $mysqli,
+  "SELECT COUNT(*) FROM dashboard_notifications WHERE user_id=? AND is_read=0",
+  "i",
+  $adminId
+);
+
+$emailVerifiedUsers = scalar_query(
+  $mysqli,
+  "SELECT COUNT(*) FROM users WHERE email_verified_at IS NOT NULL AND approval_status='approved' AND is_guest=0"
+);
+
+$twoFactorEnabled = scalar_query(
+  $mysqli,
+  "SELECT COUNT(*) FROM two_factor_secrets WHERE is_enabled=1"
+);
+
+$bankLinkedUsers = scalar_query(
+  $mysqli,
+  "SELECT COUNT(*) FROM users WHERE bank_link_status='linked' AND approval_status='approved' AND is_guest=0"
+);
+
+$rankedReadyUsers = scalar_query(
+  $mysqli,
+  "SELECT COUNT(*)
+   FROM users u
+   INNER JOIN two_factor_secrets t ON t.user_id = u.id
+   WHERE u.is_guest=0
+     AND u.is_active=1
+     AND u.approval_status='approved'
+     AND u.email_verified_at IS NOT NULL
+     AND u.bank_link_status='linked'
+     AND t.is_enabled=1
+     AND (u.banned_until IS NULL OR u.banned_until <= NOW())"
+);
+
+$recentAudit = recent_audit_rows($mysqli, 4);
 ?>
 <!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>CardGame — Home</title>
+  <title>CardGame — Administration</title>
   <link rel="stylesheet" href="<?= h($bp) ?>/assets/style.css"/>
+  <link rel="stylesheet" href="<?= h($bp) ?>/assets/hub.css"/>
 </head>
-<body>
+<body class="hub adminhub">
 
-  <!-- Flash banners -->
+  <header class="topnav">
+    <div class="topnav__inner">
+      <a class="logo" href="<?= h($bp) ?>/admin/index.php">
+        <span class="logo__mark">CG</span>
+        <span class="logo__text">CardGame Administration</span>
+      </a>
+
+      <div class="navactions">
+        <span class="pill">ADMIN</span>
+        <span class="pill"><?= h($adminName) ?></span>
+        <a class="btn btn-ghost" href="<?= h($bp) ?>/logout.php">Logout</a>
+      </div>
+    </div>
+  </header>
+
   <div class="container">
     <?php if ($err): ?>
       <div class="banner banner--bad"><?= h($err) ?></div>
@@ -29,252 +201,298 @@ $next = $bp . "/choose.php";
     <?php endif; ?>
   </div>
 
-  <!-- Hero -->
   <main class="container">
-    <section class="hero">
-      <div class="hero__copy">
-        <div class="chip">MVP Platform • Auth + Dashboard • Admin Approval</div>
-        <h1>Build rooms. Choose your mode. Play your way.</h1>
-        <p class="lead">
-          A polished card-game platform shell: account security, role-based access, approvals,
-          and a clean pre-game flow — with the actual game module coming soon.
-        </p>
+    <section class="admin-shell">
 
-        <div class="cta">
-          <button class="btn btn-primary btn-lg" type="button" data-open-auth="register">Get Started</button>
-          <button class="btn btn-ghost btn-lg" type="button" data-open-auth="login">I already have an account</button>
+      <!-- Left Rail -->
+      <aside class="admin-side card-soft">
+        <div class="admin-side__head">
+          <div class="pill">CONTROL PANEL</div>
+          <h2>Administration</h2>
+          <p>Restricted access</p>
         </div>
 
-        <div class="hero__notes">
-          <span class="note">✔ Separate Admin login</span>
-          <span class="note">✔ Approval workflow</span>
-          <span class="note">✔ Modal auth UI</span>
-        </div>
-      </div>
+        <nav class="admin-menu">
+          <a class="admin-menu__item is-active" href="<?= h($bp) ?>/admin/index.php">
+            <span class="admin-menu__icon">◈</span>
+            <span>Overview</span>
+          </a>
 
-      <div class="hero__panel" aria-hidden="true">
-        <div class="mock">
-          <div class="mock__top">
-            <span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span>
-            <span class="mock__title">CardGame • Lobby Preview</span>
-          </div>
-          <div class="mock__body">
-            <div class="mock__card">
-              <div class="k">Mode</div><div class="v">Casual / Ranked</div>
-            </div>
-            <div class="mock__card">
-              <div class="k">Rooms</div><div class="v">Create • Join • Invite</div>
-            </div>
-            <div class="mock__card">
-              <div class="k">Security</div><div class="v">RBAC • Approval • 2FA-ready</div>
-            </div>
-            <div class="mock__bar"></div>
-            <div class="mock__line"></div>
-            <div class="mock__line short"></div>
-          </div>
-        </div>
-      </div>
-    </section>
+          <a class="admin-menu__item" href="<?= h($bp) ?>/admin/users.php">
+            <span class="admin-menu__icon">👥</span>
+            <span>Users</span>
+          </a>
 
-    <!-- Features -->
-    <section class="section" id="features">
-      <div class="section__head">
-        <h2>What you get</h2>
-        <p>Everything before the actual gameplay — done cleanly and realistically.</p>
-      </div>
+          <a class="admin-menu__item" href="<?= h($bp) ?>/admin/reports.php">
+            <span class="admin-menu__icon">📝</span>
+            <span>Reports</span>
+          </a>
 
-      <div class="grid4">
-        <article class="fcard">
-          <div class="ficon">🧩</div>
-          <h3>Platform-first</h3>
-          <p>Landing, auth, dashboards, and flows that look like a real product.</p>
-        </article>
-        <article class="fcard">
-          <div class="ficon">🛡️</div>
-          <h3>Security-ready</h3>
-          <p>Approval gating, role checks, and room for verification + 2FA later.</p>
-        </article>
-        <article class="fcard">
-          <div class="ficon">🧭</div>
-          <h3>Mode selection</h3>
-          <p>Users pick what they want to see after login: Casual vs Ranked.</p>
-        </article>
-        <article class="fcard">
-          <div class="ficon">📦</div>
-          <h3>Expandable</h3>
-          <p>Game page can be plugged in later without rewriting the whole app.</p>
-        </article>
-      </div>
-    </section>
+          <a class="admin-menu__item" href="<?= h($bp) ?>/admin/game.php">
+            <span class="admin-menu__icon">🎮</span>
+            <span>Game</span>
+          </a>
 
-    <!-- How it works -->
-    <section class="section" id="how">
-      <div class="section__head">
-        <h2>How it works</h2>
-        <p>Simple flow. Clean UX. No clutter.</p>
-      </div>
+          <a class="admin-menu__item" href="<?= h($bp) ?>/admin/notifications.php">
+            <span class="admin-menu__icon">🔔</span>
+            <span>Notifications</span>
+          </a>
 
-      <div class="steps">
-        <div class="step">
-          <div class="step__num">1</div>
-          <div class="step__body">
-            <h3>Login or Register</h3>
-            <p>Use the modal to sign in or create an account. Admin approval applies if required.</p>
-          </div>
-        </div>
-        <div class="step">
-          <div class="step__num">2</div>
-          <div class="step__body">
-            <h3>Choose your experience</h3>
-            <p>After auth, you pick your path: Casual or Ranked — what you want to see.</p>
-          </div>
-        </div>
-        <div class="step">
-          <div class="step__num">3</div>
-          <div class="step__body">
-            <h3>Use the platform</h3>
-            <p>Rooms, lobby, dashboard — the full shell. Gameplay screen comes later.</p>
-          </div>
-        </div>
-      </div>
-    </section>
+          <a class="admin-menu__item" href="<?= h($bp) ?>/admin/settings.php">
+            <span class="admin-menu__icon">⚙</span>
+            <span>Settings</span>
+          </a>
+        </nav>
+      </aside>
 
-    <!-- FAQ -->
-    <section class="section" id="faq">
-      <div class="section__head">
-        <h2>FAQ</h2>
-        <p>Quick answers — looks complete, stays honest.</p>
-      </div>
+      <!-- Main -->
+      <section class="admin-main">
+        <article class="admin-hero card">
+          <div class="admin-hero__copy">
+            <div class="chip">OVERVIEW • USERS • SECURITY • GAME ACCESS</div>
+            <h1>Overview</h1>
+            <p class="lead">
+              <?= h((string)$pendingApprovals) ?> approvals pending •
+              <?= h((string)$failedLogins24h) ?> failed logins today •
+              <?= h((string)$rankedReadyUsers) ?> ranked-ready users
+            </p>
 
-      <div class="faq">
-        <button class="faq__q" type="button" data-acc>
-          <span>Is the game included?</span><span class="chev">▾</span>
-        </button>
-        <div class="faq__a">
-          The project delivers the full platform shell (auth, dashboard, rooms/lobby UX). The game screen is a stub for now.
-        </div>
-
-        <button class="faq__q" type="button" data-acc>
-          <span>Why do some accounts need approval?</span><span class="chev">▾</span>
-        </button>
-        <div class="faq__a">
-          Approval simulates a moderated platform. It also demonstrates admin controls and RBAC.
-        </div>
-
-        <button class="faq__q" type="button" data-acc>
-          <span>Where is Admin login?</span><span class="chev">▾</span>
-        </button>
-        <div class="faq__a">
-          Admin sign-in is intentionally separate: it lives under the admin area and never mixes into user auth.
-        </div>
-      </div>
-    </section>
-  </main>
-
-  <!-- Footer -->
-  <footer class="sitefooter">
-    <div class="container sitefooter__inner">
-      <div class="footleft">
-        <div class="footbrand">CardGame</div>
-        <div class="footmuted">© <?= date('Y') ?> • Platform shell (no gameplay module yet)</div>
-      </div>
-      <div class="footright">
-        <a href="#top">Back to top</a>
-        <span class="sep">•</span>
-        <a href="<?= h($bp) ?>/admin/login.php">Admin Login</a>
-      </div>
-    </div>
-  </footer>
-
-  <!-- AUTH MODAL -->
-  <div class="modal" id="authModal" aria-hidden="true">
-    <div class="modal__backdrop" data-close-auth></div>
-
-    <div class="modal__panel" role="dialog" aria-modal="true" aria-label="Authentication">
-      <div class="modal__top">
-        <div class="modal__title">
-          <div class="modal__brand">
-            <span class="logo__mark sm">CG</span>
-            <span>Welcome</span>
-          </div>
-          <div class="modal__sub">Login or create an account to continue.</div>
-        </div>
-        <button class="iconx" type="button" aria-label="Close" data-close-auth>✕</button>
-      </div>
-
-      <div class="tabs" role="tablist" aria-label="Auth tabs">
-        <button class="tab is-active" type="button" role="tab" data-tab="login">Login</button>
-        <button class="tab" type="button" role="tab" data-tab="register">Register</button>
-      </div>
-
-      <!-- LOGIN TAB -->
-      <section class="tabpane is-active" data-pane="login">
-        <form method="post" action="<?= h($bp) ?>/auth_action.php?next=<?= urlencode($next) ?>" autocomplete="off">
-          <input type="hidden" name="action" value="login"/>
-
-          <label for="login_ident">Email or Username</label>
-          <input id="login_ident" name="identifier" autocomplete="username" required />
-
-          <label for="login_pw">Password</label>
-          <input id="login_pw" name="password" type="password" autocomplete="current-password" required />
-
-          <div class="formrow">
-            <button class="btn btn-primary" type="submit">Login</button>
-            <a class="btn btn-ghost" href="<?= h($bp) ?>/auth_action.php?action=guest&next=<?= urlencode($next) ?>">Play as Guest</a>
-          </div>
-
-          <div class="tiny muted">
-            Ranked later can require: <span class="pill">Email Verified</span> <span class="pill">2FA</span>
-          </div>
-        </form>
-      </section>
-
-      <!-- REGISTER TAB -->
-      <section class="tabpane" data-pane="register">
-        <form method="post" action="<?= h($bp) ?>/auth_action.php?next=<?= urlencode($next) ?>" id="regForm" autocomplete="off">
-          <input type="hidden" name="action" value="register"/>
-
-          <label for="reg_user">Username</label>
-          <input id="reg_user" name="username" minlength="3" maxlength="32" autocomplete="username" required />
-
-          <label for="reg_email">Email</label>
-          <input id="reg_email" name="email" type="email" autocomplete="email" required />
-
-          <div class="twocol">
-            <div>
-              <label for="reg_password">Password</label>
-              <input id="reg_password" name="password" type="password" autocomplete="new-password" required />
-
-              <div class="pw-meter" aria-hidden="true"><div id="pwBar"></div></div>
-
-              <ul class="pw-req" id="pwReq">
-                <li class="bad" data-req="len">At least 16 characters</li>
-                <li class="bad" data-req="low">Lowercase letter</li>
-                <li class="bad" data-req="up">Uppercase letter</li>
-                <li class="bad" data-req="num">Number</li>
-                <li class="bad" data-req="sym">Special character</li>
-              </ul>
+            <div class="cta">
+              <a class="btn btn-primary btn-lg" href="<?= h($bp) ?>/admin/users.php">Open Users</a>
+              <a class="btn btn-ghost btn-lg" href="<?= h($bp) ?>/admin/reports.php">Open Reports</a>
+              <a class="btn btn-ghost btn-lg" href="<?= h($bp) ?>/admin/game.php">Open Game</a>
             </div>
 
-            <div>
-              <label for="reg_password2">Confirm</label>
-              <input id="reg_password2" name="password2" type="password" autocomplete="new-password" required />
-              <small class="hint" id="pwMatch"></small>
+            <div class="hero__notes">
+              <span class="note">Portal: Active</span>
+              <span class="note">Sessions: <?= h((string)$activeSessions) ?></span>
+              <span class="note">Unread Notices: <?= h((string)$unreadAdminNotifications) ?></span>
+            </div>
+          </div>
 
-              <div class="tiny muted" style="margin-top:10px;">
-                Admin approval may be required before you can sign in.
+          <div class="admin-hero__panel">
+            <div class="statpanel">
+              <div class="statpanel__top">
+                <span class="dot d1"></span>
+                <span class="dot d2"></span>
+                <span class="dot d3"></span>
+                <span class="statpanel__title">Administrative Summary</span>
+                <span class="statpanel__pill">LIVE</span>
+              </div>
+
+              <div class="statgrid">
+                <div class="stat">
+                  <div class="stat__label">Pending Approvals</div>
+                  <div class="stat__value"><?= h((string)$pendingApprovals) ?></div>
+                  <div class="stat__delta good">Users tab</div>
+                </div>
+
+                <div class="stat">
+                  <div class="stat__label">Approved Users</div>
+                  <div class="stat__value"><?= h((string)$approvedUsers) ?></div>
+                  <div class="stat__delta">Non-guest</div>
+                </div>
+
+                <div class="stat">
+                  <div class="stat__label">Failed Logins</div>
+                  <div class="stat__value"><?= h((string)$failedLogins24h) ?></div>
+                  <div class="stat__delta">Last 24 hours</div>
+                </div>
+
+                <div class="stat">
+                  <div class="stat__label">Ranked Ready</div>
+                  <div class="stat__value"><?= h((string)$rankedReadyUsers) ?></div>
+                  <div class="stat__delta">Verified + 2FA + bank linked</div>
+                </div>
+              </div>
+
+              <div class="spark">
+                <div class="spark__head">
+                  <div class="spark__title">Audit Volume</div>
+                  <div class="spark__hint">Last 24 hours: <?= h((string)$audit24h) ?></div>
+                </div>
+                <div class="spark__bars">
+                  <span style="--h:38%"></span>
+                  <span style="--h:52%"></span>
+                  <span style="--h:44%"></span>
+                  <span style="--h:71%"></span>
+                  <span style="--h:58%"></span>
+                  <span style="--h:82%"></span>
+                  <span style="--h:64%"></span>
+                </div>
               </div>
             </div>
           </div>
+        </article>
 
-          <div class="formrow">
-            <button class="btn btn-primary" id="regBtn" type="submit" disabled>Register</button>
-          </div>
-        </form>
+        <section class="admin-blocks">
+          <article class="admin-panel card-soft">
+            <div class="admin-panel__head">
+              <h2>Priority Queue</h2>
+              <a href="<?= h($bp) ?>/admin/users.php">Open users</a>
+            </div>
+
+            <div class="queue-list">
+              <div class="queue-item">
+                <div class="queue-item__main">
+                  <div class="queue-item__title">Pending approvals</div>
+                  <div class="queue-item__meta"><?= h((string)$pendingApprovals) ?> pending accounts</div>
+                </div>
+                <span class="pill">HIGH</span>
+              </div>
+
+              <div class="queue-item">
+                <div class="queue-item__main">
+                  <div class="queue-item__title">Banned accounts</div>
+                  <div class="queue-item__meta"><?= h((string)$bannedUsers) ?> currently restricted</div>
+                </div>
+                <span class="pill">WATCH</span>
+              </div>
+
+              <div class="queue-item">
+                <div class="queue-item__main">
+                  <div class="queue-item__title">Failed logins</div>
+                  <div class="queue-item__meta"><?= h((string)$failedLogins24h) ?> in the last 24 hours</div>
+                </div>
+                <span class="pill">OPEN</span>
+              </div>
+
+              <div class="queue-item">
+                <div class="queue-item__main">
+                  <div class="queue-item__title">Unread admin notifications</div>
+                  <div class="queue-item__meta"><?= h((string)$unreadAdminNotifications) ?> unread notices</div>
+                </div>
+                <span class="pill">INFO</span>
+              </div>
+            </div>
+          </article>
+
+          <article class="admin-panel card-soft">
+            <div class="admin-panel__head">
+              <h2>Game Access</h2>
+              <a href="<?= h($bp) ?>/admin/game.php">Open game</a>
+            </div>
+
+            <div class="note-list">
+              <div class="note-row">
+                <div class="note-row__title">Email verified</div>
+                <div class="note-row__meta"><?= h((string)$emailVerifiedUsers) ?> approved users</div>
+              </div>
+
+              <div class="note-row">
+                <div class="note-row__title">2FA enabled</div>
+                <div class="note-row__meta"><?= h((string)$twoFactorEnabled) ?> users</div>
+              </div>
+
+              <div class="note-row">
+                <div class="note-row__title">Bank linked</div>
+                <div class="note-row__meta"><?= h((string)$bankLinkedUsers) ?> approved users</div>
+              </div>
+
+              <div class="note-row">
+                <div class="note-row__title">Ranked ready</div>
+                <div class="note-row__meta"><?= h((string)$rankedReadyUsers) ?> users meet requirements</div>
+              </div>
+            </div>
+          </article>
+        </section>
       </section>
-    </div>
-  </div>
 
-  <script src="<?= h($bp) ?>/assets/main.js"></script>
+      <!-- Right Rail -->
+      <aside class="admin-right">
+        <article class="admin-panel card-soft">
+          <div class="admin-panel__head">
+            <h2>Recent Activity</h2>
+            <a href="<?= h($bp) ?>/admin/reports.php">Open reports</a>
+          </div>
+
+          <div class="activity-list">
+            <?php if (!$recentAudit): ?>
+              <div class="activity-item">
+                <div class="activity-item__icon">•</div>
+                <div>
+                  <div class="activity-item__title">No recent audit activity</div>
+                  <div class="activity-item__meta">New actions will appear here.</div>
+                </div>
+              </div>
+            <?php else: ?>
+              <?php foreach ($recentAudit as $row): ?>
+                <div class="activity-item">
+                  <div class="activity-item__icon">•</div>
+                  <div>
+                    <div class="activity-item__title">
+                      <?= h(nice_action_label($row['action'] ?? '')) ?>
+                    </div>
+                    <div class="activity-item__meta">
+                      <?= h(($row['actor_name'] ?: 'System') . ' • ' . nice_target_label($row['target_type'] ?? '', $row['target_id'] ?? null)) ?>
+                    </div>
+                  </div>
+                </div>
+              <?php endforeach; ?>
+            <?php endif; ?>
+          </div>
+        </article>
+
+        <article class="admin-panel card-soft">
+          <div class="admin-panel__head">
+            <h2>Attention Needed</h2>
+          </div>
+
+          <div class="attention-list">
+            <div class="attention-item">
+              <span>Pending approvals</span>
+              <strong><?= h((string)$pendingApprovals) ?></strong>
+            </div>
+
+            <div class="attention-item">
+              <span>Failed logins</span>
+              <strong><?= h((string)$failedLogins24h) ?></strong>
+            </div>
+
+            <div class="attention-item">
+              <span>Unread notifications</span>
+              <strong><?= h((string)$unreadAdminNotifications) ?></strong>
+            </div>
+
+            <div class="attention-item">
+              <span>Audit entries (24h)</span>
+              <strong><?= h((string)$audit24h) ?></strong>
+            </div>
+          </div>
+        </article>
+
+        <article class="admin-panel card-soft">
+          <div class="admin-panel__head">
+            <h2>Quick Actions</h2>
+          </div>
+
+          <div class="quick-actions">
+            <a class="btn btn-primary" href="<?= h($bp) ?>/admin/users.php">Review Users</a>
+            <a class="btn btn-ghost" href="<?= h($bp) ?>/admin/reports.php">Security Reports</a>
+            <a class="btn btn-ghost" href="<?= h($bp) ?>/admin/game.php">Game Access</a>
+            <a class="btn btn-ghost" href="<?= h($bp) ?>/admin/notifications.php">Notifications</a>
+          </div>
+        </article>
+      </aside>
+    </section>
+  </main>
+
+  <footer class="sitefooter">
+    <div class="sitefooter__inner">
+      <div class="footleft">
+        <div class="footbrand">CardGame Administration</div>
+        <div class="footmuted">© <?= date('Y') ?> • Restricted access</div>
+      </div>
+      <div class="footright">
+        <a href="<?= h($bp) ?>/admin/index.php">Dashboard</a>
+        <span class="sep">•</span>
+        <a href="<?= h($bp) ?>/admin/users.php">Users</a>
+        <span class="sep">•</span>
+        <a href="<?= h($bp) ?>/admin/reports.php">Reports</a>
+        <span class="sep">•</span>
+        <a href="<?= h($bp) ?>/logout.php">Logout</a>
+      </div>
+    </div>
+  </footer>
 </body>
 </html>
