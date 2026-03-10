@@ -58,6 +58,7 @@ $next = $bp . "/choose.php";
         <div class="cta">
           <button class="btn btn-primary btn-lg" type="button" data-open-auth="register">Get Started</button>
           <button class="btn btn-ghost btn-lg" type="button" data-open-auth="login">I already have an account</button>
+          <a class="btn btn-ghost btn-lg" href="<?= h($bp) ?>/auth_action.php?action=guest&next=<?= urlencode($bp . '/guest_dashboard.php') ?>">Play as Guest</a>
         </div>
       </div>
 
@@ -236,9 +237,10 @@ $next = $bp . "/choose.php";
         <button class="iconx" type="button" aria-label="Close" data-close-auth>✕</button>
       </div>
 
-      <div class="tabs" role="tablist" aria-label="Auth tabs">
-        <button class="tab is-active" type="button" role="tab" data-tab="login">Login</button>
-        <button class="tab" type="button" role="tab" data-tab="register">Register</button>
+      <div class="navactions">
+        <a class="btn btn-ghost" href="<?= h($bp) ?>/auth_action.php?action=guest&next=<?= urlencode($bp . '/guest_dashboard.php') ?>">Play as Guest</a>
+        <button class="btn btn-ghost" type="button" data-open-auth="login">Login</button>
+        <button class="btn btn-primary" type="button" data-open-auth="register">Register</button>
       </div>
 
       <!-- LOGIN TAB -->

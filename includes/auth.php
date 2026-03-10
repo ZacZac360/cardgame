@@ -17,7 +17,8 @@ function load_user_into_session(mysqli $mysqli, int $uid): void {
     SELECT id, username, email, display_name,
            is_active, is_guest,
            approval_status, email_verified_at,
-           bank_link_status, banned_until, last_login_at
+           bank_link_status, banned_until, last_login_at,
+           appearance_mode
     FROM users
     WHERE id = ?
     LIMIT 1
@@ -31,6 +32,13 @@ function load_user_into_session(mysqli $mysqli, int $uid): void {
     unset($_SESSION['user_id'], $_SESSION['user']);
     return;
   }
+
+  // safety default
+  $mode = (string)($u['appearance_mode'] ?? 'default');
+  if (!in_array($mode, ['default', 'dark', 'light'], true)) {
+    $mode = 'default';
+  }
+  $u['appearance_mode'] = $mode;
 
   // roles
   $stmt = $mysqli->prepare("

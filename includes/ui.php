@@ -64,7 +64,17 @@ function ranked_requirements(mysqli $mysqli, array $u): array {
   ];
 }
 
-function ui_header(string $title = 'Dashboard'): void {
+function ui_appearance_mode(array $u): string {
+  $mode = (string)($u['appearance_mode'] ?? 'default');
+
+  if (!in_array($mode, ['default', 'dark', 'light'], true)) {
+    $mode = 'default';
+  }
+
+  return $mode;
+}
+
+function ui_header(string $title = 'Dashboard', bool $is_hub = true): void {
   global $mysqli;
 
   $bp = base_path();
@@ -83,7 +93,6 @@ function ui_header(string $title = 'Dashboard'): void {
   $req = ranked_requirements($mysqli, $u);
   $ranked_ok = (!$is_guest && !empty($req['ranked_ok']));
 
-  $is_hub = (stripos($title, 'dashboard') !== false);
   $dd_notes = fetch_notifications($mysqli, $uid, 6);
   ?>
 <!doctype html>
@@ -97,7 +106,10 @@ function ui_header(string $title = 'Dashboard'): void {
   <link rel="stylesheet" href="<?= h($bp) ?>/assets/hub.css"/>
 </head>
 
-<body class="<?= $is_hub ? 'hub' : '' ?>">
+<body
+  class="<?= $is_hub ? 'hub' : '' ?>"
+  data-appearance="<?= h(ui_appearance_mode($u)) ?>"
+>
 
 <header class="topnav">
   <div class="topnav__inner" style="display:flex; align-items:center; justify-content:space-between; gap:14px;">

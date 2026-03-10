@@ -12,6 +12,10 @@ $u  = current_user();
 $bp = base_path();
 
 $is_guest  = ((int)($u['is_guest'] ?? 0) === 1);
+if ($is_guest) {
+  header("Location: {$bp}/guest_dashboard.php");
+  exit;
+}
 $req       = ranked_requirements($mysqli, $u);
 $ranked_ok = (!$is_guest && !empty($req['ranked_ok']));
 
@@ -53,10 +57,10 @@ ui_header("Dashboard");
           </div>
         <?php endif; ?>
 
-        <button class="hub-item" type="button" data-open="options" style="text-align:left;">
+        <a class="hub-item" href="<?= h($bp) ?>/profile.php?tab=account">
           <span class="hub-ico">⚙️</span>
           <span>Options</span>
-        </button>
+        </a>
       </div>
 
       <div style="margin-top:14px; padding-top:14px; border-top:1px solid rgba(255,255,255,.08);">
