@@ -1,0 +1,352 @@
+<?php
+// shop.php
+session_start();
+
+require_once __DIR__ . "/includes/helpers.php";
+require_once __DIR__ . "/includes/auth.php";
+require_once __DIR__ . "/includes/ui.php";
+
+require_login();
+
+$bp = base_path();
+$u  = current_user();
+
+$is_guest = ((int)($u['is_guest'] ?? 0) === 1);
+if ($is_guest) {
+  header("Location: {$bp}/guest_dashboard.php");
+  exit;
+}
+
+$username = $u['username'] ?? $u['display_name'] ?? 'Player';
+
+$creditPacks = [
+  ['name' => 'Starter Cache', 'amount' => '500 Credits',  'price' => '₱99',  'tag' => 'Entry'],
+  ['name' => 'Duel Stack',    'amount' => '1200 Credits', 'price' => '₱199', 'tag' => 'Popular'],
+  ['name' => 'Arena Vault',   'amount' => '3000 Credits', 'price' => '₱399', 'tag' => 'Best Value'],
+];
+
+$featuredItems = [
+  ['name' => 'Nebula Frame',  'type' => 'Profile Border', 'price' => '900'],
+  ['name' => 'Static Burst',  'type' => 'Card Back',      'price' => '700'],
+  ['name' => 'Circuit Echo',  'type' => 'Table Skin',     'price' => '1400'],
+  ['name' => 'Verdant Glow',  'type' => 'Avatar Accent',  'price' => '450'],
+];
+
+$dailyItems = [
+  ['name' => 'Ion Crest',   'type' => 'Icon',      'price' => '450'],
+  ['name' => 'Pulse Edge',  'type' => 'Frame',     'price' => '900'],
+  ['name' => 'Afterglow',   'type' => 'Board',     'price' => '1400'],
+  ['name' => 'Arc Static',  'type' => 'Card Back', 'price' => '700'],
+];
+
+$bundleItems = [
+  ['name' => 'Circuit Collection Bundle', 'type' => 'Premium Set', 'price' => '2200'],
+  ['name' => 'Volt Starter Set',          'type' => 'Bundle',      'price' => '1600'],
+  ['name' => 'Nebula Vanity Pack',        'type' => 'Bundle',      'price' => '1800'],
+];
+
+$cosmeticItems = [
+  ['name' => 'Nebula Frame',   'type' => 'Frame',      'price' => '900'],
+  ['name' => 'Static Burst',   'type' => 'Card Back',  'price' => '700'],
+  ['name' => 'Circuit Echo',   'type' => 'Board',      'price' => '1400'],
+  ['name' => 'Ion Crest',      'type' => 'Icon',       'price' => '450'],
+  ['name' => 'Verdant Glow',   'type' => 'Accent',     'price' => '450'],
+  ['name' => 'Afterglow',      'type' => 'Board',      'price' => '1400'],
+  ['name' => 'Pulse Edge',     'type' => 'Frame',      'price' => '900'],
+  ['name' => 'Arc Static',     'type' => 'Card Back',  'price' => '700'],
+];
+
+$allowedTabs = ['featured', 'credits', 'cosmetics', 'daily', 'bundles'];
+$activeTab = strtolower(trim((string)($_GET['tab'] ?? 'featured')));
+if (!in_array($activeTab, $allowedTabs, true)) {
+  $activeTab = 'featured';
+}
+
+function is_shop_tab(string $tab, string $activeTab): string {
+  return $tab === $activeTab ? ' is-active' : '';
+}
+
+ui_header("Shop");
+?>
+
+<section class="section" style="padding-top:0;">
+  <div class="hub-grid">
+
+    <!-- LEFT -->
+    <aside class="card hub-left" style="padding:14px; position:sticky; top:86px;">
+      <div style="font-weight:950; letter-spacing:.02em; opacity:.9; margin-bottom:10px;">
+        MENU
+      </div>
+
+      <div style="display:grid; gap:10px;">
+        <a class="hub-item" href="<?= h($bp) ?>/play.php">
+          <span class="hub-ico">🎮</span>
+          <span>Play</span>
+        </a>
+
+        <a class="hub-item" href="<?= h($bp) ?>/solo.php">
+          <span class="hub-ico">🧪</span>
+          <span>Solo</span>
+        </a>
+
+        <a class="hub-item is-active" href="<?= h($bp) ?>/shop.php">
+          <span class="hub-ico">🛒</span>
+          <span>Shop</span>
+        </a>
+
+        <a class="hub-item" href="<?= h($bp) ?>/profile.php?tab=overview">
+          <span class="hub-ico">⚙️</span>
+          <span>Options</span>
+        </a>
+      </div>
+
+      <div style="margin-top:14px; padding-top:14px; border-top:1px solid rgba(255,255,255,.08);">
+        <span class="pill">Player</span>
+
+        <div style="margin-top:10px;">
+          <span class="pill" style="border-color: rgba(57,255,106,.35); background: rgba(57,255,106,.10);">
+            Store Access
+          </span>
+          <div style="margin-top:8px; color: var(--muted); font-size:13px; line-height:1.4;">
+            Browse cosmetics, bundles, and currency packs.
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- CENTER -->
+    <main style="min-width:0;">
+      <section class="shop-shell shop-shell--clean">
+
+        <nav class="shop-tabsbar" aria-label="Shop categories">
+          <a href="<?= h($bp) ?>/shop.php?tab=featured" class="shop-tabsbar__item<?= h(is_shop_tab('featured', $activeTab)) ?>" data-tab-link="featured">Featured</a>
+          <a href="<?= h($bp) ?>/shop.php?tab=credits" class="shop-tabsbar__item<?= h(is_shop_tab('credits', $activeTab)) ?>" data-tab-link="credits">Credits</a>
+          <a href="<?= h($bp) ?>/shop.php?tab=cosmetics" class="shop-tabsbar__item<?= h(is_shop_tab('cosmetics', $activeTab)) ?>" data-tab-link="cosmetics">Cosmetics</a>
+          <a href="<?= h($bp) ?>/shop.php?tab=daily" class="shop-tabsbar__item<?= h(is_shop_tab('daily', $activeTab)) ?>" data-tab-link="daily">Daily</a>
+          <a href="<?= h($bp) ?>/shop.php?tab=bundles" class="shop-tabsbar__item<?= h(is_shop_tab('bundles', $activeTab)) ?>" data-tab-link="bundles">Bundles</a>
+        </nav>
+
+        <section class="shop-pane" data-tab-pane="featured" <?= $activeTab !== 'featured' ? 'hidden' : '' ?>>
+          <div class="shop-pane__head">
+            <div>
+              <h2>Featured</h2>
+              <p>Current storefront highlights.</p>
+            </div>
+            <button class="btn btn-ghost" type="button" data-switch-tab="cosmetics">View all</button>
+          </div>
+
+          <div class="shop-showcase">
+            <article class="shop-banner-card">
+              <div class="shop-banner-card__content">
+                <span class="pill">Limited</span>
+                <h3>Circuit Collection Bundle</h3>
+                <p>Frame, card back, board style, and profile accent grouped into one premium set.</p>
+
+                <div class="shop-banner-card__actions">
+                  <button class="btn btn-primary" type="button" data-switch-tab="bundles">View Bundle</button>
+                  <button class="btn btn-ghost" type="button" data-switch-tab="cosmetics">Browse Set</button>
+                </div>
+              </div>
+            </article>
+
+            <div class="shop-featured-strip">
+              <?php foreach ($featuredItems as $item): ?>
+                <article class="shop-product-tile">
+                  <div class="shop-product-tile__art"></div>
+                  <span class="pill"><?= h($item['type']) ?></span>
+                  <h3><?= h($item['name']) ?></h3>
+                  <div class="shop-product-tile__foot">
+                    <strong><?= h($item['price']) ?></strong>
+                    <button class="btn btn-ghost" type="button">View</button>
+                  </div>
+                </article>
+              <?php endforeach; ?>
+            </div>
+          </div>
+        </section>
+
+        <section class="shop-pane" data-tab-pane="credits" <?= $activeTab !== 'credits' ? 'hidden' : '' ?>>
+          <div class="shop-pane__head">
+            <div>
+              <h2>Credits</h2>
+              <p>Top up currency packs for cosmetics, bundles, and future store rotations.</p>
+            </div>
+          </div>
+
+          <div class="shop-featured-strip">
+            <?php foreach ($creditPacks as $pack): ?>
+              <article class="shop-product-tile">
+                <div class="shop-product-tile__art"></div>
+                <span class="pill"><?= h($pack['tag']) ?></span>
+                <h3><?= h($pack['name']) ?></h3>
+                <p style="margin:0 0 14px; color:var(--muted);"><?= h($pack['amount']) ?></p>
+                <div class="shop-product-tile__foot">
+                  <strong><?= h($pack['price']) ?></strong>
+                  <button class="btn btn-primary" type="button">Purchase</button>
+                </div>
+              </article>
+            <?php endforeach; ?>
+          </div>
+        </section>
+
+        <section class="shop-pane" data-tab-pane="cosmetics" <?= $activeTab !== 'cosmetics' ? 'hidden' : '' ?>>
+          <div class="shop-pane__head">
+            <div>
+              <h2>Cosmetics</h2>
+              <p>Visual upgrades for profile, cards, boards, and account flair.</p>
+            </div>
+          </div>
+
+          <div class="category-strip" style="margin-bottom:16px;">
+            <span class="category-pill is-active">All</span>
+            <span class="category-pill">Frames</span>
+            <span class="category-pill">Card Backs</span>
+            <span class="category-pill">Boards</span>
+            <span class="category-pill">Icons</span>
+            <span class="category-pill">Accents</span>
+          </div>
+
+          <div class="shop-featured-strip">
+            <?php foreach ($cosmeticItems as $item): ?>
+              <article class="shop-product-tile">
+                <div class="shop-product-tile__art"></div>
+                <span class="pill"><?= h($item['type']) ?></span>
+                <h3><?= h($item['name']) ?></h3>
+                <div class="shop-product-tile__foot">
+                  <strong><?= h($item['price']) ?></strong>
+                  <button class="btn btn-ghost" type="button">View</button>
+                </div>
+              </article>
+            <?php endforeach; ?>
+          </div>
+        </section>
+
+        <section class="shop-pane" data-tab-pane="daily" <?= $activeTab !== 'daily' ? 'hidden' : '' ?>>
+          <div class="shop-pane__head">
+            <div>
+              <h2>Daily Rotation</h2>
+              <p>Smaller picks on a limited-time rotation.</p>
+            </div>
+          </div>
+
+          <div class="shop-featured-strip">
+            <?php foreach ($dailyItems as $item): ?>
+              <article class="shop-product-tile">
+                <div class="shop-product-tile__art"></div>
+                <span class="pill"><?= h($item['type']) ?></span>
+                <h3><?= h($item['name']) ?></h3>
+                <p style="margin:0 0 14px; color:var(--muted);">Available today only.</p>
+                <div class="shop-product-tile__foot">
+                  <strong><?= h($item['price']) ?></strong>
+                  <button class="btn btn-ghost" type="button">Claim</button>
+                </div>
+              </article>
+            <?php endforeach; ?>
+          </div>
+        </section>
+
+        <section class="shop-pane" data-tab-pane="bundles" <?= $activeTab !== 'bundles' ? 'hidden' : '' ?>>
+          <div class="shop-pane__head">
+            <div>
+              <h2>Bundles</h2>
+              <p>Grouped offers with a cleaner value pitch than buying pieces one by one.</p>
+            </div>
+          </div>
+
+          <div class="shop-showcase">
+
+            <div class="shop-featured-strip">
+              <?php foreach ($bundleItems as $item): ?>
+                <article class="shop-product-tile">
+                  <div class="shop-product-tile__art"></div>
+                  <span class="pill"><?= h($item['type']) ?></span>
+                  <h3><?= h($item['name']) ?></h3>
+                  <div class="shop-product-tile__foot">
+                    <strong><?= h($item['price']) ?></strong>
+                    <button class="btn btn-ghost" type="button">View</button>
+                  </div>
+                </article>
+              <?php endforeach; ?>
+            </div>
+          </div>
+        </section>
+
+      </section>
+    </main>
+
+    <!-- RIGHT -->
+    <aside class="hub-right">
+      <div class="card" style="padding:16px; border-radius: calc(var(--radius) + 10px);">
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+          <div>
+            <div style="font-weight:950;">Store Info</div>
+            <div style="color: var(--muted); font-size:13px; margin-top:4px;">
+              Rotation, bundles, and account wallet
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top:12px; display:grid; gap:10px;">
+          <div class="card-soft" style="display:block; padding:12px;">
+            <div style="font-weight:900;">💳 Wallet</div>
+            <div style="color: var(--muted); font-size:13px; margin-top:4px;">
+              You currently have 0 credits available.
+            </div>
+          </div>
+
+          <div class="card-soft" style="display:block; padding:12px;">
+            <div style="font-weight:900;">✨ Cosmetics</div>
+            <div style="color: var(--muted); font-size:13px; margin-top:4px;">
+              Frames, boards, icons, and card backs rotate through the storefront.
+            </div>
+          </div>
+
+          <div class="card-soft" style="display:block; padding:12px;">
+            <div style="font-weight:900;">📦 Bundles</div>
+            <div style="color: var(--muted); font-size:13px; margin-top:4px;">
+              Higher-value grouped offers show up in limited windows.
+            </div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+  </div>
+</section>
+
+<script>
+(function () {
+  const tabLinks = document.querySelectorAll('[data-tab-link]');
+  const panes = document.querySelectorAll('[data-tab-pane]');
+  const quickSwitches = document.querySelectorAll('[data-switch-tab]');
+
+  function setActiveTab(tabName) {
+    panes.forEach((pane) => {
+      pane.hidden = pane.getAttribute('data-tab-pane') !== tabName;
+    });
+
+    tabLinks.forEach((link) => {
+      link.classList.toggle('is-active', link.getAttribute('data-tab-link') === tabName);
+    });
+
+    const url = new URL(window.location.href);
+    url.searchParams.set('tab', tabName);
+    window.history.replaceState({}, '', url);
+  }
+
+  tabLinks.forEach((link) => {
+    link.addEventListener('click', function (event) {
+      event.preventDefault();
+      setActiveTab(this.getAttribute('data-tab-link'));
+    });
+  });
+
+  quickSwitches.forEach((button) => {
+    button.addEventListener('click', function () {
+      setActiveTab(this.getAttribute('data-switch-tab'));
+    });
+  });
+})();
+</script>
+
+<?php ui_footer(); ?>

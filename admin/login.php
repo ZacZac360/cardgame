@@ -11,7 +11,7 @@ $msg = flash_get('msg');
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>CardGame — Admin Login</title>
+  <title>Logia — Admin Login</title>
   <link rel="stylesheet" href="<?= h($bp) ?>/assets/style.css"/>
 </head>
 <body>
@@ -20,7 +20,7 @@ $msg = flash_get('msg');
     <div class="topnav__inner">
       <a class="logo" href="<?= h($bp) ?>/index.php">
         <span class="logo__mark">CG</span>
-        <span class="logo__text">CardGame Admin</span>
+        <span class="logo__text">Logia Admin</span>
       </a>
 
       <div class="navactions">

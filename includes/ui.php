@@ -100,10 +100,11 @@ function ui_header(string $title = 'Dashboard', bool $is_hub = true): void {
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title><?= h($title) ?> — CardGame</title>
+  <title><?= h($title) ?> — Logia</title>
 
   <link rel="stylesheet" href="<?= h($bp) ?>/assets/style.css"/>
   <link rel="stylesheet" href="<?= h($bp) ?>/assets/hub.css"/>
+  <link rel="stylesheet" href="<?= h($bp) ?>/assets/userstyle.css"/>
 </head>
 
 <body
@@ -362,7 +363,7 @@ function ui_footer(): void {
   <!-- IMPORTANT: no .container here. hub.css centers this -->
   <div class="sitefooter__inner" style="display:flex; align-items:center; justify-content:space-between; gap:14px;">
     <div>
-      <div class="footbrand">CardGame</div>
+      <div class="footbrand">Logia</div>
       <div class="footmuted">© <?= date('Y') ?> • Platform shell</div>
     </div>
 

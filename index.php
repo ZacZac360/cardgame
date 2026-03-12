@@ -7,7 +7,7 @@ $bp  = base_path();
 $err = flash_get('err');
 $msg = flash_get('msg');
 
-// After auth, send to choose.php (no DB changes).
+// After auth, send to choose.php
 $next = $bp . "/choose.php";
 ?>
 <!doctype html>
@@ -15,7 +15,7 @@ $next = $bp . "/choose.php";
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>insertName — Home</title>
+  <title>Logia — Home</title>
   <link rel="stylesheet" href="<?= h($bp) ?>/assets/style.css"/>
 </head>
 <body>
@@ -23,11 +23,10 @@ $next = $bp . "/choose.php";
   <!-- Top Nav -->
   <header class="topnav" id="top">
     <div class="topnav__inner">
-      <a class="logo" href="<?= h($bp) ?>/index.php#top" aria-label="insertName Home">
-        <span class="logo__mark">CG</span>
-        <span class="logo__text">insertName</span>
+      <a class="logo" href="<?= h($bp) ?>/index.php#top" aria-label="Logia Home">
+        <span class="logo__mark">LG</span>
+        <span class="logo__text">Logia</span>
       </a>
-
 
       <div class="navactions">
         <button class="btn btn-ghost" type="button" data-open-auth="login">Login</button>
@@ -49,15 +48,17 @@ $next = $bp . "/choose.php";
   <main class="container">
     <section class="hero">
       <div class="hero__copy">
-        <div class="chip">No. 1 Card Game on this specific localhost port!</div>
-        <h1>Build rooms. Choose your mode. Play your way.</h1>
+        <div class="chip">No. 1 on this specific localhost port!</div>
+        <h1>Master the elements. Outplay the table. Become Logia.</h1>
         <p class="lead">
-          Believe in the heart of the cards. Bet low win big!
+          Logia is a competitive online card game built around elemental matchups, room-based play,
+          and player choice. Jump in as a guest, create an account, or step into ranked once your
+          account is fully ready.
         </p>
 
         <div class="cta">
-          <button class="btn btn-primary btn-lg" type="button" data-open-auth="register">Get Started</button>
-          <button class="btn btn-ghost btn-lg" type="button" data-open-auth="login">I already have an account</button>
+          <button class="btn btn-primary btn-lg" type="button" data-open-auth="register">Create Account</button>
+          <button class="btn btn-ghost btn-lg" type="button" data-open-auth="login">Login</button>
           <a class="btn btn-ghost btn-lg" href="<?= h($bp) ?>/auth_action.php?action=guest&next=<?= urlencode($bp . '/guest_dashboard.php') ?>">Play as Guest</a>
         </div>
       </div>
@@ -66,48 +67,48 @@ $next = $bp . "/choose.php";
         <div class="statpanel">
           <div class="statpanel__top">
             <span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span>
-            <span class="statpanel__title">CardGame • Platform Analytics</span>
-            <span class="statpanel__pill">Live</span>
+            <span class="statpanel__title">Logia • Real Time Data</span>
           </div>
 
           <div class="statgrid">
             <div class="stat">
-              <div class="stat__label">Rooms Created</div>
-              <div class="stat__value">1,284</div>
-              <div class="stat__delta up">+12% this week</div>
+              <div class="stat__label">Mode Entry</div>
+              <div class="stat__value">Guest or Account</div>
+              <div class="stat__delta">jump in immediately</div>
             </div>
 
             <div class="stat">
-              <div class="stat__label">Matches Logged</div>
-              <div class="stat__value">8,902</div>
-              <div class="stat__delta up">+7% this week</div>
+              <div class="stat__label">Match Type</div>
+              <div class="stat__value">Casual / Ranked</div>
+              <div class="stat__delta">choose your pace</div>
             </div>
 
             <div class="stat">
-              <div class="stat__label">Avg. Session</div>
-              <div class="stat__value">18m</div>
-              <div class="stat__delta">stable</div>
+              <div class="stat__label">Room Access</div>
+              <div class="stat__value">Public or Private</div>
+              <div class="stat__delta">join friends fast</div>
             </div>
 
             <div class="stat">
-              <div class="stat__label">Queue Health</div>
-              <div class="stat__value">Good</div>
-              <div class="stat__delta good">low wait</div>
+              <div class="stat__label">Win Condition</div>
+              <div class="stat__value">Become Logia</div>
+              <div class="stat__delta good">outlast the table</div>
             </div>
           </div>
 
           <div class="spark">
             <div class="spark__head">
-              <span class="spark__title">Activity (7 days)</span>
+              <span class="spark__title">Core elemental set</span>
+              <span class="spark__hint">fire • water • lightning • earth • wind • wood</span>
             </div>
             <div class="spark__bars" aria-hidden="true">
-              <span style="--h:38%"></span>
-              <span style="--h:62%"></span>
-              <span style="--h:48%"></span>
-              <span style="--h:74%"></span>
+              <span style="--h:72%"></span>
               <span style="--h:58%"></span>
-              <span style="--h:82%"></span>
+              <span style="--h:80%"></span>
               <span style="--h:66%"></span>
+              <span style="--h:61%"></span>
+              <span style="--h:76%"></span>
+              <span style="--h:70%"></span>
             </div>
           </div>
         </div>
@@ -122,24 +123,35 @@ $next = $bp . "/choose.php";
 
       <div class="grid4">
         <article class="fcard">
-          <div class="ficon">🧩</div>
-          <h3>Insert</h3>
-          <p>Lorem ipsum</p>
+          <div class="ficon">⚔️</div>
+          <h3>Element-based play</h3>
+          <p>
+            Every match revolves around elemental interactions, timing, and reading your opponent’s next move.
+          </p>
         </article>
+
         <article class="fcard">
-          <div class="ficon">🛡️</div>
-          <h3>Insert</h3>
-          <p>Lorem ipsum</p>
+          <div class="ficon">🎮</div>
+          <h3>Guest or registered access</h3>
+          <p>
+            Jump in immediately as a guest or create an account to unlock a more complete play experience.
+          </p>
         </article>
+
         <article class="fcard">
-          <div class="ficon">🧭</div>
-          <h3>Insert</h3>
-          <p>Lorem ipsum</p>
+          <div class="ficon">🚪</div>
+          <h3>Room-based multiplayer</h3>
+          <p>
+            Create a room, share the code, and run matches with friends or join with a room ID and password.
+          </p>
         </article>
+
         <article class="fcard">
-          <div class="ficon">📦</div>
-          <h3>Insert</h3>
-          <p>Lorem ipsum</p>
+          <div class="ficon">🏆</div>
+          <h3>Ranked-ready structure</h3>
+          <p>
+            Casual is open and easy to enter, while ranked is built for verified, more serious competition.
+          </p>
         </article>
       </div>
     </section>
@@ -154,22 +166,24 @@ $next = $bp . "/choose.php";
         <div class="step">
           <div class="step__num">1</div>
           <div class="step__body">
-            <h3>Enter the game!</h3>
-            <p>Create an account, login, or play as guest!</p>
+            <h3>Enter Logia</h3>
+            <p>Create an account, log in, or continue as a guest depending on how you want to play.</p>
           </div>
         </div>
+
         <div class="step">
           <div class="step__num">2</div>
           <div class="step__body">
-            <h3>Choose your experience</h3>
-            <p>Casual or Ranked — pick your poison.</p>
+            <h3>Choose your mode</h3>
+            <p>Play casually, join a room, or prepare for ranked once your account meets the requirements.</p>
           </div>
         </div>
+
         <div class="step">
           <div class="step__num">3</div>
           <div class="step__body">
-            <h3>Play Responsibly!</h3>
-            <p>Ranked matches require age verification due to monetary exchanges.</p>
+            <h3>Win the match</h3>
+            <p>Use elemental advantage, room strategy, and match awareness to take control and become Logia.</p>
           </div>
         </div>
       </div>
@@ -183,24 +197,31 @@ $next = $bp . "/choose.php";
 
       <div class="faq">
         <button class="faq__q" type="button" data-acc>
-          <span>Insert</span><span class="chev">▾</span>
+          <span>Can I play without creating an account?</span><span class="chev">▾</span>
         </button>
         <div class="faq__a">
-          lorem ipsum
+          Yes. You can enter as a guest and go straight to the guest dashboard to join or start supported matches.
         </div>
 
         <button class="faq__q" type="button" data-acc>
-          <span>Insert</span><span class="chev">▾</span>
+          <span>What is the difference between casual and ranked?</span><span class="chev">▾</span>
         </button>
         <div class="faq__a">
-          Lorem ipsum
+          Casual is the easier way to jump into the game. Ranked is intended for players with fully prepared accounts and stricter access requirements.
         </div>
 
         <button class="faq__q" type="button" data-acc>
-          <span>Insert</span><span class="chev">▾</span>
+          <span>Do I need verification for ranked play?</span><span class="chev">▾</span>
         </button>
         <div class="faq__a">
-          Lorem ipsum
+          Yes. Ranked access may require account approval, email verification, and additional security steps before entry.
+        </div>
+
+        <button class="faq__q" type="button" data-acc>
+          <span>Can I make private rooms for friends?</span><span class="chev">▾</span>
+        </button>
+        <div class="faq__a">
+          Yes. Room-based play lets you create matches that can be shared directly with invited players.
         </div>
       </div>
     </section>
@@ -210,8 +231,8 @@ $next = $bp . "/choose.php";
   <footer class="sitefooter">
     <div class="container sitefooter__inner">
       <div class="footleft">
-        <div class="footbrand">insertName</div>
-        <div class="footmuted">© <?= date('Y') ?> • Platform shell</div>
+        <div class="footbrand">Logia</div>
+        <div class="footmuted">© <?= date('Y') ?> • Elemental card battles, room play, and competitive match flow.</div>
       </div>
       <div class="footright">
         <a href="#top">Back to top</a>
@@ -229,12 +250,17 @@ $next = $bp . "/choose.php";
       <div class="modal__top">
         <div class="modal__title">
           <div class="modal__brand">
-            <span class="logo__mark sm">CG</span>
-            <span>Welcome</span>
+            <span class="logo__mark sm">LG</span>
+            <span>Welcome to Logia</span>
           </div>
-          <div class="modal__sub">Login or create an account to continue.</div>
+          <div class="modal__sub">Log in, register, or continue as a guest to start playing.</div>
         </div>
         <button class="iconx" type="button" aria-label="Close" data-close-auth>✕</button>
+      </div>
+
+      <div class="tabs" style="margin-bottom:10px;">
+        <button class="tab is-active" type="button" data-tab="login">Login</button>
+        <button class="tab" type="button" data-tab="register">Register</button>
       </div>
 
       <div class="navactions">
@@ -256,11 +282,11 @@ $next = $bp . "/choose.php";
 
           <div class="formrow">
             <button class="btn btn-primary" type="submit">Login</button>
-            <a class="btn btn-ghost" href="<?= h($bp) ?>/auth_action.php?action=guest&next=<?= urlencode($next) ?>">Play as Guest</a>
+            <a class="btn btn-ghost" href="<?= h($bp) ?>/auth_action.php?action=guest&next=<?= urlencode($bp . '/guest_dashboard.php') ?>">Play as Guest</a>
           </div>
 
-          <div class="tiny muted">
-            Ranked later can require: <span class="pill">Email Verified</span> <span class="pill">2FA</span>
+          <div class="tiny" style="margin-top:10px; color: rgba(238,243,255,.72);">
+            Ranked access may require account approval, email verification, and extra security setup.
           </div>
         </form>
       </section>
@@ -293,12 +319,12 @@ $next = $bp . "/choose.php";
             </div>
 
             <div>
-              <label for="reg_password2">Confirm</label>
+              <label for="reg_password2">Confirm Password</label>
               <input id="reg_password2" name="password2" type="password" autocomplete="new-password" required />
               <small class="hint" id="pwMatch"></small>
 
               <div class="tiny muted" style="margin-top:10px;">
-                Admin approval may be required before you can sign in.
+                Some accounts may need approval before full access is granted.
               </div>
             </div>
           </div>

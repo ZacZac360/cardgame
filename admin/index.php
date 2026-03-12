@@ -172,7 +172,7 @@ $recentAudit = recent_audit_rows($mysqli, 4);
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>CardGame — Administration</title>
+  <title>Logia — Administration</title>
   <link rel="stylesheet" href="<?= h($bp) ?>/assets/style.css"/>
   <link rel="stylesheet" href="<?= h($bp) ?>/assets/hub.css"/>
 </head>
@@ -182,7 +182,7 @@ $recentAudit = recent_audit_rows($mysqli, 4);
     <div class="topnav__inner">
       <a class="logo" href="<?= h($bp) ?>/admin/index.php">
         <span class="logo__mark">CG</span>
-        <span class="logo__text">CardGame Administration</span>
+        <span class="logo__text">Logia Administration</span>
       </a>
 
       <div class="navactions">
@@ -480,7 +480,7 @@ $recentAudit = recent_audit_rows($mysqli, 4);
   <footer class="sitefooter">
     <div class="sitefooter__inner">
       <div class="footleft">
-        <div class="footbrand">CardGame Administration</div>
+        <div class="footbrand">Logia Administration</div>
         <div class="footmuted">© <?= date('Y') ?> • Restricted access</div>
       </div>
       <div class="footright">

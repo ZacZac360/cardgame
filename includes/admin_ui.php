@@ -73,7 +73,7 @@ function admin_ui_header(string $title = 'Admin'): void {
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title><?= h($title) ?> — Admin • CardGame</title>
+  <title><?= h($title) ?> — Admin • Logia</title>
   <link rel="stylesheet" href="<?= h($bp) ?>/assets/style.css"/>
 </head>
 <body>
@@ -182,7 +182,7 @@ function admin_ui_footer(): void {
 
 <footer class="app-footer">
   <div class="app-footer__inner">
-    <div class="muted">© <?= date('Y') ?> CardGame • Admin Console</div>
+    <div class="muted">© <?= date('Y') ?> Logia • Admin Console</div>
     <div class="muted">Ops: Approval • RBAC • Audit Logs • Attempts • Sessions</div>
     <div class="muted"><a href="<?= h($bp) ?>/admin/index.php">Admin Home</a></div>
   </div>

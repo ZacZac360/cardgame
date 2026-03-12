@@ -35,7 +35,7 @@ ui_header("Dashboard");
       </div>
 
       <div style="display:grid; gap:10px;">
-        <a class="hub-item is-active" href="<?= h($bp) ?>/play.php">
+        <a class="hub-item" href="<?= h($bp) ?>/play.php">
           <span class="hub-ico">🎮</span>
           <span>Play</span>
         </a>
@@ -57,7 +57,7 @@ ui_header("Dashboard");
           </div>
         <?php endif; ?>
 
-        <a class="hub-item" href="<?= h($bp) ?>/profile.php?tab=account">
+        <a class="hub-item" href="<?= h($bp) ?>/profile.php?tab=overview">
           <span class="hub-ico">⚙️</span>
           <span>Options</span>
         </a>
