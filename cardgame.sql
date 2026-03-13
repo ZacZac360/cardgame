@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Mar 10, 2026 at 01:59 PM
+-- Generation Time: Mar 13, 2026 at 12:53 PM
 -- Server version: 8.0.44
 -- PHP Version: 8.2.12
 
@@ -51,7 +51,11 @@ INSERT INTO `audit_logs` (`id`, `actor_user_id`, `action`, `target_type`, `targe
 (6, NULL, 'GUEST_CREATE', 'user', 6, '{\"username\": \"guest_E38E26A4\"}', 0x00000000000000000000000000000001, '2026-03-10 14:38:20'),
 (7, NULL, 'GUEST_CREATE', 'user', 7, '{\"username\": \"guest_BE755BAE\"}', 0x00000000000000000000000000000001, '2026-03-10 14:39:41'),
 (8, NULL, 'GUEST_CREATE', 'user', 8, '{\"username\": \"guest_730939E2\"}', 0x00000000000000000000000000000001, '2026-03-10 14:40:25'),
-(9, NULL, 'GUEST_CREATE', 'user', 9, '{\"username\": \"guest_1A8F9B60\"}', 0x00000000000000000000000000000001, '2026-03-10 15:00:29');
+(9, NULL, 'GUEST_CREATE', 'user', 9, '{\"username\": \"guest_1A8F9B60\"}', 0x00000000000000000000000000000001, '2026-03-10 15:00:29'),
+(10, NULL, 'GUEST_CREATE', 'user', 10, '{\"username\": \"guest_AAF4CE60\"}', 0x00000000000000000000000000000001, '2026-03-11 20:46:41'),
+(11, NULL, 'GUEST_CREATE', 'user', 11, '{\"username\": \"guest_1BAD5D10\"}', 0x00000000000000000000000000000001, '2026-03-12 21:53:53'),
+(12, NULL, 'USER_REGISTER', 'user', 12, '{\"email\": \"zacgames.tv@gmail.com\", \"username\": \"ZaccyBoi\"}', 0x00000000000000000000000000000001, '2026-03-13 17:00:45'),
+(13, 1, 'USER_APPROVE', 'user', 12, '{\"note\": \"approved from admin queue\"}', NULL, '2026-03-13 17:01:47');
 
 -- --------------------------------------------------------
 
@@ -102,7 +106,68 @@ INSERT INTO `auth_sessions` (`id`, `user_id`, `refresh_token_hash`, `user_agent`
 (24, 3, '8dd863537cff6a83233613abff7d0eabbfdc46ebc95e6fbb0097502428d62ddc', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/127.0.0.0', 0x00000000000000000000000000000001, '2026-03-10 20:53:42', '2026-03-10 20:53:42', '2026-03-24 20:53:42', '2026-03-10 20:53:51'),
 (25, 3, 'ba05daee63f582dc2133f0af1e19065a8f004cb4f98bae6d94178da9a85ec356', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/127.0.0.0', 0x00000000000000000000000000000001, '2026-03-10 20:53:54', '2026-03-10 20:53:54', '2026-03-24 20:53:54', '2026-03-10 20:54:01'),
 (26, 3, 'd4548acae75542ec1d8d868f6512613aa8794c3aca582dbdd68ce21b22cbf289', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/127.0.0.0', 0x00000000000000000000000000000001, '2026-03-10 20:54:55', '2026-03-10 20:54:55', '2026-03-24 20:54:55', '2026-03-10 20:56:27'),
-(27, 3, 'cd98018920d6d298ec1282c5ab6a77d477837f9c2b50944696b70c49cb3f8c65', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/127.0.0.0', 0x00000000000000000000000000000001, '2026-03-10 20:56:30', '2026-03-10 20:56:30', '2026-03-24 20:56:30', NULL);
+(27, 3, 'cd98018920d6d298ec1282c5ab6a77d477837f9c2b50944696b70c49cb3f8c65', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/127.0.0.0', 0x00000000000000000000000000000001, '2026-03-10 20:56:30', '2026-03-10 20:56:30', '2026-03-24 20:56:30', NULL),
+(28, 3, '04ee80e7dcb87e262c1b4ca00a291ddfddf3f3aba742b011e4bdd4272e95ba81', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/127.0.0.0', 0x00000000000000000000000000000001, '2026-03-11 20:43:48', '2026-03-11 20:43:48', '2026-03-25 20:43:48', NULL),
+(29, 3, '8c129c711a289d085c56b6748158d89bcb0e9fe94f329ed65eee60ccd5ef8dc6', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/127.0.0.0', 0x00000000000000000000000000000001, '2026-03-11 20:44:32', '2026-03-11 20:44:32', '2026-03-25 20:44:32', '2026-03-11 20:46:07'),
+(30, 3, 'b3d116c24b1d4f4bb46705c43a2c30760433eab634fe1245ff374392d4f621f5', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/127.0.0.0', 0x00000000000000000000000000000001, '2026-03-12 18:27:40', '2026-03-12 18:27:40', '2026-03-26 18:27:40', '2026-03-12 21:53:04'),
+(31, 3, 'b1c12156fac574f9d965236626f11e4bdb562ce39210ce10015383aaddbb12ff', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/127.0.0.0', 0x00000000000000000000000000000001, '2026-03-12 21:53:09', '2026-03-12 21:53:09', '2026-03-26 21:53:09', '2026-03-12 21:53:35'),
+(32, 3, '19ca02b23c478d0083542f1586aef692507a893fdfea8484149c42cd4ab3c27d', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/127.0.0.0', 0x00000000000000000000000000000001, '2026-03-12 22:00:43', '2026-03-12 22:00:43', '2026-03-26 22:00:43', '2026-03-12 23:43:42'),
+(33, 3, '9e3ba4ef251cbf1fe99d50b5d85b14faff805846fdf3b45666c0ea3431d1a8e1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/127.0.0.0', 0x00000000000000000000000000000001, '2026-03-13 13:52:54', '2026-03-13 13:52:54', '2026-03-27 13:52:54', '2026-03-13 14:02:28'),
+(34, 3, '1da82de13542853cfcc3ce943a8cc4d8ae8d4887bdd788540bd65de6d79912e8', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/127.0.0.0', 0x00000000000000000000000000000001, '2026-03-13 15:52:39', '2026-03-13 15:52:39', '2026-03-27 15:52:39', '2026-03-13 17:00:22'),
+(35, 3, 'e0685979f982b70e5669a0a3b6f0da3b159c33b0a6bc6f311710f03a8f8802e3', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/127.0.0.0', 0x00000000000000000000000000000001, '2026-03-13 17:02:01', '2026-03-13 17:02:01', '2026-03-27 17:02:01', '2026-03-13 17:02:12'),
+(36, 12, '1ac2fbf9f03a2ae7ef1ac74c62e8efd1fc8fff45829f627afd3918b2b8fc4d37', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/127.0.0.0', 0x00000000000000000000000000000001, '2026-03-13 17:02:20', '2026-03-13 17:02:20', '2026-03-27 17:02:20', '2026-03-13 17:54:16'),
+(37, 12, 'b982552d92a2c0851dd4104686749bcfd7c6ae4545bad1e4b7ef00cef8f8cde9', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/127.0.0.0', 0x00000000000000000000000000000001, '2026-03-13 17:54:18', '2026-03-13 17:54:18', '2026-03-27 17:54:18', '2026-03-13 17:55:23'),
+(38, 3, '871d62f2756637b064cab9a81e8d68b44defbaacc79787971488a42c2b66b9b3', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/127.0.0.0', 0x00000000000000000000000000000001, '2026-03-13 17:55:27', '2026-03-13 17:55:27', '2026-03-27 17:55:27', '2026-03-13 17:59:01'),
+(39, 3, '0d99e4dc5ac8d6334f40376905ecf0b1c399fc17402da5a9b636bf8281efe02d', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/127.0.0.0', 0x00000000000000000000000000000001, '2026-03-13 17:59:03', '2026-03-13 17:59:03', '2026-03-27 17:59:03', '2026-03-13 17:59:40'),
+(40, 3, 'fe4ca9ef68f8ff9386917ffc15192af26232fefa5de3314ed802f2801cba9f52', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/127.0.0.0', 0x00000000000000000000000000000001, '2026-03-13 17:59:42', '2026-03-13 17:59:42', '2026-03-27 17:59:42', '2026-03-13 18:09:21'),
+(41, 3, '0933865957825a504c4d100f7846993743c9649bc9b4c4dcad3c5a120c456e01', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/127.0.0.0', 0x00000000000000000000000000000001, '2026-03-13 18:09:23', '2026-03-13 18:09:23', '2026-03-27 18:09:23', '2026-03-13 18:15:37'),
+(42, 12, '612d1eed1d64cd3c36487c0c76bae2d6ada422b9409b3ad17b8d310accab4d47', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/127.0.0.0', 0x00000000000000000000000000000001, '2026-03-13 18:15:43', '2026-03-13 18:15:43', '2026-03-27 18:15:43', '2026-03-13 18:27:00'),
+(43, 12, '16673d637d6b90081d8b63e2b89ba941d47179c6defb27f43fefe7428bff986f', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/127.0.0.0', 0x00000000000000000000000000000001, '2026-03-13 18:27:03', '2026-03-13 18:27:03', '2026-03-27 18:27:03', '2026-03-13 18:27:08'),
+(44, 3, '8cdf2514e3ab7c0af3fa428fded1401a413d68f663db86c22a0719d9849723bb', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/127.0.0.0', 0x00000000000000000000000000000001, '2026-03-13 18:27:12', '2026-03-13 18:27:12', '2026-03-27 18:27:12', '2026-03-13 18:27:23'),
+(45, 12, '51d64486c21b28a9a72c386cb7cb048a8bcdd95e1a69bc96d62c7a8c82f14dc4', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/127.0.0.0', 0x00000000000000000000000000000001, '2026-03-13 18:27:26', '2026-03-13 18:27:26', '2026-03-27 18:27:26', NULL),
+(46, 12, '6feccb174b13ddbd32fadde94e9408a0ead26caa9d353c60f3311dc47de5646c', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/127.0.0.0', 0x00000000000000000000000000000001, '2026-03-13 18:46:32', '2026-03-13 18:46:32', '2026-03-27 18:46:32', '2026-03-13 19:16:36'),
+(47, 3, 'ab6b31b632a638f8af18346f89d61ca2d7ebc4c632a202542e672fe586d4edbb', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/127.0.0.0', 0x00000000000000000000000000000001, '2026-03-13 19:16:40', '2026-03-13 19:16:40', '2026-03-27 19:16:40', '2026-03-13 19:18:49'),
+(48, 3, 'f5a490b7de785e38c0a8958c56cc6c21b6a0d19c879cef91cf1e463abe7876c8', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/127.0.0.0', 0x00000000000000000000000000000001, '2026-03-13 19:20:58', '2026-03-13 19:20:58', '2026-03-27 19:20:58', '2026-03-13 19:51:23'),
+(49, 12, 'f518c4d65baf368cda10d65c658b3e7cd9e2489c783768e2d41f8b0fc25e5a94', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/127.0.0.0', 0x00000000000000000000000000000001, '2026-03-13 19:51:31', '2026-03-13 19:51:31', '2026-03-27 19:51:31', NULL);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `conversations`
+--
+
+CREATE TABLE `conversations` (
+  `id` int NOT NULL,
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `conversations`
+--
+
+INSERT INTO `conversations` (`id`, `created_at`) VALUES
+(1, '2026-03-13 17:32:15');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `conversation_members`
+--
+
+CREATE TABLE `conversation_members` (
+  `id` int NOT NULL,
+  `conversation_id` int NOT NULL,
+  `user_id` bigint UNSIGNED NOT NULL,
+  `last_read_message_id` int DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `conversation_members`
+--
+
+INSERT INTO `conversation_members` (`id`, `conversation_id`, `user_id`, `last_read_message_id`) VALUES
+(1, 1, 12, 7),
+(2, 1, 3, 5);
 
 -- --------------------------------------------------------
 
@@ -128,7 +193,20 @@ CREATE TABLE `dashboard_notifications` (
 
 INSERT INTO `dashboard_notifications` (`id`, `user_id`, `type`, `title`, `body`, `link_url`, `is_read`, `created_at`, `read_at`) VALUES
 (1, 1, 'admin_approval', 'New account pending approval', 'User: ZacZac460 (crispino.zyrus@gmail.com)', '/admin/pending-users.php?user_id=3', 0, '2026-03-01 17:28:29', NULL),
-(2, 3, 'system', 'Account approved', 'You can now log in and play.', '/index.php', 0, '2026-03-01 17:28:37', NULL);
+(2, 3, 'system', 'Account approved', 'You can now log in and play.', '/index.php', 1, '2026-03-01 17:28:37', NULL),
+(3, 1, 'admin_approval', 'New account pending approval', 'User: ZaccyBoi (zacgames.tv@gmail.com)', '/admin/pending-users.php?user_id=12', 0, '2026-03-13 17:00:45', NULL),
+(4, 12, 'system', 'Account approved', 'You can now log in.', '/index.php', 1, '2026-03-13 17:01:47', NULL),
+(5, 12, 'friend_request', 'Friend Request', 'You received a new friend request.', '/friends.php', 1, '2026-03-13 17:02:10', NULL),
+(6, 3, 'friend_accept', 'Friend Request Accepted', 'Your friend request was accepted.', '/friends.php', 1, '2026-03-13 17:02:26', NULL),
+(7, 3, 'message', 'New Message', 'You received a new message.', '/messages.php?conversation_id=1', 1, '2026-03-13 17:54:34', NULL),
+(8, 12, 'message', 'New Message', 'You received a new message.', '/messages.php?conversation_id=1', 1, '2026-03-13 17:58:49', NULL),
+(9, 12, 'message', 'New Message', 'You received a new message.', '/messages.php?conversation_id=1', 1, '2026-03-13 18:15:36', NULL),
+(10, 3, 'message', 'New Message', 'You received a new message.', '/messages.php?conversation_id=1', 1, '2026-03-13 18:15:56', NULL),
+(11, 12, 'friend_request', 'Friend Request', 'You received a new friend request.', '/friends.php', 1, '2026-03-13 18:27:22', NULL),
+(12, 3, 'friend_accept', 'Friend Request Accepted', 'Your friend request was accepted.', '/friends.php', 1, '2026-03-13 18:27:28', NULL),
+(13, 12, 'message', 'New Message', 'You received a new message.', '/messages.php?conversation_id=1', 1, '2026-03-13 19:21:18', NULL),
+(14, 3, 'message', 'New Message', 'You received a new message.', '/messages.php?conversation_id=1', 0, '2026-03-13 19:51:39', NULL),
+(15, 3, 'message', 'New Message', 'You received a new message.', '/messages.php?conversation_id=1', 0, '2026-03-13 19:51:40', NULL);
 
 -- --------------------------------------------------------
 
@@ -145,6 +223,49 @@ CREATE TABLE `email_verifications` (
   `verified_at` datetime DEFAULT NULL,
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `friends`
+--
+
+CREATE TABLE `friends` (
+  `id` int NOT NULL,
+  `user_one` bigint UNSIGNED NOT NULL,
+  `user_two` bigint UNSIGNED NOT NULL,
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `friends`
+--
+
+INSERT INTO `friends` (`id`, `user_one`, `user_two`, `created_at`) VALUES
+(2, 3, 12, '2026-03-13 18:27:28');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `friend_requests`
+--
+
+CREATE TABLE `friend_requests` (
+  `id` int NOT NULL,
+  `sender_id` bigint UNSIGNED NOT NULL,
+  `receiver_id` bigint UNSIGNED NOT NULL,
+  `status` enum('pending','accepted','declined','cancelled') DEFAULT 'pending',
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  `responded_at` datetime DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `friend_requests`
+--
+
+INSERT INTO `friend_requests` (`id`, `sender_id`, `receiver_id`, `status`, `created_at`, `responded_at`) VALUES
+(1, 3, 12, 'accepted', '2026-03-13 17:02:10', '2026-03-13 17:02:26'),
+(2, 3, 12, 'accepted', '2026-03-13 18:27:22', '2026-03-13 18:27:28');
 
 -- --------------------------------------------------------
 
@@ -198,7 +319,57 @@ INSERT INTO `login_attempts` (`id`, `user_id`, `identifier`, `success`, `ip_addr
 (28, 3, 'crispino.zyrus@gmail.com', 1, 0x00000000000000000000000000000001, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/127.0.0.0', NULL, '2026-03-10 20:53:42'),
 (29, 3, 'crispino.zyrus@gmail.com', 1, 0x00000000000000000000000000000001, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/127.0.0.0', NULL, '2026-03-10 20:53:54'),
 (30, 3, 'crispino.zyrus@gmail.com', 1, 0x00000000000000000000000000000001, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/127.0.0.0', NULL, '2026-03-10 20:54:55'),
-(31, 3, 'crispino.zyrus@gmail.com', 1, 0x00000000000000000000000000000001, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/127.0.0.0', NULL, '2026-03-10 20:56:30');
+(31, 3, 'crispino.zyrus@gmail.com', 1, 0x00000000000000000000000000000001, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/127.0.0.0', NULL, '2026-03-10 20:56:30'),
+(32, 3, 'crispino.zyrus@gmail.com', 1, 0x00000000000000000000000000000001, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/127.0.0.0', NULL, '2026-03-11 20:43:47'),
+(33, 3, 'crispino.zyrus@gmail.com', 1, 0x00000000000000000000000000000001, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/127.0.0.0', NULL, '2026-03-11 20:44:32'),
+(34, NULL, 'user1@propertyhub.local', 0, 0x00000000000000000000000000000001, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/127.0.0.0', 'wrong_credentials', '2026-03-12 18:27:35'),
+(35, 3, 'crispino.zyrus@gmail.com', 1, 0x00000000000000000000000000000001, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/127.0.0.0', NULL, '2026-03-12 18:27:40'),
+(36, 3, 'crispino.zyrus@gmail.com', 1, 0x00000000000000000000000000000001, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/127.0.0.0', NULL, '2026-03-12 21:53:09'),
+(37, 3, 'crispino.zyrus@gmail.com', 1, 0x00000000000000000000000000000001, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/127.0.0.0', NULL, '2026-03-12 22:00:43'),
+(38, 3, 'crispino.zyrus@gmail.com', 1, 0x00000000000000000000000000000001, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/127.0.0.0', NULL, '2026-03-13 13:52:54'),
+(39, 3, 'crispino.zyrus@gmail.com', 1, 0x00000000000000000000000000000001, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/127.0.0.0', NULL, '2026-03-13 15:52:39'),
+(40, 3, 'crispino.zyrus@gmail.com', 1, 0x00000000000000000000000000000001, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/127.0.0.0', NULL, '2026-03-13 17:02:01'),
+(41, 12, 'ZaccyBoi', 1, 0x00000000000000000000000000000001, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/127.0.0.0', NULL, '2026-03-13 17:02:20'),
+(42, 12, 'ZaccyBoi', 1, 0x00000000000000000000000000000001, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/127.0.0.0', NULL, '2026-03-13 17:54:18'),
+(43, 3, 'crispino.zyrus@gmail.com', 1, 0x00000000000000000000000000000001, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/127.0.0.0', NULL, '2026-03-13 17:55:27'),
+(44, 3, 'crispino.zyrus@gmail.com', 1, 0x00000000000000000000000000000001, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/127.0.0.0', NULL, '2026-03-13 17:59:03'),
+(45, 3, 'crispino.zyrus@gmail.com', 1, 0x00000000000000000000000000000001, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/127.0.0.0', NULL, '2026-03-13 17:59:42'),
+(46, 3, 'crispino.zyrus@gmail.com', 1, 0x00000000000000000000000000000001, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/127.0.0.0', NULL, '2026-03-13 18:09:23'),
+(47, 12, 'ZaccyBoi', 1, 0x00000000000000000000000000000001, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/127.0.0.0', NULL, '2026-03-13 18:15:43'),
+(48, 12, 'ZaccyBoi', 1, 0x00000000000000000000000000000001, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/127.0.0.0', NULL, '2026-03-13 18:27:03'),
+(49, 3, 'crispino.zyrus@gmail.com', 1, 0x00000000000000000000000000000001, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/127.0.0.0', NULL, '2026-03-13 18:27:12'),
+(50, 12, 'ZaccyBoi', 1, 0x00000000000000000000000000000001, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/127.0.0.0', NULL, '2026-03-13 18:27:26'),
+(51, 12, 'ZaccyBoi', 1, 0x00000000000000000000000000000001, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/127.0.0.0', NULL, '2026-03-13 18:46:32'),
+(52, 3, 'crispino.zyrus@gmail.com', 1, 0x00000000000000000000000000000001, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/127.0.0.0', NULL, '2026-03-13 19:16:40'),
+(53, 3, 'crispino.zyrus@gmail.com', 1, 0x00000000000000000000000000000001, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/127.0.0.0', NULL, '2026-03-13 19:20:58'),
+(54, 12, 'ZaccyBoi', 1, 0x00000000000000000000000000000001, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/127.0.0.0', NULL, '2026-03-13 19:51:31');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `messages`
+--
+
+CREATE TABLE `messages` (
+  `id` int NOT NULL,
+  `conversation_id` int NOT NULL,
+  `sender_id` bigint UNSIGNED NOT NULL,
+  `body` text,
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `messages`
+--
+
+INSERT INTO `messages` (`id`, `conversation_id`, `sender_id`, `body`, `created_at`) VALUES
+(1, 1, 12, 'Test', '2026-03-13 17:54:34'),
+(2, 1, 3, 'Sup bro', '2026-03-13 17:58:49'),
+(3, 1, 3, 'Dude ilan talo mo kagabi', '2026-03-13 18:15:36'),
+(4, 1, 12, 'Ay nako wag mo na tanungin. Bwiset na baraha to', '2026-03-13 18:15:56'),
+(5, 1, 3, 'Aight gg pars', '2026-03-13 19:21:18'),
+(6, 1, 12, 'Test', '2026-03-13 19:51:39'),
+(7, 1, 12, 'Test', '2026-03-13 19:51:40');
 
 -- --------------------------------------------------------
 
@@ -261,16 +432,29 @@ CREATE TABLE `users` (
   `appearance_mode` enum('default','dark','light') NOT NULL DEFAULT 'default',
   `last_login_at` datetime DEFAULT NULL,
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `level` int DEFAULT '1',
+  `exp` int DEFAULT '0',
+  `exp_to_next` int DEFAULT '100',
+  `credits` int DEFAULT '0',
+  `matches_played` int DEFAULT '0',
+  `matches_won` int DEFAULT '0',
+  `bio` text,
+  `avatar_path` varchar(255) DEFAULT NULL,
+  `favorite_deck` varchar(100) DEFAULT NULL,
+  `tagline` varchar(120) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Dumping data for table `users`
 --
 
-INSERT INTO `users` (`id`, `username`, `email`, `password_hash`, `display_name`, `email_verified_at`, `approval_status`, `approved_by`, `approved_at`, `rejected_reason`, `is_active`, `is_guest`, `banned_until`, `bank_link_status`, `bank_linked_at`, `appearance_mode`, `last_login_at`, `created_at`, `updated_at`) VALUES
-(1, 'admin', 'admin@game.local', '$2y$10$axxzhPXLJmTV4gHq9p2Pq.3nUk.0SJpmAwMoyF4w4PZM/0/LTkVoy', 'Admin', '2026-03-01 16:59:26', 'approved', NULL, NULL, NULL, 1, 0, NULL, 'none', NULL, 'default', '2026-03-05 18:52:17', '2026-03-01 16:59:26', '2026-03-05 18:52:17'),
-(3, 'ZacZac460', 'crispino.zyrus@gmail.com', '$2y$10$JA5TOx2v.CYAP/OFYqPPjOGIxev05wF43XlLqHFZ16IYc6WVx/El6', 'ZacZac460', NULL, 'approved', 1, '2026-03-01 17:28:37', NULL, 1, 0, NULL, 'none', NULL, 'default', '2026-03-10 20:56:30', '2026-03-01 17:28:29', '2026-03-10 20:56:30');
+INSERT INTO `users` (`id`, `username`, `email`, `password_hash`, `display_name`, `email_verified_at`, `approval_status`, `approved_by`, `approved_at`, `rejected_reason`, `is_active`, `is_guest`, `banned_until`, `bank_link_status`, `bank_linked_at`, `appearance_mode`, `last_login_at`, `created_at`, `updated_at`, `level`, `exp`, `exp_to_next`, `credits`, `matches_played`, `matches_won`, `bio`, `avatar_path`, `favorite_deck`, `tagline`) VALUES
+(1, 'admin', 'admin@game.local', '$2y$10$axxzhPXLJmTV4gHq9p2Pq.3nUk.0SJpmAwMoyF4w4PZM/0/LTkVoy', 'Admin', '2026-03-01 16:59:26', 'approved', NULL, NULL, NULL, 1, 0, NULL, 'none', NULL, 'default', '2026-03-05 18:52:17', '2026-03-01 16:59:26', '2026-03-05 18:52:17', 1, 0, 100, 0, 0, 0, NULL, NULL, NULL, NULL),
+(3, 'ZacZac460', 'crispino.zyrus@gmail.com', '$2y$10$JA5TOx2v.CYAP/OFYqPPjOGIxev05wF43XlLqHFZ16IYc6WVx/El6', 'ZacZac460', NULL, 'approved', 1, '2026-03-01 17:28:37', NULL, 1, 0, NULL, 'none', NULL, 'default', '2026-03-13 19:20:58', '2026-03-01 17:28:29', '2026-03-13 19:20:58', 1, 0, 100, 0, 0, 0, NULL, 'uploads/avatars/avatar_3_1773395746.png', NULL, NULL),
+(10, 'guest_AAF4CE60', 'guest_AAF4CE60@guest.local', '', 'Guest', NULL, 'approved', NULL, NULL, NULL, 1, 1, NULL, 'none', NULL, 'default', NULL, '2026-03-11 20:46:41', '2026-03-11 20:46:41', 1, 0, 100, 0, 0, 0, NULL, NULL, NULL, NULL),
+(11, 'guest_1BAD5D10', 'guest_1BAD5D10@guest.local', '', 'Guest', NULL, 'approved', NULL, NULL, NULL, 1, 1, NULL, 'none', NULL, 'default', NULL, '2026-03-12 21:53:53', '2026-03-12 21:53:53', 1, 0, 100, 0, 0, 0, NULL, NULL, NULL, NULL),
+(12, 'ZaccyBoi', 'zacgames.tv@gmail.com', '$2y$10$q5zfGSrYB0rG8Ixt68UKvOxkamcHf4g3MU9rBjW2UDQA8e/xowYxa', 'ZaccyBoi', NULL, 'approved', 1, '2026-03-13 17:01:47', NULL, 1, 0, NULL, 'none', NULL, 'default', '2026-03-13 19:51:31', '2026-03-13 17:00:45', '2026-03-13 19:51:31', 1, 0, 100, 0, 0, 0, NULL, NULL, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -291,7 +475,10 @@ CREATE TABLE `user_roles` (
 
 INSERT INTO `user_roles` (`user_id`, `role_id`, `assigned_by`, `assigned_at`) VALUES
 (1, 1, 1, '2026-03-01 16:59:29'),
-(3, 3, NULL, '2026-03-01 17:28:29');
+(3, 3, NULL, '2026-03-01 17:28:29'),
+(10, 3, NULL, '2026-03-11 20:46:41'),
+(11, 3, NULL, '2026-03-12 21:53:53'),
+(12, 3, NULL, '2026-03-13 17:00:45');
 
 --
 -- Indexes for dumped tables
@@ -317,6 +504,22 @@ ALTER TABLE `auth_sessions`
   ADD KEY `idx_auth_sessions_revoked` (`revoked_at`);
 
 --
+-- Indexes for table `conversations`
+--
+ALTER TABLE `conversations`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_conversations_created_at` (`created_at`);
+
+--
+-- Indexes for table `conversation_members`
+--
+ALTER TABLE `conversation_members`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `uq_conversation_member` (`conversation_id`,`user_id`),
+  ADD KEY `idx_conversation_members_user_id` (`user_id`),
+  ADD KEY `idx_conversation_members_last_read` (`last_read_message_id`);
+
+--
 -- Indexes for table `dashboard_notifications`
 --
 ALTER TABLE `dashboard_notifications`
@@ -331,6 +534,25 @@ ALTER TABLE `email_verifications`
   ADD KEY `idx_ev_user` (`user_id`);
 
 --
+-- Indexes for table `friends`
+--
+ALTER TABLE `friends`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `uq_friends_pair` (`user_one`,`user_two`),
+  ADD KEY `idx_friends_user_one` (`user_one`),
+  ADD KEY `idx_friends_user_two` (`user_two`);
+
+--
+-- Indexes for table `friend_requests`
+--
+ALTER TABLE `friend_requests`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_friend_requests_sender` (`sender_id`),
+  ADD KEY `idx_friend_requests_receiver` (`receiver_id`),
+  ADD KEY `idx_friend_requests_status` (`status`),
+  ADD KEY `idx_friend_requests_created_at` (`created_at`);
+
+--
 -- Indexes for table `login_attempts`
 --
 ALTER TABLE `login_attempts`
@@ -338,6 +560,15 @@ ALTER TABLE `login_attempts`
   ADD KEY `idx_login_attempts_user` (`user_id`,`created_at`),
   ADD KEY `idx_login_attempts_identifier` (`identifier`,`created_at`),
   ADD KEY `idx_login_attempts_ip` (`ip_address`,`created_at`);
+
+--
+-- Indexes for table `messages`
+--
+ALTER TABLE `messages`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_messages_conversation_id` (`conversation_id`),
+  ADD KEY `idx_messages_sender_id` (`sender_id`),
+  ADD KEY `idx_messages_created_at` (`created_at`);
 
 --
 -- Indexes for table `roles`
@@ -383,19 +614,31 @@ ALTER TABLE `user_roles`
 -- AUTO_INCREMENT for table `audit_logs`
 --
 ALTER TABLE `audit_logs`
-  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
 
 --
 -- AUTO_INCREMENT for table `auth_sessions`
 --
 ALTER TABLE `auth_sessions`
-  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=28;
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=50;
+
+--
+-- AUTO_INCREMENT for table `conversations`
+--
+ALTER TABLE `conversations`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
+-- AUTO_INCREMENT for table `conversation_members`
+--
+ALTER TABLE `conversation_members`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `dashboard_notifications`
 --
 ALTER TABLE `dashboard_notifications`
-  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
 
 --
 -- AUTO_INCREMENT for table `email_verifications`
@@ -404,10 +647,28 @@ ALTER TABLE `email_verifications`
   MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
+-- AUTO_INCREMENT for table `friends`
+--
+ALTER TABLE `friends`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
+-- AUTO_INCREMENT for table `friend_requests`
+--
+ALTER TABLE `friend_requests`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
 -- AUTO_INCREMENT for table `login_attempts`
 --
 ALTER TABLE `login_attempts`
-  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=32;
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=55;
+
+--
+-- AUTO_INCREMENT for table `messages`
+--
+ALTER TABLE `messages`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT for table `roles`
@@ -419,7 +680,7 @@ ALTER TABLE `roles`
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
 -- Constraints for dumped tables
@@ -438,6 +699,13 @@ ALTER TABLE `auth_sessions`
   ADD CONSTRAINT `fk_auth_sessions_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 
 --
+-- Constraints for table `conversation_members`
+--
+ALTER TABLE `conversation_members`
+  ADD CONSTRAINT `fk_conversation_members_conversation` FOREIGN KEY (`conversation_id`) REFERENCES `conversations` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `fk_conversation_members_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
+
+--
 -- Constraints for table `dashboard_notifications`
 --
 ALTER TABLE `dashboard_notifications`
@@ -450,10 +718,31 @@ ALTER TABLE `email_verifications`
   ADD CONSTRAINT `fk_ev_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 
 --
+-- Constraints for table `friends`
+--
+ALTER TABLE `friends`
+  ADD CONSTRAINT `fk_friends_user_one` FOREIGN KEY (`user_one`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `fk_friends_user_two` FOREIGN KEY (`user_two`) REFERENCES `users` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `friend_requests`
+--
+ALTER TABLE `friend_requests`
+  ADD CONSTRAINT `fk_friend_requests_receiver` FOREIGN KEY (`receiver_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `fk_friend_requests_sender` FOREIGN KEY (`sender_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
+
+--
 -- Constraints for table `login_attempts`
 --
 ALTER TABLE `login_attempts`
   ADD CONSTRAINT `fk_login_attempts_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE SET NULL;
+
+--
+-- Constraints for table `messages`
+--
+ALTER TABLE `messages`
+  ADD CONSTRAINT `fk_messages_conversation` FOREIGN KEY (`conversation_id`) REFERENCES `conversations` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `fk_messages_sender` FOREIGN KEY (`sender_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `two_factor_secrets`

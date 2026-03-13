@@ -1,10 +1,12 @@
 <?php
+//cardgame/index.php (user side)
 session_start();
 
 require_once __DIR__ . "/includes/db.php";
 require_once __DIR__ . "/includes/helpers.php";
 require_once __DIR__ . "/includes/auth.php";
 require_once __DIR__ . "/includes/ui.php";
+require_once __DIR__ . "/includes/profile_helpers.php";
 
 require_login();
 
@@ -20,57 +22,10 @@ if (!in_array($tab, $allowed_tabs, true)) {
   $tab = 'overview';
 }
 
-$is_guest = ((int)($u['is_guest'] ?? 0) === 1);
+profile_handle_post($mysqli, $u, $bp, $tab);
 
-$username  = (string)($u['username'] ?? 'Player');
-$email     = (string)($u['email'] ?? '');
-$roleLabel = $is_guest ? 'Guest' : 'Player';
-
-$playerId = 'CG-' . str_pad((string)((int)($u['id'] ?? 0)), 6, '0', STR_PAD_LEFT);
-$joinedAt = !empty($u['created_at']) ? date("M d, Y", strtotime((string)$u['created_at'])) : '—';
-$bio      = trim((string)($u['bio'] ?? ''));
-$appearanceMode = (string)($u['appearance_mode'] ?? 'default');
-if (!in_array($appearanceMode, ['default', 'dark', 'light'], true)) {
-  $appearanceMode = 'default';
-}
-$avatar   = trim((string)($u['avatar_path'] ?? ''));
-$avatarInitial = strtoupper(substr($username, 0, 1));
-
-$emailVerified = !empty($u['email_verified_at']);
-$twofaEnabled  = !empty($u['twofa_enabled']);
-$approved      = (($u['approval_status'] ?? '') === 'approved');
-
-$profileChecks = [
-  !empty($avatar),
-  $bio !== '',
-  $emailVerified,
-  $twofaEnabled,
-];
-$profileCompletion = (int)round((array_sum(array_map(fn($v) => $v ? 1 : 0, $profileChecks)) / count($profileChecks)) * 100);
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-  if ($tab === 'appearance') {
-    $appearanceMode = (string)($_POST['appearance_mode'] ?? 'default');
-
-    if (!in_array($appearanceMode, ['default', 'dark', 'light'], true)) {
-      $appearanceMode = 'default';
-    }
-
-    $stmt = $mysqli->prepare("UPDATE users SET appearance_mode = ? WHERE id = ? LIMIT 1");
-    $stmt->bind_param("si", $appearanceMode, $u['id']);
-    $stmt->execute();
-    $stmt->close();
-
-    // If your app keeps a copy of the user in session, update it too.
-    if (isset($_SESSION['user']) && is_array($_SESSION['user'])) {
-      $_SESSION['user']['appearance_mode'] = $appearanceMode;
-    }
-
-    $_SESSION['flash_success'] = "Appearance updated.";
-    header("Location: " . $bp . "/profile.php?tab=appearance");
-    exit;
-  }
-}
+$profile = profile_load_state($mysqli, $u);
+extract($profile);
 
 ui_header("Profile");
 ?>
@@ -178,7 +133,7 @@ ui_header("Profile");
                 <?php endif; ?>
               </div>
 
-              <h2 style="margin:0 0 6px;"><?= h($username) ?></h2>
+              <h2 style="margin:0 0 6px;"><?= h($displayName !== '' ? $displayName : $username) ?></h2>
 
               <div style="display:flex; flex-wrap:wrap; gap:8px;">
                 <span class="note">Joined: <b><?= h($joinedAt) ?></b></span>
@@ -292,24 +247,36 @@ ui_header("Profile");
             <form method="post" action="" style="margin-top:14px; display:grid; gap:12px;">
               <div class="card-soft" style="padding:14px;">
                 <label style="display:block; font-size:12px; color:var(--muted); margin-bottom:8px;">Display Name</label>
-                <input class="input" type="text" name="display_name" value="<?= h($username) ?>" maxlength="40">
+                <input class="input" type="text" name="display_name" value="<?= h($displayName) ?>" maxlength="40">
               </div>
 
               <div class="card-soft" style="padding:14px;">
-                <label style="display:block; font-size:12px; color:var(--muted); margin-bottom:8px;">Bio</label>
-                <textarea class="input" name="bio" rows="6" maxlength="280" placeholder=""><?= h($bio) ?></textarea>
-              </div>
+                <label style="display:block; font-size:12px; color:var(--muted); margin-bottom:8px;">
+                  Bio
+                </label>
 
-              <div class="card-soft" style="padding:14px;">
-                <div style="display:grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap:12px;">
-                  <div>
-                    <label style="display:block; font-size:12px; color:var(--muted); margin-bottom:8px;">Favorite Deck</label>
-                    <input class="input" type="text" name="favorite_deck" value="<?= h((string)($u['favorite_deck'] ?? '')) ?>" maxlength="60">
-                  </div>
-                  <div>
-                    <label style="display:block; font-size:12px; color:var(--muted); margin-bottom:8px;">Tagline</label>
-                    <input class="input" type="text" name="tagline" value="<?= h((string)($u['tagline'] ?? '')) ?>" maxlength="80">
-                  </div>
+                <textarea
+                  name="bio"
+                  rows="6"
+                  maxlength="280"
+                  placeholder="Tell other players about yourself..."
+                  style="
+                    width:100%;
+                    min-height:120px;
+                    resize:vertical;
+                    padding:12px 14px;
+                    border-radius:12px;
+                    border:1px solid var(--border);
+                    background:var(--surface-1);
+                    color:var(--text);
+                    font-family:inherit;
+                    font-size:14px;
+                    line-height:1.5;
+                  "
+                ><?= h($bio) ?></textarea>
+
+                <div id="bioCount" style="margin-top:6px;font-size:11px;color:var(--muted);">
+                0 / 280
                 </div>
               </div>
 
@@ -448,7 +415,7 @@ ui_header("Profile");
                 <div style="display:grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap:12px;">
                   <div>
                     <label style="display:block; font-size:12px; color:var(--muted); margin-bottom:8px;">Username</label>
-                    <input class="input" type="text" name="username" value="<?= h($username) ?>" maxlength="40">
+                    <input class="input" type="text" name="username" value="<?= h($displayName) ?>" maxlength="40">
                   </div>
                   <div>
                     <label style="display:block; font-size:12px; color:var(--muted); margin-bottom:8px;">Email</label>
@@ -496,27 +463,27 @@ ui_header("Profile");
           <div class="card" style="padding:16px;">
             <div style="font-weight:950;">Stats</div>
 
-            <div style="margin-top:14px; display:grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap:12px;">
-              <div class="card-soft" style="padding:14px;">
-                <div style="font-size:12px; color:var(--muted); margin-bottom:6px;">Level</div>
-                <div style="font-size:24px; font-weight:1000;">12</div>
-              </div>
-
-              <div class="card-soft" style="padding:14px;">
-                <div style="font-size:12px; color:var(--muted); margin-bottom:6px;">Matches</div>
-                <div style="font-size:24px; font-weight:1000;">—</div>
-              </div>
-
-              <div class="card-soft" style="padding:14px;">
-                <div style="font-size:12px; color:var(--muted); margin-bottom:6px;">Win Rate</div>
-                <div style="font-size:24px; font-weight:1000;">—</div>
-              </div>
-
-              <div class="card-soft" style="padding:14px;">
-                <div style="font-size:12px; color:var(--muted); margin-bottom:6px;">Rank</div>
-                <div style="font-size:24px; font-weight:1000;">Locked</div>
-              </div>
+          <div style="margin-top:14px; display:grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap:12px;">
+            <div class="card-soft" style="padding:14px;">
+              <div style="font-size:12px; color:var(--muted); margin-bottom:6px;">Level</div>
+              <div style="font-size:24px; font-weight:1000;"><?= $level ?></div>
             </div>
+
+            <div class="card-soft" style="padding:14px;">
+              <div style="font-size:12px; color:var(--muted); margin-bottom:6px;">Matches</div>
+              <div style="font-size:24px; font-weight:1000;"><?= $matchesPlayed ?> </div>
+            </div>
+
+            <div class="card-soft" style="padding:14px;">
+              <div style="font-size:12px; color:var(--muted); margin-bottom:6px;">Wins</div>
+              <div style="font-size:24px; font-weight:1000;"><?= $matchesWon ?></div>
+            </div>
+
+            <div class="card-soft" style="padding:14px;">
+              <div style="font-size:12px; color:var(--muted); margin-bottom:6px;">Credits</div>
+              <div style="font-size:24px; font-weight:1000;"><?= number_format($credits) ?></div>
+            </div>
+          </div>
 
             <div style="margin-top:12px;" class="card-soft">
               <div style="padding:14px;">

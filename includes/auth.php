@@ -15,10 +15,12 @@ function is_logged_in(): bool {
 function load_user_into_session(mysqli $mysqli, int $uid): void {
   $stmt = $mysqli->prepare("
     SELECT id, username, email, display_name,
-           is_active, is_guest,
-           approval_status, email_verified_at,
-           bank_link_status, banned_until, last_login_at,
-           appearance_mode
+          avatar_path, bio, favorite_deck, tagline, appearance_mode,
+          is_active, is_guest,
+          approval_status, email_verified_at,
+          bank_link_status, banned_until, last_login_at,
+          level, exp, exp_to_next, credits, matches_played, matches_won,
+          created_at
     FROM users
     WHERE id = ?
     LIMIT 1
