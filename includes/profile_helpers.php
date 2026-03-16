@@ -1,5 +1,7 @@
 <?php
 
+require_once __DIR__ . '/profanity_helper.php';
+
 function profile_load_state(mysqli $mysqli, array $u): array {
   $is_guest = ((int)($u['is_guest'] ?? 0) === 1);
 
@@ -106,6 +108,28 @@ function profile_handle_post(mysqli $mysqli, array $u, string $bp, string $tab):
     $favoriteDeck = trim((string)($_POST['favorite_deck'] ?? ''));
     $tagline      = trim((string)($_POST['tagline'] ?? ''));
 
+    if ($displayName === '') {
+      $_SESSION['flash_error'] = "Display name is required.";
+      header("Location: " . $bp . "/profile.php?tab=bio");
+      exit;
+    }
+
+    $checks = [
+      ['Display name', $displayName, 40],
+      ['Bio', $bioText, 280],
+      ['Favorite deck', $favoriteDeck, 60],
+      ['Tagline', $tagline, 80],
+    ];
+
+    foreach ($checks as [$label, $value, $maxLen]) {
+      $err = validate_clean_text($label, $value, $maxLen);
+      if ($err !== null) {
+        $_SESSION['flash_error'] = $err;
+        header("Location: " . $bp . "/profile.php?tab=bio");
+        exit;
+      }
+    }
+
     $stmt = $mysqli->prepare("
       UPDATE users
       SET display_name = ?, bio = ?, favorite_deck = ?, tagline = ?
@@ -176,6 +200,49 @@ function profile_handle_post(mysqli $mysqli, array $u, string $bp, string $tab):
   if ($tab === 'account') {
     $newUsername = trim((string)($_POST['username'] ?? ''));
     $newEmail    = trim((string)($_POST['email'] ?? ''));
+
+    if ($newUsername === '') {
+      $_SESSION['flash_error'] = "Username is required.";
+      header("Location: " . $bp . "/profile.php?tab=account");
+      exit;
+    }
+
+    $err = validate_clean_text('Username', $newUsername, 40);
+    if ($err !== null) {
+      $_SESSION['flash_error'] = $err;
+      header("Location: " . $bp . "/profile.php?tab=account");
+      exit;
+    }
+
+    if (!filter_var($newEmail, FILTER_VALIDATE_EMAIL)) {
+      $_SESSION['flash_error'] = "Enter a valid email address.";
+      header("Location: " . $bp . "/profile.php?tab=account");
+      exit;
+    }
+
+    $stmt = $mysqli->prepare("SELECT id FROM users WHERE username = ? AND id <> ? LIMIT 1");
+    $stmt->bind_param("si", $newUsername, $u['id']);
+    $stmt->execute();
+    $dupUser = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
+
+    if ($dupUser) {
+      $_SESSION['flash_error'] = "Username is already taken.";
+      header("Location: " . $bp . "/profile.php?tab=account");
+      exit;
+    }
+
+    $stmt = $mysqli->prepare("SELECT id FROM users WHERE email = ? AND id <> ? LIMIT 1");
+    $stmt->bind_param("si", $newEmail, $u['id']);
+    $stmt->execute();
+    $dupEmail = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
+
+    if ($dupEmail) {
+      $_SESSION['flash_error'] = "Email is already in use.";
+      header("Location: " . $bp . "/profile.php?tab=account");
+      exit;
+    }
 
     $stmt = $mysqli->prepare("
       UPDATE users

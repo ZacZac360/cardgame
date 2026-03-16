@@ -415,7 +415,7 @@ ui_header("Profile");
                 <div style="display:grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap:12px;">
                   <div>
                     <label style="display:block; font-size:12px; color:var(--muted); margin-bottom:8px;">Username</label>
-                    <input class="input" type="text" name="username" value="<?= h($displayName) ?>" maxlength="40">
+                    <input class="input" type="text" name="username" value="<?= h($username) ?>" maxlength="40">
                   </div>
                   <div>
                     <label style="display:block; font-size:12px; color:var(--muted); margin-bottom:8px;">Email</label>

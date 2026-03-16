@@ -5,6 +5,7 @@ session_start();
 require_once __DIR__ . "/includes/db.php";
 require_once __DIR__ . "/includes/helpers.php";
 require_once __DIR__ . "/includes/auth.php";
+require_once __DIR__ . "/includes/mail_config.php";
 
 $bp = base_path();
 
@@ -23,7 +24,6 @@ function pw_policy_err(string $pw): ?string {
 function ip_bin(): ?string {
   $ip = $_SERVER['REMOTE_ADDR'] ?? '';
   if ($ip === '') return null;
-  // store as binary(16)
   $packed = @inet_pton($ip);
   return $packed ?: null;
 }
@@ -31,6 +31,7 @@ function ip_bin(): ?string {
 function log_login_attempt(mysqli $mysqli, ?int $user_id, string $identifier, int $success, ?string $reason): void {
   $ip = ip_bin();
   $ua = substr((string)($_SERVER['HTTP_USER_AGENT'] ?? ''), 0, 255);
+
   $stmt = $mysqli->prepare("
     INSERT INTO login_attempts (user_id, identifier, success, ip_address, user_agent, failure_reason)
     VALUES (?, ?, ?, ?, ?, ?)
@@ -41,8 +42,8 @@ function log_login_attempt(mysqli $mysqli, ?int $user_id, string $identifier, in
 }
 
 function too_many_recent_failures(mysqli $mysqli, string $identifier): bool {
-  // simple throttle: 8 failures in last 10 minutes for same identifier OR same IP
   $ip = ip_bin();
+
   $stmt = $mysqli->prepare("
     SELECT
       SUM(CASE WHEN success = 0 THEN 1 ELSE 0 END) AS fails
@@ -55,15 +56,26 @@ function too_many_recent_failures(mysqli $mysqli, string $identifier): bool {
   ");
   $stmt->bind_param("ss", $identifier, $ip);
   $stmt->execute();
+
   $fails = (int)($stmt->get_result()->fetch_assoc()['fails'] ?? 0);
   $stmt->close();
+
   return $fails >= 8;
 }
 
+
+
+
+
+
+/* =========================================================
+   GUEST LOGIN
+========================================================= */
+
 if ($action === 'guest') {
-  // Create an auto-approved guest user
+
   $guestName = 'guest_' . strtoupper(bin2hex(random_bytes(4)));
-  $email = $guestName . '@guest.local'; // placeholder; keeps UNIQUE(email) happy
+  $email = $guestName . '@guest.local';
 
   $stmt = $mysqli->prepare("
     INSERT INTO users (username, email, password_hash, display_name, email_verified_at,
@@ -77,7 +89,6 @@ if ($action === 'guest') {
   $uid = (int)$stmt->insert_id;
   $stmt->close();
 
-  // assign player role
   $stmt = $mysqli->prepare("
     INSERT INTO user_roles (user_id, role_id, assigned_by)
     SELECT ?, id, NULL
@@ -89,7 +100,6 @@ if ($action === 'guest') {
   $stmt->execute();
   $stmt->close();
 
-  // audit
   $stmt = $mysqli->prepare("
     INSERT INTO audit_logs (actor_user_id, action, target_type, target_id, metadata_json, ip_address)
     VALUES (NULL, 'GUEST_CREATE', 'user', ?, JSON_OBJECT('username', ?), ?)
@@ -106,11 +116,30 @@ if ($action === 'guest') {
   redirect($bp . "/dashboard.php");
 }
 
+
+
+
+
+
+/* =========================================================
+   ONLY POST AFTER THIS POINT
+========================================================= */
+
 if (!is_post()) {
   redirect($bp . "/index.php");
 }
 
+
+
+
+
+
+/* =========================================================
+   REGISTRATION
+========================================================= */
+
 if ($action === 'register') {
+
   $username = trim((string)($_POST['username'] ?? ''));
   $email    = trim((string)($_POST['email'] ?? ''));
   $pw       = (string)($_POST['password'] ?? '');
@@ -120,84 +149,62 @@ if ($action === 'register') {
     flash_set('err', "Please fill in all fields.");
     redirect($bp . "/index.php");
   }
+
   if (!preg_match('/^[A-Za-z0-9_]{3,32}$/', $username)) {
     flash_set('err', "Username must be 3–32 chars and use letters/numbers/underscore only.");
     redirect($bp . "/index.php");
   }
+
   if ($pw !== $pw2) {
     flash_set('err', "Passwords do not match.");
     redirect($bp . "/index.php");
   }
+
   if ($pe = pw_policy_err($pw)) {
     flash_set('err', $pe);
     redirect($bp . "/index.php");
   }
 
-  // insert pending user
   $hash = password_hash($pw, PASSWORD_DEFAULT);
+
   try {
+
     $stmt = $mysqli->prepare("
-      INSERT INTO users (username, email, password_hash, display_name, email_verified_at,
-                         approval_status, is_guest, is_active, bank_link_status)
-      VALUES (?, ?, ?, ?, NULL,
-              'pending', 0, 1, 'none')
+      INSERT INTO users (username, email, password_hash, display_name,
+                         approval_status, is_guest, is_active)
+      VALUES (?, ?, ?, ?, 'pending', 0, 1)
     ");
+
     $display = $username;
+
     $stmt->bind_param("ssss", $username, $email, $hash, $display);
     $stmt->execute();
+
     $uid = (int)$stmt->insert_id;
     $stmt->close();
+
   } catch (mysqli_sql_exception $e) {
-    $msg = "Registration failed.";
-    if (str_contains($e->getMessage(), 'uq_users_username')) $msg = "Username is already taken.";
-    if (str_contains($e->getMessage(), 'uq_users_email')) $msg = "Email is already registered.";
-    flash_set('err', $msg);
+
+    flash_set('err', "Username or email already exists.");
     redirect($bp . "/index.php");
+
   }
 
-  // assign player role
-  $stmt = $mysqli->prepare("
-    INSERT INTO user_roles (user_id, role_id, assigned_by)
-    SELECT ?, id, NULL
-    FROM roles
-    WHERE name = 'player'
-    LIMIT 1
-  ");
-  $stmt->bind_param("i", $uid);
-  $stmt->execute();
-  $stmt->close();
-
-  // notify admins (one notification per admin user)
-  $stmt = $mysqli->prepare("
-    INSERT INTO dashboard_notifications (user_id, type, title, body, link_url)
-    SELECT ur.user_id,
-           'admin_approval',
-           'New account pending approval',
-           CONCAT('User: ', ?, ' (', ?, ')'),
-           CONCAT('/admin/pending-users.php?user_id=', ?)
-    FROM user_roles ur
-    JOIN roles r ON r.id = ur.role_id
-    WHERE r.name = 'admin'
-  ");
-  $stmt->bind_param("ssi", $username, $email, $uid);
-  $stmt->execute();
-  $stmt->close();
-
-  // audit
-  $stmt = $mysqli->prepare("
-    INSERT INTO audit_logs (actor_user_id, action, target_type, target_id, metadata_json, ip_address)
-    VALUES (NULL, 'USER_REGISTER', 'user', ?, JSON_OBJECT('email', ?, 'username', ?), ?)
-  ");
-  $ip = ip_bin();
-  $stmt->bind_param("isss", $uid, $email, $username, $ip);
-  $stmt->execute();
-  $stmt->close();
-
-  flash_set('msg', "Registered! Your account is pending admin approval.");
+  flash_set('msg', "Registered! Awaiting admin approval.");
   redirect($bp . "/index.php");
 }
 
+
+
+
+
+
+/* =========================================================
+   LOGIN
+========================================================= */
+
 if ($action === 'login') {
+
   $identifier = trim((string)($_POST['identifier'] ?? ''));
   $pw = (string)($_POST['password'] ?? '');
 
@@ -207,72 +214,188 @@ if ($action === 'login') {
   }
 
   if (too_many_recent_failures($mysqli, $identifier)) {
-    flash_set('err', "Too many attempts. Try again in a few minutes.");
+    flash_set('err', "Too many attempts. Try again later.");
     redirect($bp . "/index.php");
   }
 
   $stmt = $mysqli->prepare("
     SELECT id, username, email, password_hash,
-           is_active, is_guest, approval_status, banned_until
+           is_active, is_guest, approval_status, banned_until,
+           failed_login_attempts, security_challenge_required
     FROM users
     WHERE username = ? OR email = ?
     LIMIT 1
   ");
+
   $stmt->bind_param("ss", $identifier, $identifier);
   $stmt->execute();
+
   $u = $stmt->get_result()->fetch_assoc();
   $stmt->close();
 
-  if (!$u || empty($u['password_hash']) || !password_verify($pw, $u['password_hash'])) {
+
+
+  /* =========================================================
+     INVALID PASSWORD
+  ========================================================= */
+
+  if (!$u || !password_verify($pw, $u['password_hash'])) {
+
+    if ($u) {
+
+      $uid = (int)$u['id'];
+
+      $stmt = $mysqli->prepare("
+        UPDATE users
+        SET failed_login_attempts = failed_login_attempts + 1
+        WHERE id = ?
+      ");
+
+      $stmt->bind_param("i", $uid);
+      $stmt->execute();
+      $stmt->close();
+    }
+
     log_login_attempt($mysqli, $u ? (int)$u['id'] : null, $identifier, 0, "wrong_credentials");
+
     flash_set('err', "Invalid credentials.");
     redirect($bp . "/index.php");
   }
 
-  // block if pending approval (your rule)
-  if ($msg = assert_can_login($u)) {
-    log_login_attempt($mysqli, (int)$u['id'], $identifier, 0, "not_allowed");
-    flash_set('err', $msg);
-    redirect($bp . "/index.php");
+
+
+  /* =========================================================
+     SECURITY STEP-UP AFTER FAILURES
+  ========================================================= */
+
+  $uid = (int)$u['id'];
+
+  if ((int)$u['failed_login_attempts'] >= 3) {
+
+    $_SESSION['verify_login_user'] = $uid;
+
+    $otp = random_int(100000, 999999);
+    $expires = date('Y-m-d H:i:s', time()+300);
+
+    $stmt = $mysqli->prepare("
+      INSERT INTO email_verifications (user_id, email, otp_code, expires_at)
+      VALUES (?, ?, ?, ?)
+    ");
+
+    $stmt->bind_param("isss", $uid, $u['email'], $otp, $expires);
+    $stmt->execute();
+    $stmt->close();
+
+
+    /* EMAIL SEND */
+
+    $payload = [
+      'sender'=>[
+        'email'=>$MAIL_FROM_EMAIL,
+        'name'=>$MAIL_FROM_NAME
+      ],
+      'to'=>[['email'=>$u['email']]],
+      'subject'=>'Logia Login Verification',
+      'htmlContent'=>"
+        <h2>Login Verification</h2>
+        <p>Your code:</p>
+        <h1>{$otp}</h1>
+        <p>Expires in 5 minutes.</p>
+      "
+    ];
+
+    $ch = curl_init('https://api.brevo.com/v3/smtp/email');
+
+    curl_setopt($ch,CURLOPT_HTTPHEADER,[
+      'accept: application/json',
+      'content-type: application/json',
+      'api-key: '.$BREVO_API_KEY
+    ]);
+
+    curl_setopt($ch,CURLOPT_RETURNTRANSFER,true);
+    curl_setopt($ch,CURLOPT_POST,true);
+    curl_setopt($ch,CURLOPT_POSTFIELDS,json_encode($payload));
+
+    curl_exec($ch);
+    curl_close($ch);
+
+
+    flash_set('msg',"Verification code sent to email.");
+    redirect($bp."/verify-login.php");
   }
 
-  // success: set session + update last_login_at
-  $uid = (int)$u['id'];
-  $_SESSION['user_id'] = $uid;
-  load_user_into_session($mysqli, $uid);
 
-  $stmt = $mysqli->prepare("UPDATE users SET last_login_at = NOW() WHERE id = ?");
-  $stmt->bind_param("i", $uid);
+
+  /* =========================================================
+     NORMAL LOGIN SUCCESS
+  ========================================================= */
+
+  if ($msg = assert_can_login($u)) {
+
+    log_login_attempt($mysqli,$uid,$identifier,0,"not_allowed");
+
+    flash_set('err',$msg);
+    redirect($bp."/index.php");
+  }
+
+
+  $stmt=$mysqli->prepare("
+    UPDATE users
+    SET failed_login_attempts = 0,
+        security_challenge_required = 0,
+        last_login_at = NOW()
+    WHERE id = ?
+  ");
+
+  $stmt->bind_param("i",$uid);
   $stmt->execute();
   $stmt->close();
 
-  log_login_attempt($mysqli, $uid, $identifier, 1, null);
 
-  // Create session record (hash a random refresh token)
-  $refresh = bin2hex(random_bytes(32));
-  $refresh_hash = hash('sha256', $refresh);
-  $ua = substr((string)($_SERVER['HTTP_USER_AGENT'] ?? ''), 0, 255);
-  $ip = ip_bin();
-  $stmt = $mysqli->prepare("
+  $_SESSION['user_id']=$uid;
+  load_user_into_session($mysqli,$uid);
+
+  log_login_attempt($mysqli,$uid,$identifier,1,null);
+
+
+
+  /* SESSION */
+
+  $refresh=bin2hex(random_bytes(32));
+  $refresh_hash=hash('sha256',$refresh);
+
+  $ua=substr((string)($_SERVER['HTTP_USER_AGENT'] ?? ''),0,255);
+  $ip=ip_bin();
+
+  $stmt=$mysqli->prepare("
     INSERT INTO auth_sessions (user_id, refresh_token_hash, user_agent, ip_address, expires_at)
     VALUES (?, ?, ?, ?, DATE_ADD(NOW(), INTERVAL 14 DAY))
   ");
-  $stmt->bind_param("isss", $uid, $refresh_hash, $ua, $ip);
+
+  $stmt->bind_param("isss",$uid,$refresh_hash,$ua,$ip);
   $stmt->execute();
-  $sid = (int)$stmt->insert_id;
+
+  $sid=(int)$stmt->insert_id;
   $stmt->close();
 
-  // Store session id + refresh in PHP session (for MVP; later you’ll set secure cookie)
-  $_SESSION['auth_session_id'] = $sid;
-  $_SESSION['refresh_token'] = $refresh;
+  $_SESSION['auth_session_id']=$sid;
+  $_SESSION['refresh_token']=$refresh;
 
-  // Redirect based on role
-  $cu = current_user();
-  if ($cu && (user_has_role($cu, 'admin') || user_has_role($cu, 'moderator'))) {
-    redirect($bp . "/admin/index.php");
+
+
+  $cu=current_user();
+
+  if ($cu && (user_has_role($cu,'admin') || user_has_role($cu,'moderator'))) {
+    redirect($bp."/admin/index.php");
   }
-  redirect($bp . "/dashboard.php");
+
+  redirect($bp."/dashboard.php");
 }
 
-flash_set('err', "Unknown action.");
-redirect($bp . "/index.php");
+
+
+
+
+
+flash_set('err',"Unknown action.");
+redirect($bp."/index.php");

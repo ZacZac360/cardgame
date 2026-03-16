@@ -1,9 +1,17 @@
 <?php
-// index.php
 session_start();
-require_once __DIR__ . "/includes/helpers.php";
 
-$bp  = base_path();
+require_once __DIR__ . "/includes/helpers.php";
+require_once __DIR__ . "/includes/auth.php";
+
+$bp = base_path();
+
+// If already logged in → go to dashboard
+if (is_logged_in()) {
+  header("Location: {$bp}/dashboard.php");
+  exit;
+}
+
 $err = flash_get('err');
 $msg = flash_get('msg');
 
@@ -279,6 +287,15 @@ $next = $bp . "/choose.php";
 
           <label for="login_pw">Password</label>
           <input id="login_pw" name="password" type="password" autocomplete="current-password" required />
+
+          <div style="margin-top:8px; margin-bottom:12px;">
+            <a
+              href="<?= h($bp) ?>/forgot-password.php"
+              style="font-size:13px; color:rgba(238,243,255,.78); text-decoration:none;"
+            >
+              Forgot password?
+            </a>
+          </div>
 
           <div class="formrow">
             <button class="btn btn-primary" type="submit">Login</button>

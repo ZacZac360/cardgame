@@ -1384,3 +1384,6 @@ body.adminhub .sitefooter__inner{
   width:100%;
   justify-content:center;
 }
+
+#pwReq .ok { color: rgba(57,255,106,.95); }
+#pwReq .bad { color: rgba(255,77,109,.95); }
