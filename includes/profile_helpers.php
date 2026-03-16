@@ -263,4 +263,45 @@ function profile_handle_post(mysqli $mysqli, array $u, string $bp, string $tab):
     header("Location: " . $bp . "/profile.php?tab=account");
     exit;
   }
+  function password_requirement_errors(string $password, string $confirmPassword): array {
+  $errors = [];
+
+  if (strlen($password) < 16) {
+    $errors[] = "New password must be at least 16 characters.";
+  }
+
+  if (!preg_match('/[a-z]/', $password)) {
+    $errors[] = "New password must include at least one lowercase letter.";
+  }
+
+  if (!preg_match('/[A-Z]/', $password)) {
+    $errors[] = "New password must include at least one uppercase letter.";
+  }
+
+  if (!preg_match('/[0-9]/', $password)) {
+    $errors[] = "New password must include at least one number.";
+  }
+
+  if (!preg_match('/[^A-Za-z0-9]/', $password)) {
+    $errors[] = "New password must include at least one special character.";
+  }
+
+  if ($password !== $confirmPassword) {
+    $errors[] = "New password and confirm password do not match.";
+  }
+
+  return $errors;
+}
+
+function password_requirements_html(): string {
+  return '
+    <ul class="pw-req" style="margin:10px 0 0 18px; padding:0; color:var(--muted); font-size:13px; line-height:1.5;">
+      <li>At least 16 characters</li>
+      <li>Lowercase letter</li>
+      <li>Uppercase letter</li>
+      <li>Number</li>
+      <li>Special character</li>
+    </ul>
+  ';
+}
 }

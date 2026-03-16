@@ -386,17 +386,38 @@ ui_header("Profile");
                 </div>
 
                 <div style="margin-top:12px; display:flex; gap:8px; flex-wrap:wrap;">
-                  <button class="btn btn-ghost" type="button">Set Up</button>
-                  <button class="btn btn-ghost" type="button">Backup Codes</button>
+                  <?php if ($twofaEnabled): ?>
+                    <a class="btn btn-ghost" href="/cardgame/api/2fa/setup.php">Reconfigure</a>
+                    <a class="btn btn-ghost" href="/cardgame/api/2fa/backup-codes.php">Backup Codes</a>
+                    <a class="btn btn-ghost" href="/cardgame/api/2fa/disable.php"
+                      onclick="return confirm('Disable two-factor authentication?');">
+                      Disable 2FA
+                    </a>
+                  <?php else: ?>
+                    <a class="btn btn-ghost" href="/cardgame/api/2fa/setup.php">Set Up</a>
+                  <?php endif; ?>
                 </div>
               </div>
 
               <div class="card-soft" style="padding:14px;">
                 <div style="font-weight:900; margin-bottom:12px;">Password</div>
                 <form method="post" action="" style="display:grid; gap:10px;">
-                  <input class="input" type="password" name="current_password" placeholder="Current password">
-                  <input class="input" type="password" name="new_password" placeholder="New password">
-                  <input class="input" type="password" name="confirm_password" placeholder="Confirm password">
+                  <input class="input" type="password" name="current_password" placeholder="Current password" autocomplete="current-password">
+                  <input class="input" type="password" name="new_password" placeholder="New password" autocomplete="new-password">
+                  <input class="input" type="password" name="confirm_password" placeholder="Confirm password" autocomplete="new-password">
+
+                  <div style="color:var(--muted); font-size:13px;">
+                    Your new password must meet the same rules as registration.
+                  </div>
+
+                  <ul class="pw-req" style="margin:0 0 0 18px; padding:0; color:var(--muted); font-size:13px; line-height:1.5;">
+                    <li>At least 16 characters</li>
+                    <li>Lowercase letter</li>
+                    <li>Uppercase letter</li>
+                    <li>Number</li>
+                    <li>Special character</li>
+                  </ul>
+
                   <div style="display:flex; gap:8px; flex-wrap:wrap;">
                     <button class="btn btn-primary" type="submit">Update Password</button>
                   </div>
