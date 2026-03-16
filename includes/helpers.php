@@ -32,22 +32,7 @@ function is_post(): bool {
 
 // if you’re hosting under /cardgame or /something, this works:
 function base_path(): string {
-  $script = $_SERVER['SCRIPT_NAME'] ?? '';
-  $dir = rtrim(str_replace('\\', '/', dirname($script)), '/');
-
-  // normalize
-  if ($dir === '/' || $dir === '.') $dir = '';
-
-  // If we're inside /admin (or /admin/whatever), strip it so base is project root
-  // Examples:
-  //  /cardgame/admin        -> /cardgame
-  //  /admin                 -> ''   (project at web root)
-  //  /cardgame/admin/tools  -> /cardgame
-  if (preg_match('#^(.*?)/admin(?:/.*)?$#', $dir, $m)) {
-    $dir = $m[1];
-  }
-
-  return $dir;
+  return '/cardgame';
 }
 
 // Session flash helpers

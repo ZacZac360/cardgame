@@ -225,17 +225,6 @@ ui_header("Profile");
                     <button class="btn btn-ghost" type="button">Reset</button>
                   </div>
                 </form>
-
-                <div class="card-soft" style="padding:14px;">
-                  <div style="font-weight:900; margin-bottom:10px;">Camera</div>
-                  <div style="display:flex; gap:8px; flex-wrap:wrap;">
-                    <button class="btn btn-ghost" type="button">Open Camera</button>
-                    <button class="btn btn-ghost" type="button">Capture</button>
-                  </div>
-                  <div style="margin-top:12px; min-height:120px; border-radius:16px; border:1px dashed rgba(255,255,255,.12); background:rgba(255,255,255,.03); display:grid; place-items:center; color:var(--muted);">
-                    Camera frame
-                  </div>
-                </div>
               </div>
             </div>
           </div>

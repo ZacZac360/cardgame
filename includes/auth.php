@@ -4,7 +4,12 @@ require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/helpers.php';
 
 function current_user(): ?array {
-  if (!isset($_SESSION['user_id'])) return null;
+  global $mysqli;
+
+  $uid = (int)($_SESSION['user_id'] ?? 0);
+  if ($uid <= 0) return null;
+
+  load_user_into_session($mysqli, $uid);
   return $_SESSION['user'] ?? null;
 }
 

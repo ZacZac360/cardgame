@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Mar 13, 2026 at 12:53 PM
+-- Generation Time: Mar 16, 2026 at 11:12 AM
 -- Server version: 8.0.44
 -- PHP Version: 8.2.12
 
@@ -30,8 +30,8 @@ SET time_zone = "+00:00";
 CREATE TABLE `audit_logs` (
   `id` bigint UNSIGNED NOT NULL,
   `actor_user_id` bigint UNSIGNED DEFAULT NULL,
-  `action` varchar(64) NOT NULL,
-  `target_type` varchar(32) NOT NULL,
+  `action` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `target_type` varchar(32) COLLATE utf8mb4_unicode_ci NOT NULL,
   `target_id` bigint UNSIGNED DEFAULT NULL,
   `metadata_json` json DEFAULT NULL,
   `ip_address` varbinary(16) DEFAULT NULL,
@@ -55,7 +55,9 @@ INSERT INTO `audit_logs` (`id`, `actor_user_id`, `action`, `target_type`, `targe
 (10, NULL, 'GUEST_CREATE', 'user', 10, '{\"username\": \"guest_AAF4CE60\"}', 0x00000000000000000000000000000001, '2026-03-11 20:46:41'),
 (11, NULL, 'GUEST_CREATE', 'user', 11, '{\"username\": \"guest_1BAD5D10\"}', 0x00000000000000000000000000000001, '2026-03-12 21:53:53'),
 (12, NULL, 'USER_REGISTER', 'user', 12, '{\"email\": \"zacgames.tv@gmail.com\", \"username\": \"ZaccyBoi\"}', 0x00000000000000000000000000000001, '2026-03-13 17:00:45'),
-(13, 1, 'USER_APPROVE', 'user', 12, '{\"note\": \"approved from admin queue\"}', NULL, '2026-03-13 17:01:47');
+(13, 1, 'USER_APPROVE', 'user', 12, '{\"note\": \"approved from admin queue\"}', NULL, '2026-03-13 17:01:47'),
+(14, NULL, 'GUEST_CREATE', 'user', 13, '{\"username\": \"guest_876B308C\"}', 0x00000000000000000000000000000001, '2026-03-16 14:25:24'),
+(15, NULL, 'PASSWORD_RESET', 'user', 3, '{\"method\": \"email_otp\"}', NULL, '2026-03-16 15:15:40');
 
 -- --------------------------------------------------------
 
@@ -66,8 +68,8 @@ INSERT INTO `audit_logs` (`id`, `actor_user_id`, `action`, `target_type`, `targe
 CREATE TABLE `auth_sessions` (
   `id` bigint UNSIGNED NOT NULL,
   `user_id` bigint UNSIGNED NOT NULL,
-  `refresh_token_hash` char(64) NOT NULL,
-  `user_agent` varchar(255) DEFAULT NULL,
+  `refresh_token_hash` char(64) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `user_agent` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `ip_address` varbinary(16) DEFAULT NULL,
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `last_seen_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -81,21 +83,21 @@ CREATE TABLE `auth_sessions` (
 
 INSERT INTO `auth_sessions` (`id`, `user_id`, `refresh_token_hash`, `user_agent`, `ip_address`, `created_at`, `last_seen_at`, `expires_at`, `revoked_at`) VALUES
 (1, 1, '8e4c716040a8639b98c9f7b546fcf5aed60a6f80000a1966e95ec8643f489b5d', 'mysql-cli-test', 0x7f000001, '2026-03-01 17:00:36', '2026-03-01 17:00:36', '2026-03-15 17:00:36', NULL),
-(2, 3, '26198f6d3923022c9cf8cb9cb94a559ac0064b5369482775ce9e751bea917fee', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/127.0.0.0', 0x00000000000000000000000000000001, '2026-03-01 17:28:52', '2026-03-01 17:28:52', '2026-03-15 17:28:52', NULL),
-(3, 3, '8563896790eb164dd2a3c58957bf1457773fa6ee0c9050a651b097317cc6dad7', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/127.0.0.0', 0x00000000000000000000000000000001, '2026-03-01 17:29:47', '2026-03-01 17:29:47', '2026-03-15 17:29:47', NULL),
+(2, 3, '26198f6d3923022c9cf8cb9cb94a559ac0064b5369482775ce9e751bea917fee', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/127.0.0.0', 0x00000000000000000000000000000001, '2026-03-01 17:28:52', '2026-03-01 17:28:52', '2026-03-15 17:28:52', '2026-03-16 15:15:40'),
+(3, 3, '8563896790eb164dd2a3c58957bf1457773fa6ee0c9050a651b097317cc6dad7', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/127.0.0.0', 0x00000000000000000000000000000001, '2026-03-01 17:29:47', '2026-03-01 17:29:47', '2026-03-15 17:29:47', '2026-03-16 15:15:40'),
 (4, 3, 'f0ecea7fdb6923623057f9303acd2c818d2d11a49824a3b0724a9a1d211acb7f', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/127.0.0.0', 0x00000000000000000000000000000001, '2026-03-01 17:44:10', '2026-03-01 17:44:10', '2026-03-15 17:44:10', '2026-03-01 17:54:53'),
 (5, 1, 'a8e581855528af7a33239a1b14b063193fc3324572f3fcf86b566f97ea6bb326', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/127.0.0.0', 0x00000000000000000000000000000001, '2026-03-03 19:18:49', '2026-03-03 19:18:49', '2026-03-17 19:18:49', '2026-03-03 19:19:50'),
 (6, 1, '97731fea97bc8bebf18b2665a716e210b6d798008d6d7adb6371fd07ae8f3ada', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/127.0.0.0', 0x00000000000000000000000000000001, '2026-03-03 19:19:52', '2026-03-03 19:19:52', '2026-03-17 19:19:52', '2026-03-03 19:20:00'),
 (7, 3, '153bbd80065e0f1f150d04a36cbb570d785bee6928d96f8fbcb02c3ade352bbe', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/127.0.0.0', 0x00000000000000000000000000000001, '2026-03-03 19:20:19', '2026-03-03 19:20:19', '2026-03-17 19:20:19', '2026-03-03 19:21:09'),
 (8, 1, '62cefe75e76af43352b0e38d071e76f56c860fe3353cf19cef740aac10ea8346', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/127.0.0.0', 0x00000000000000000000000000000001, '2026-03-05 18:52:17', '2026-03-05 18:52:17', '2026-03-19 18:52:17', NULL),
 (9, 3, 'de386cddfab72b62675f38a529c7cf4e4ff51d664c66536fb81ec708a50bc579', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/127.0.0.0', 0x00000000000000000000000000000001, '2026-03-05 18:54:23', '2026-03-05 18:54:23', '2026-03-19 18:54:23', '2026-03-05 19:02:36'),
-(10, 3, '97daa7fea064e6424f75715e33a1dede3cd7e781d6a095f3a4f131313da8a7a3', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/127.0.0.0', 0x00000000000000000000000000000001, '2026-03-05 19:11:42', '2026-03-05 19:11:42', '2026-03-19 19:11:42', NULL),
+(10, 3, '97daa7fea064e6424f75715e33a1dede3cd7e781d6a095f3a4f131313da8a7a3', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/127.0.0.0', 0x00000000000000000000000000000001, '2026-03-05 19:11:42', '2026-03-05 19:11:42', '2026-03-19 19:11:42', '2026-03-16 15:15:40'),
 (11, 3, '871ca5058bc689ca1bff0eae0d4c6b39482ad93f74fdb35de02b6e6b2263c888', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/127.0.0.0', 0x00000000000000000000000000000001, '2026-03-05 21:06:59', '2026-03-05 21:06:59', '2026-03-19 21:06:59', '2026-03-05 21:08:21'),
-(12, 3, 'dd6b583d8bd36cbe55438f882b60f4327c825d74d22d72d55588191378c19526', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/127.0.0.0', 0x00000000000000000000000000000001, '2026-03-05 21:08:23', '2026-03-05 21:08:23', '2026-03-19 21:08:23', NULL),
+(12, 3, 'dd6b583d8bd36cbe55438f882b60f4327c825d74d22d72d55588191378c19526', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/127.0.0.0', 0x00000000000000000000000000000001, '2026-03-05 21:08:23', '2026-03-05 21:08:23', '2026-03-19 21:08:23', '2026-03-16 15:15:40'),
 (13, 3, '8726c11e649249dd3ed175cbe8538b0b86c0a92325f334768e46f91b9dd73b2d', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/127.0.0.0', 0x00000000000000000000000000000001, '2026-03-06 13:52:51', '2026-03-06 13:52:51', '2026-03-20 13:52:51', '2026-03-06 14:22:41'),
 (14, 3, 'd02c5274e884de276d8fd4bebd4b29af5b54818b61af9e52d142204d7dc74267', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/127.0.0.0', 0x00000000000000000000000000000001, '2026-03-06 15:35:30', '2026-03-06 15:35:30', '2026-03-20 15:35:30', '2026-03-06 15:45:13'),
 (15, 3, '47f30a58cfab85c4dcacb938b036d6708ae86cc523541833cfbbc5df0f38c5d3', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/127.0.0.0', 0x00000000000000000000000000000001, '2026-03-06 15:45:25', '2026-03-06 15:45:25', '2026-03-20 15:45:25', '2026-03-06 15:45:47'),
-(16, 3, 'fafbafbc38e2420bd15f1e44fbe0efbe3eaee5f1c078343234de4789e5a43ab8', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/127.0.0.0', 0x00000000000000000000000000000001, '2026-03-10 12:19:50', '2026-03-10 12:19:50', '2026-03-24 12:19:50', NULL),
+(16, 3, 'fafbafbc38e2420bd15f1e44fbe0efbe3eaee5f1c078343234de4789e5a43ab8', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/127.0.0.0', 0x00000000000000000000000000000001, '2026-03-10 12:19:50', '2026-03-10 12:19:50', '2026-03-24 12:19:50', '2026-03-16 15:15:40'),
 (17, 3, '515a2717601b9318abe68d0acd8ab47872994abb11f8b5c727e8a4b7668239f1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/127.0.0.0', 0x00000000000000000000000000000001, '2026-03-10 13:48:46', '2026-03-10 13:48:46', '2026-03-24 13:48:46', '2026-03-10 14:10:44'),
 (18, 3, '9f73bbda58fd86eca8f3e3e9f9cdd3b7edf62f4c8ce88946fb9497299fdc07a1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/127.0.0.0', 0x00000000000000000000000000000001, '2026-03-10 14:15:20', '2026-03-10 14:15:20', '2026-03-24 14:15:20', '2026-03-10 14:29:21'),
 (19, 3, 'de0f691f89e86a9f04d10c4a586f041229d553ef668be778a20f66093f42e1e2', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/127.0.0.0', 0x00000000000000000000000000000001, '2026-03-10 19:03:57', '2026-03-10 19:03:57', '2026-03-24 19:03:57', '2026-03-10 19:55:25'),
@@ -106,8 +108,8 @@ INSERT INTO `auth_sessions` (`id`, `user_id`, `refresh_token_hash`, `user_agent`
 (24, 3, '8dd863537cff6a83233613abff7d0eabbfdc46ebc95e6fbb0097502428d62ddc', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/127.0.0.0', 0x00000000000000000000000000000001, '2026-03-10 20:53:42', '2026-03-10 20:53:42', '2026-03-24 20:53:42', '2026-03-10 20:53:51'),
 (25, 3, 'ba05daee63f582dc2133f0af1e19065a8f004cb4f98bae6d94178da9a85ec356', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/127.0.0.0', 0x00000000000000000000000000000001, '2026-03-10 20:53:54', '2026-03-10 20:53:54', '2026-03-24 20:53:54', '2026-03-10 20:54:01'),
 (26, 3, 'd4548acae75542ec1d8d868f6512613aa8794c3aca582dbdd68ce21b22cbf289', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/127.0.0.0', 0x00000000000000000000000000000001, '2026-03-10 20:54:55', '2026-03-10 20:54:55', '2026-03-24 20:54:55', '2026-03-10 20:56:27'),
-(27, 3, 'cd98018920d6d298ec1282c5ab6a77d477837f9c2b50944696b70c49cb3f8c65', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/127.0.0.0', 0x00000000000000000000000000000001, '2026-03-10 20:56:30', '2026-03-10 20:56:30', '2026-03-24 20:56:30', NULL),
-(28, 3, '04ee80e7dcb87e262c1b4ca00a291ddfddf3f3aba742b011e4bdd4272e95ba81', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/127.0.0.0', 0x00000000000000000000000000000001, '2026-03-11 20:43:48', '2026-03-11 20:43:48', '2026-03-25 20:43:48', NULL),
+(27, 3, 'cd98018920d6d298ec1282c5ab6a77d477837f9c2b50944696b70c49cb3f8c65', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/127.0.0.0', 0x00000000000000000000000000000001, '2026-03-10 20:56:30', '2026-03-10 20:56:30', '2026-03-24 20:56:30', '2026-03-16 15:15:40'),
+(28, 3, '04ee80e7dcb87e262c1b4ca00a291ddfddf3f3aba742b011e4bdd4272e95ba81', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/127.0.0.0', 0x00000000000000000000000000000001, '2026-03-11 20:43:48', '2026-03-11 20:43:48', '2026-03-25 20:43:48', '2026-03-16 15:15:40'),
 (29, 3, '8c129c711a289d085c56b6748158d89bcb0e9fe94f329ed65eee60ccd5ef8dc6', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/127.0.0.0', 0x00000000000000000000000000000001, '2026-03-11 20:44:32', '2026-03-11 20:44:32', '2026-03-25 20:44:32', '2026-03-11 20:46:07'),
 (30, 3, 'b3d116c24b1d4f4bb46705c43a2c30760433eab634fe1245ff374392d4f621f5', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/127.0.0.0', 0x00000000000000000000000000000001, '2026-03-12 18:27:40', '2026-03-12 18:27:40', '2026-03-26 18:27:40', '2026-03-12 21:53:04'),
 (31, 3, 'b1c12156fac574f9d965236626f11e4bdb562ce39210ce10015383aaddbb12ff', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/127.0.0.0', 0x00000000000000000000000000000001, '2026-03-12 21:53:09', '2026-03-12 21:53:09', '2026-03-26 21:53:09', '2026-03-12 21:53:35'),
@@ -128,7 +130,61 @@ INSERT INTO `auth_sessions` (`id`, `user_id`, `refresh_token_hash`, `user_agent`
 (46, 12, '6feccb174b13ddbd32fadde94e9408a0ead26caa9d353c60f3311dc47de5646c', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/127.0.0.0', 0x00000000000000000000000000000001, '2026-03-13 18:46:32', '2026-03-13 18:46:32', '2026-03-27 18:46:32', '2026-03-13 19:16:36'),
 (47, 3, 'ab6b31b632a638f8af18346f89d61ca2d7ebc4c632a202542e672fe586d4edbb', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/127.0.0.0', 0x00000000000000000000000000000001, '2026-03-13 19:16:40', '2026-03-13 19:16:40', '2026-03-27 19:16:40', '2026-03-13 19:18:49'),
 (48, 3, 'f5a490b7de785e38c0a8958c56cc6c21b6a0d19c879cef91cf1e463abe7876c8', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/127.0.0.0', 0x00000000000000000000000000000001, '2026-03-13 19:20:58', '2026-03-13 19:20:58', '2026-03-27 19:20:58', '2026-03-13 19:51:23'),
-(49, 12, 'f518c4d65baf368cda10d65c658b3e7cd9e2489c783768e2d41f8b0fc25e5a94', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/127.0.0.0', 0x00000000000000000000000000000001, '2026-03-13 19:51:31', '2026-03-13 19:51:31', '2026-03-27 19:51:31', NULL);
+(49, 12, 'f518c4d65baf368cda10d65c658b3e7cd9e2489c783768e2d41f8b0fc25e5a94', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/127.0.0.0', 0x00000000000000000000000000000001, '2026-03-13 19:51:31', '2026-03-13 19:51:31', '2026-03-27 19:51:31', NULL),
+(50, 12, 'ca1b53d393ea7d9634ab6b0dca1229d820ece4e8174cb435d67af9cc3533c282', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/127.0.0.0', 0x00000000000000000000000000000001, '2026-03-16 11:40:29', '2026-03-16 11:40:29', '2026-03-30 11:40:29', '2026-03-16 12:19:58'),
+(51, 12, '1bba307757457a14250b4c0c953a91350ee9ccfc7b76d937c8af0b148a6db5e6', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/127.0.0.0', 0x00000000000000000000000000000001, '2026-03-16 14:39:57', '2026-03-16 14:39:57', '2026-03-30 14:39:57', '2026-03-16 14:48:30'),
+(52, 3, '7780d4478054e86db89bb12d32b7b7414b80425676085dc024cd2086cbaa4a5a', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/127.0.0.0', 0x00000000000000000000000000000001, '2026-03-16 14:48:38', '2026-03-16 14:48:38', '2026-03-30 14:48:38', '2026-03-16 14:48:41'),
+(53, 3, '56f4b016dcc4deaa696a27b22d2eacfec8e6caa45358a01b96e8c8ddd4b05ff2', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/127.0.0.0', 0x00000000000000000000000000000001, '2026-03-16 15:13:45', '2026-03-16 15:13:45', '2026-03-30 15:13:45', '2026-03-16 15:13:45'),
+(54, 3, 'a6ce54bfa2a89dcb98d09d9df6be7bf2fc0680f59635915ff5a27625832d0a43', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/127.0.0.0', 0x00000000000000000000000000000001, '2026-03-16 15:18:26', '2026-03-16 15:18:26', '2026-03-30 15:18:26', '2026-03-16 15:19:39'),
+(55, 12, '048fad7c9e3b421dfe26dd2a765c87a817dd6595b6f6207f3f8a327fc94e0ccc', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/127.0.0.0', 0x00000000000000000000000000000001, '2026-03-16 15:34:22', '2026-03-16 15:34:22', '2026-03-30 15:34:22', NULL);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `auth_tokens`
+--
+
+CREATE TABLE `auth_tokens` (
+  `id` bigint UNSIGNED NOT NULL,
+  `user_id` bigint UNSIGNED NOT NULL,
+  `token_type` enum('login_verify','password_reset','email_verify') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `token_hash` char(64) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `code` varchar(12) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `expires_at` datetime NOT NULL,
+  `used_at` datetime DEFAULT NULL,
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `backup_codes`
+--
+
+CREATE TABLE `backup_codes` (
+  `id` bigint UNSIGNED NOT NULL,
+  `user_id` bigint UNSIGNED NOT NULL,
+  `code_hash` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `is_used` tinyint(1) NOT NULL DEFAULT '0',
+  `used_at` datetime DEFAULT NULL,
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `backup_codes`
+--
+
+INSERT INTO `backup_codes` (`id`, `user_id`, `code_hash`, `is_used`, `used_at`, `created_at`) VALUES
+(1, 12, '$2y$10$6DB3GHZG.UPT6l4qH60pruynHTD2oBzHMSaijD5t/rx/tZk2mrwHe', 0, NULL, '2026-03-16 17:41:31'),
+(2, 12, '$2y$10$fylQn0Jt0odpZxhVoHj7N.nKGDDlv4OcPTsgauoy9Yedf3Mq56.sS', 0, NULL, '2026-03-16 17:41:31'),
+(3, 12, '$2y$10$.OT/oOHvXvYc7EX1lm0Xjuc5DVvUfguI8lOhPB2ejbBGumzXJv7ri', 0, NULL, '2026-03-16 17:41:31'),
+(4, 12, '$2y$10$rROqtUBUGRMM2OIiv6uo2uEoBSSTzmBgx3SIUlEsT1oZGK8qA036i', 0, NULL, '2026-03-16 17:41:31'),
+(5, 12, '$2y$10$k7SgxaNAKCTTKIUDaWy68uNvAlDXTZJoBr1bXa2Gz2qZq56JHOUd.', 0, NULL, '2026-03-16 17:41:31'),
+(6, 12, '$2y$10$nGu1WWUJeTn0tO6ZpA7oW.Ox9xmCtlwGmnQZTNDqzPQD8xS/354Se', 0, NULL, '2026-03-16 17:41:31'),
+(7, 12, '$2y$10$L7a81fh4nqK7hfjheTOAt.XdoVpq1LhIahqcU8OBEJ8qzxTI/RYYC', 0, NULL, '2026-03-16 17:41:31'),
+(8, 12, '$2y$10$inCqWkaMHlbuxYz5Opv9PeDqKzCyVOv54SZOKaKlByxF4Bfwyenk.', 0, NULL, '2026-03-16 17:41:31'),
+(9, 12, '$2y$10$Sm.3J/eAOP46jwYbcNbzJOaeqAzLoBcya6NQnhNdPpMHTZFNjZV.a', 0, NULL, '2026-03-16 17:41:32'),
+(10, 12, '$2y$10$Isi3nsyAyBjWmii3zQCRteqkhDi/RW5WknbYxajC0EerEESmg3OZG', 0, NULL, '2026-03-16 17:41:32');
 
 -- --------------------------------------------------------
 
@@ -178,10 +234,10 @@ INSERT INTO `conversation_members` (`id`, `conversation_id`, `user_id`, `last_re
 CREATE TABLE `dashboard_notifications` (
   `id` bigint UNSIGNED NOT NULL,
   `user_id` bigint UNSIGNED NOT NULL,
-  `type` varchar(32) NOT NULL,
-  `title` varchar(120) NOT NULL,
-  `body` varchar(500) DEFAULT NULL,
-  `link_url` varchar(255) DEFAULT NULL,
+  `type` varchar(32) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `title` varchar(120) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `body` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `link_url` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `is_read` tinyint(1) NOT NULL DEFAULT '0',
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `read_at` datetime DEFAULT NULL
@@ -217,12 +273,20 @@ INSERT INTO `dashboard_notifications` (`id`, `user_id`, `type`, `title`, `body`,
 CREATE TABLE `email_verifications` (
   `id` int NOT NULL,
   `user_id` bigint UNSIGNED NOT NULL,
-  `email` varchar(255) NOT NULL,
-  `otp_code` varchar(20) NOT NULL,
+  `email` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `otp_code` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
   `expires_at` datetime NOT NULL,
   `verified_at` datetime DEFAULT NULL,
-  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `purpose` varchar(32) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'login'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `email_verifications`
+--
+
+INSERT INTO `email_verifications` (`id`, `user_id`, `email`, `otp_code`, `expires_at`, `verified_at`, `created_at`, `purpose`) VALUES
+(6, 12, 'zacgames.tv@gmail.com', '404501', '2026-03-16 10:36:45', '2026-03-16 17:32:00', '2026-03-16 17:31:45', 'login');
 
 -- --------------------------------------------------------
 
@@ -254,7 +318,7 @@ CREATE TABLE `friend_requests` (
   `id` int NOT NULL,
   `sender_id` bigint UNSIGNED NOT NULL,
   `receiver_id` bigint UNSIGNED NOT NULL,
-  `status` enum('pending','accepted','declined','cancelled') DEFAULT 'pending',
+  `status` enum('pending','accepted','declined','cancelled') COLLATE utf8mb4_unicode_ci DEFAULT 'pending',
   `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
   `responded_at` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -276,11 +340,11 @@ INSERT INTO `friend_requests` (`id`, `sender_id`, `receiver_id`, `status`, `crea
 CREATE TABLE `login_attempts` (
   `id` bigint UNSIGNED NOT NULL,
   `user_id` bigint UNSIGNED DEFAULT NULL,
-  `identifier` varchar(255) NOT NULL,
+  `identifier` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
   `success` tinyint(1) NOT NULL DEFAULT '0',
   `ip_address` varbinary(16) DEFAULT NULL,
-  `user_agent` varchar(255) DEFAULT NULL,
-  `failure_reason` varchar(64) DEFAULT NULL,
+  `user_agent` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `failure_reason` varchar(64) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -342,7 +406,16 @@ INSERT INTO `login_attempts` (`id`, `user_id`, `identifier`, `success`, `ip_addr
 (51, 12, 'ZaccyBoi', 1, 0x00000000000000000000000000000001, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/127.0.0.0', NULL, '2026-03-13 18:46:32'),
 (52, 3, 'crispino.zyrus@gmail.com', 1, 0x00000000000000000000000000000001, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/127.0.0.0', NULL, '2026-03-13 19:16:40'),
 (53, 3, 'crispino.zyrus@gmail.com', 1, 0x00000000000000000000000000000001, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/127.0.0.0', NULL, '2026-03-13 19:20:58'),
-(54, 12, 'ZaccyBoi', 1, 0x00000000000000000000000000000001, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/127.0.0.0', NULL, '2026-03-13 19:51:31');
+(54, 12, 'ZaccyBoi', 1, 0x00000000000000000000000000000001, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/127.0.0.0', NULL, '2026-03-13 19:51:31'),
+(55, 12, 'ZaccyBoi', 1, 0x00000000000000000000000000000001, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/127.0.0.0', NULL, '2026-03-16 11:40:29'),
+(56, 12, 'ZaccyBoi', 0, 0x00000000000000000000000000000001, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/127.0.0.0', 'wrong_credentials', '2026-03-16 14:36:20'),
+(57, 12, 'ZaccyBoi', 0, 0x00000000000000000000000000000001, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/127.0.0.0', 'wrong_credentials', '2026-03-16 14:36:25'),
+(58, 12, 'ZaccyBoi', 0, 0x00000000000000000000000000000001, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/127.0.0.0', 'wrong_credentials', '2026-03-16 14:36:28'),
+(59, 12, 'ZaccyBoi', 1, 0x00000000000000000000000000000001, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/127.0.0.0', NULL, '2026-03-16 14:39:57'),
+(60, 3, 'crispino.zyrus@gmail.com', 1, 0x00000000000000000000000000000001, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/127.0.0.0', NULL, '2026-03-16 14:48:38'),
+(61, 3, 'crispino.zyrus@gmail.com', 1, 0x00000000000000000000000000000001, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/127.0.0.0', NULL, '2026-03-16 15:13:44'),
+(62, 3, 'crispino.zyrus@gmail.com', 1, 0x00000000000000000000000000000001, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/127.0.0.0', NULL, '2026-03-16 15:18:26'),
+(63, 12, 'ZaccyBoi', 1, 0x00000000000000000000000000000001, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/127.0.0.0', NULL, '2026-03-16 15:34:22');
 
 -- --------------------------------------------------------
 
@@ -354,7 +427,7 @@ CREATE TABLE `messages` (
   `id` int NOT NULL,
   `conversation_id` int NOT NULL,
   `sender_id` bigint UNSIGNED NOT NULL,
-  `body` text,
+  `body` text COLLATE utf8mb4_unicode_ci,
   `created_at` datetime DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -379,8 +452,8 @@ INSERT INTO `messages` (`id`, `conversation_id`, `sender_id`, `body`, `created_a
 
 CREATE TABLE `roles` (
   `id` smallint UNSIGNED NOT NULL,
-  `name` varchar(32) NOT NULL,
-  `description` varchar(255) DEFAULT NULL
+  `name` varchar(32) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `description` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
@@ -399,13 +472,21 @@ INSERT INTO `roles` (`id`, `name`, `description`) VALUES
 --
 
 CREATE TABLE `two_factor_secrets` (
+  `id` bigint UNSIGNED NOT NULL,
   `user_id` bigint UNSIGNED NOT NULL,
+  `secret_key` varchar(128) COLLATE utf8mb4_unicode_ci NOT NULL,
   `is_enabled` tinyint(1) NOT NULL DEFAULT '0',
-  `method` enum('totp') NOT NULL DEFAULT 'totp',
-  `secret_enc` varbinary(255) DEFAULT NULL,
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `enabled_at` datetime DEFAULT NULL,
-  `last_used_at` datetime DEFAULT NULL
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `two_factor_secrets`
+--
+
+INSERT INTO `two_factor_secrets` (`id`, `user_id`, `secret_key`, `is_enabled`, `created_at`, `enabled_at`, `updated_at`) VALUES
+(1, 12, 'MPQBGQWNGIKUH64ZOF3WVLYG3YDMOXST', 1, '2026-03-16 17:11:01', '2026-03-16 17:26:32', '2026-03-16 17:26:32');
 
 -- --------------------------------------------------------
 
@@ -415,21 +496,24 @@ CREATE TABLE `two_factor_secrets` (
 
 CREATE TABLE `users` (
   `id` bigint UNSIGNED NOT NULL,
-  `username` varchar(32) NOT NULL,
-  `email` varchar(255) NOT NULL,
-  `password_hash` varchar(255) NOT NULL,
-  `display_name` varchar(64) DEFAULT NULL,
+  `username` varchar(32) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `email` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `password_hash` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `display_name` varchar(64) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `email_verified_at` datetime DEFAULT NULL,
-  `approval_status` enum('pending','approved','rejected') NOT NULL DEFAULT 'pending',
+  `failed_login_attempts` int NOT NULL DEFAULT '0',
+  `security_challenge_required` tinyint(1) NOT NULL DEFAULT '0',
+  `last_failed_login_at` datetime DEFAULT NULL,
+  `approval_status` enum('pending','approved','rejected') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'pending',
   `approved_by` bigint UNSIGNED DEFAULT NULL,
   `approved_at` datetime DEFAULT NULL,
-  `rejected_reason` varchar(255) DEFAULT NULL,
+  `rejected_reason` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `is_active` tinyint(1) NOT NULL DEFAULT '1',
   `is_guest` tinyint(1) NOT NULL DEFAULT '0',
   `banned_until` datetime DEFAULT NULL,
-  `bank_link_status` enum('none','pending','linked','failed') NOT NULL DEFAULT 'none',
+  `bank_link_status` enum('none','pending','linked','failed') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'none',
   `bank_linked_at` datetime DEFAULT NULL,
-  `appearance_mode` enum('default','dark','light') NOT NULL DEFAULT 'default',
+  `appearance_mode` enum('default','dark','light') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'default',
   `last_login_at` datetime DEFAULT NULL,
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -439,22 +523,23 @@ CREATE TABLE `users` (
   `credits` int DEFAULT '0',
   `matches_played` int DEFAULT '0',
   `matches_won` int DEFAULT '0',
-  `bio` text,
-  `avatar_path` varchar(255) DEFAULT NULL,
-  `favorite_deck` varchar(100) DEFAULT NULL,
-  `tagline` varchar(120) DEFAULT NULL
+  `bio` text COLLATE utf8mb4_unicode_ci,
+  `avatar_path` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `favorite_deck` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `tagline` varchar(120) COLLATE utf8mb4_unicode_ci DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Dumping data for table `users`
 --
 
-INSERT INTO `users` (`id`, `username`, `email`, `password_hash`, `display_name`, `email_verified_at`, `approval_status`, `approved_by`, `approved_at`, `rejected_reason`, `is_active`, `is_guest`, `banned_until`, `bank_link_status`, `bank_linked_at`, `appearance_mode`, `last_login_at`, `created_at`, `updated_at`, `level`, `exp`, `exp_to_next`, `credits`, `matches_played`, `matches_won`, `bio`, `avatar_path`, `favorite_deck`, `tagline`) VALUES
-(1, 'admin', 'admin@game.local', '$2y$10$axxzhPXLJmTV4gHq9p2Pq.3nUk.0SJpmAwMoyF4w4PZM/0/LTkVoy', 'Admin', '2026-03-01 16:59:26', 'approved', NULL, NULL, NULL, 1, 0, NULL, 'none', NULL, 'default', '2026-03-05 18:52:17', '2026-03-01 16:59:26', '2026-03-05 18:52:17', 1, 0, 100, 0, 0, 0, NULL, NULL, NULL, NULL),
-(3, 'ZacZac460', 'crispino.zyrus@gmail.com', '$2y$10$JA5TOx2v.CYAP/OFYqPPjOGIxev05wF43XlLqHFZ16IYc6WVx/El6', 'ZacZac460', NULL, 'approved', 1, '2026-03-01 17:28:37', NULL, 1, 0, NULL, 'none', NULL, 'default', '2026-03-13 19:20:58', '2026-03-01 17:28:29', '2026-03-13 19:20:58', 1, 0, 100, 0, 0, 0, NULL, 'uploads/avatars/avatar_3_1773395746.png', NULL, NULL),
-(10, 'guest_AAF4CE60', 'guest_AAF4CE60@guest.local', '', 'Guest', NULL, 'approved', NULL, NULL, NULL, 1, 1, NULL, 'none', NULL, 'default', NULL, '2026-03-11 20:46:41', '2026-03-11 20:46:41', 1, 0, 100, 0, 0, 0, NULL, NULL, NULL, NULL),
-(11, 'guest_1BAD5D10', 'guest_1BAD5D10@guest.local', '', 'Guest', NULL, 'approved', NULL, NULL, NULL, 1, 1, NULL, 'none', NULL, 'default', NULL, '2026-03-12 21:53:53', '2026-03-12 21:53:53', 1, 0, 100, 0, 0, 0, NULL, NULL, NULL, NULL),
-(12, 'ZaccyBoi', 'zacgames.tv@gmail.com', '$2y$10$q5zfGSrYB0rG8Ixt68UKvOxkamcHf4g3MU9rBjW2UDQA8e/xowYxa', 'ZaccyBoi', NULL, 'approved', 1, '2026-03-13 17:01:47', NULL, 1, 0, NULL, 'none', NULL, 'default', '2026-03-13 19:51:31', '2026-03-13 17:00:45', '2026-03-13 19:51:31', 1, 0, 100, 0, 0, 0, NULL, NULL, NULL, NULL);
+INSERT INTO `users` (`id`, `username`, `email`, `password_hash`, `display_name`, `email_verified_at`, `failed_login_attempts`, `security_challenge_required`, `last_failed_login_at`, `approval_status`, `approved_by`, `approved_at`, `rejected_reason`, `is_active`, `is_guest`, `banned_until`, `bank_link_status`, `bank_linked_at`, `appearance_mode`, `last_login_at`, `created_at`, `updated_at`, `level`, `exp`, `exp_to_next`, `credits`, `matches_played`, `matches_won`, `bio`, `avatar_path`, `favorite_deck`, `tagline`) VALUES
+(1, 'admin', 'admin@game.local', '$2y$10$axxzhPXLJmTV4gHq9p2Pq.3nUk.0SJpmAwMoyF4w4PZM/0/LTkVoy', 'Admin', '2026-03-01 16:59:26', 0, 0, NULL, 'approved', NULL, NULL, NULL, 1, 0, NULL, 'none', NULL, 'default', '2026-03-05 18:52:17', '2026-03-01 16:59:26', '2026-03-05 18:52:17', 1, 0, 100, 0, 0, 0, NULL, NULL, NULL, NULL),
+(3, 'ZacZac460', 'crispino.zyrus@gmail.com', '$2y$10$u6W3WqPs.JGt1LjIQBD4b.HVRMQ1nrnlMgTb5TN8cXU/6AzkclgR2', 'ZacZac460', NULL, 0, 0, NULL, 'approved', 1, '2026-03-01 17:28:37', NULL, 1, 0, NULL, 'none', NULL, 'default', '2026-03-16 15:18:26', '2026-03-01 17:28:29', '2026-03-16 15:18:26', 1, 0, 100, 0, 0, 0, NULL, 'uploads/avatars/avatar_3_1773395746.png', NULL, NULL),
+(10, 'guest_AAF4CE60', 'guest_AAF4CE60@guest.local', '', 'Guest', NULL, 0, 0, NULL, 'approved', NULL, NULL, NULL, 1, 1, NULL, 'none', NULL, 'default', NULL, '2026-03-11 20:46:41', '2026-03-11 20:46:41', 1, 0, 100, 0, 0, 0, NULL, NULL, NULL, NULL),
+(11, 'guest_1BAD5D10', 'guest_1BAD5D10@guest.local', '', 'Guest', NULL, 0, 0, NULL, 'approved', NULL, NULL, NULL, 1, 1, NULL, 'none', NULL, 'default', NULL, '2026-03-12 21:53:53', '2026-03-12 21:53:53', 1, 0, 100, 0, 0, 0, NULL, NULL, NULL, NULL),
+(12, 'ZaccyBoi', 'zacgames.tv@gmail.com', '$2y$10$q5zfGSrYB0rG8Ixt68UKvOxkamcHf4g3MU9rBjW2UDQA8e/xowYxa', 'ZaccyBoi', '2026-03-16 17:32:00', 0, 0, NULL, 'approved', 1, '2026-03-13 17:01:47', NULL, 1, 0, NULL, 'none', NULL, 'default', '2026-03-16 15:34:22', '2026-03-13 17:00:45', '2026-03-16 17:56:12', 1, 0, 100, 0, 0, 0, 'Testing', 'uploads/avatars/avatar_12_1773654943.png', '', ''),
+(13, 'guest_876B308C', 'guest_876B308C@guest.local', '', 'Guest', NULL, 0, 0, NULL, 'approved', NULL, NULL, NULL, 1, 1, NULL, 'none', NULL, 'default', NULL, '2026-03-16 14:25:24', '2026-03-16 14:25:24', 1, 0, 100, 0, 0, 0, NULL, NULL, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -478,7 +563,8 @@ INSERT INTO `user_roles` (`user_id`, `role_id`, `assigned_by`, `assigned_at`) VA
 (3, 3, NULL, '2026-03-01 17:28:29'),
 (10, 3, NULL, '2026-03-11 20:46:41'),
 (11, 3, NULL, '2026-03-12 21:53:53'),
-(12, 3, NULL, '2026-03-13 17:00:45');
+(12, 3, NULL, '2026-03-13 17:00:45'),
+(13, 3, NULL, '2026-03-16 14:25:24');
 
 --
 -- Indexes for dumped tables
@@ -502,6 +588,21 @@ ALTER TABLE `auth_sessions`
   ADD KEY `idx_auth_sessions_user` (`user_id`),
   ADD KEY `idx_auth_sessions_expires` (`expires_at`),
   ADD KEY `idx_auth_sessions_revoked` (`revoked_at`);
+
+--
+-- Indexes for table `auth_tokens`
+--
+ALTER TABLE `auth_tokens`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_auth_tokens_user` (`user_id`,`token_type`,`expires_at`),
+  ADD KEY `idx_auth_tokens_expires` (`expires_at`);
+
+--
+-- Indexes for table `backup_codes`
+--
+ALTER TABLE `backup_codes`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_backup_codes_user` (`user_id`);
 
 --
 -- Indexes for table `conversations`
@@ -581,7 +682,8 @@ ALTER TABLE `roles`
 -- Indexes for table `two_factor_secrets`
 --
 ALTER TABLE `two_factor_secrets`
-  ADD PRIMARY KEY (`user_id`);
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `uq_two_factor_user` (`user_id`);
 
 --
 -- Indexes for table `users`
@@ -614,13 +716,25 @@ ALTER TABLE `user_roles`
 -- AUTO_INCREMENT for table `audit_logs`
 --
 ALTER TABLE `audit_logs`
-  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
 
 --
 -- AUTO_INCREMENT for table `auth_sessions`
 --
 ALTER TABLE `auth_sessions`
-  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=50;
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=56;
+
+--
+-- AUTO_INCREMENT for table `auth_tokens`
+--
+ALTER TABLE `auth_tokens`
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `backup_codes`
+--
+ALTER TABLE `backup_codes`
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
 -- AUTO_INCREMENT for table `conversations`
@@ -644,7 +758,7 @@ ALTER TABLE `dashboard_notifications`
 -- AUTO_INCREMENT for table `email_verifications`
 --
 ALTER TABLE `email_verifications`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT for table `friends`
@@ -662,7 +776,7 @@ ALTER TABLE `friend_requests`
 -- AUTO_INCREMENT for table `login_attempts`
 --
 ALTER TABLE `login_attempts`
-  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=55;
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=64;
 
 --
 -- AUTO_INCREMENT for table `messages`
@@ -677,10 +791,16 @@ ALTER TABLE `roles`
   MODIFY `id` smallint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
+-- AUTO_INCREMENT for table `two_factor_secrets`
+--
+ALTER TABLE `two_factor_secrets`
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
+
+--
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
 
 --
 -- Constraints for dumped tables
@@ -697,6 +817,18 @@ ALTER TABLE `audit_logs`
 --
 ALTER TABLE `auth_sessions`
   ADD CONSTRAINT `fk_auth_sessions_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `auth_tokens`
+--
+ALTER TABLE `auth_tokens`
+  ADD CONSTRAINT `fk_auth_tokens_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `backup_codes`
+--
+ALTER TABLE `backup_codes`
+  ADD CONSTRAINT `fk_backup_codes_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `conversation_members`
@@ -748,7 +880,7 @@ ALTER TABLE `messages`
 -- Constraints for table `two_factor_secrets`
 --
 ALTER TABLE `two_factor_secrets`
-  ADD CONSTRAINT `fk_2fa_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
+  ADD CONSTRAINT `fk_two_factor_secrets_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `users`

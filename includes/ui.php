@@ -107,6 +107,7 @@ function ui_header(string $title = 'Dashboard', bool $is_hub = true): void {
   $friend_unread   = $is_guest ? 0 : count_pending_friend_requests($mysqli, $uid);
   $mail_threads    = $is_guest ? [] : fetch_user_conversations($mysqli, $uid, 6);
   $mail_unread     = $is_guest ? 0 : count_unread_direct_messages($mysqli, $uid);
+  $zenyBalance = (int)($u['credits'] ?? 0);
   ?>
 <!doctype html>
 <html lang="en">
@@ -171,6 +172,30 @@ function ui_header(string $title = 'Dashboard', bool $is_hub = true): void {
     </a>
 
     <div class="md-icons">
+
+          <div
+          class="md-ico-wrap"
+          title="Zeny Balance"
+          style="display:flex; align-items:center; gap:8px; padding:0 2px;"
+        >
+          <a
+            href="<?= h($bp) ?>/shop.php?tab=credits"
+            style="
+              display:inline-flex;
+              align-items:center;
+              gap:8px;
+              text-decoration:none;
+              color:var(--text);
+              padding:10px 12px;
+              border-radius:14px;
+              border:1px solid rgba(255,255,255,.10);
+              background:rgba(255,255,255,.05);
+              font-weight:900;
+              line-height:1;
+            "
+          >
+            <span> <?= number_format($zenyBalance) ?> Zeny</span>
+          </a>
 
       <div class="md-ico-wrap" data-dd-wrap>
         <button class="md-ico" type="button" data-dd-btn="notif" title="Notifications">🔔</button>

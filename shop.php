@@ -19,10 +19,39 @@ if ($is_guest) {
 
 $username = $u['username'] ?? $u['display_name'] ?? 'Player';
 
+$currentCredits = (int)($u['credits'] ?? 0);
+$topupMsg = flash_get('msg');
+$topupErr = flash_get('err');
+if (isset($_GET['cancel'])) {
+  $topupErr = 'Top-up was cancelled.';
+}
+
+
 $creditPacks = [
-  ['name' => 'Starter Cache', 'amount' => '500 Credits',  'price' => '₱99',  'tag' => 'Entry'],
-  ['name' => 'Duel Stack',    'amount' => '1200 Credits', 'price' => '₱199', 'tag' => 'Popular'],
-  ['name' => 'Arena Vault',   'amount' => '3000 Credits', 'price' => '₱399', 'tag' => 'Best Value'],
+  [
+    'code'          => 'starter_50',
+    'name'          => 'Starter Cache',
+    'price_php'     => 50,
+    'credits'       => 250,
+    'bonus_credits' => 0,
+    'tag'           => 'Entry',
+  ],
+  [
+    'code'          => 'duel_100',
+    'name'          => 'Duel Stack',
+    'price_php'     => 100,
+    'credits'       => 500,
+    'bonus_credits' => 50,
+    'tag'           => 'Popular',
+  ],
+  [
+    'code'          => 'arena_200',
+    'name'          => 'Arena Vault',
+    'price_php'     => 200,
+    'credits'       => 1000,
+    'bonus_credits' => 150,
+    'tag'           => 'Best Value',
+  ],
 ];
 
 $featuredItems = [
@@ -168,21 +197,46 @@ ui_header("Shop");
         <section class="shop-pane" data-tab-pane="credits" <?= $activeTab !== 'credits' ? 'hidden' : '' ?>>
           <div class="shop-pane__head">
             <div>
-              <h2>Credits</h2>
-              <p>Top up currency packs for cosmetics, bundles, and future store rotations.</p>
+              <h2>Zeny</h2>
+              <p>Top up your wallet for cosmetics, bundles, and future store rotations.</p>
             </div>
           </div>
 
+          <?php if (!empty($topupMsg)): ?>
+            <div class="card-soft" style="padding:12px 14px; margin-bottom:14px; border:1px solid rgba(34,197,94,.28); background:rgba(34,197,94,.10);">
+              <strong>Success.</strong> <?= h($topupMsg) ?>
+            </div>
+          <?php endif; ?>
+
+          <?php if (!empty($topupErr)): ?>
+            <div class="card-soft" style="padding:12px 14px; margin-bottom:14px; border:1px solid rgba(255,77,109,.28); background:rgba(255,77,109,.10);">
+              <strong>Heads up.</strong> <?= h($topupErr) ?>
+            </div>
+          <?php endif; ?>
+
           <div class="shop-featured-strip">
             <?php foreach ($creditPacks as $pack): ?>
+              <?php
+                $baseCredits  = (int)$pack['credits'];
+                $bonusCredits = (int)$pack['bonus_credits'];
+                $totalCredits = $baseCredits + $bonusCredits;
+              ?>
               <article class="shop-product-tile">
                 <div class="shop-product-tile__art"></div>
                 <span class="pill"><?= h($pack['tag']) ?></span>
                 <h3><?= h($pack['name']) ?></h3>
-                <p style="margin:0 0 14px; color:var(--muted);"><?= h($pack['amount']) ?></p>
-                <div class="shop-product-tile__foot">
-                  <strong><?= h($pack['price']) ?></strong>
-                  <button class="btn btn-primary" type="button">Purchase</button>
+
+                <p style="margin:0 0 6px; color:var(--text); font-weight:900;">
+                  <?= number_format($totalCredits) ?> Zeny
+                </p>
+
+                <div class="shop-product-tile__foot" style="align-items:center;">
+                  <strong>₱<?= number_format((float)$pack['price_php'], 2) ?></strong>
+
+                  <form method="post" action="<?= h($bp) ?>/api/payments/paymongo-topup-create.php" style="margin:0;">
+                    <input type="hidden" name="pack_code" value="<?= h($pack['code']) ?>">
+                    <button class="btn btn-primary" type="submit">Buy Zeny</button>
+                  </form>
                 </div>
               </article>
             <?php endforeach; ?>
@@ -290,7 +344,7 @@ ui_header("Shop");
           <div class="card-soft" style="display:block; padding:12px;">
             <div style="font-weight:900;">💳 Wallet</div>
             <div style="color: var(--muted); font-size:13px; margin-top:4px;">
-              You currently have 0 credits available.
+              You currently have <?= number_format($currentCredits) ?> Zeny available.
             </div>
           </div>
 
