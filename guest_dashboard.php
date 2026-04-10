@@ -46,7 +46,7 @@ ui_header("Guest", true);
       <div class="card" style="padding:18px;">
         <div style="font-weight:950; font-size:20px; margin-bottom:10px;">Join Room</div>
 
-        <form method="get" action="<?= h($bp) ?>/rooms.php" style="display:grid; gap:10px;">
+        <form method="get" action="<?= h($bp) ?>/room.php" style="display:grid; gap:10px;">
           <input class="input" type="text" name="room_code" placeholder="Room ID" required>
           <input class="input" type="text" name="room_password" placeholder="Password (if needed)">
           <div style="display:flex; gap:8px; flex-wrap:wrap;">

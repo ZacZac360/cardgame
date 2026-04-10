@@ -98,16 +98,16 @@ function is_shop_tab(string $tab, string $activeTab): string {
 ui_header("Shop");
 ?>
 
-<section class="section" style="padding-top:0;">
+<section class="section section--flush-top">
   <div class="hub-grid">
 
     <!-- LEFT -->
-    <aside class="card hub-left" style="padding:14px; position:sticky; top:86px;">
-      <div style="font-weight:950; letter-spacing:.02em; opacity:.9; margin-bottom:10px;">
+    <aside class="card hub-left hub-sidebar">
+      <div class="hub-sidebar__title">
         MENU
       </div>
 
-      <div style="display:grid; gap:10px;">
+      <div class="hub-sidebar__nav">
         <a class="hub-item" href="<?= h($bp) ?>/play.php">
           <span class="hub-ico">🎮</span>
           <span>Play</span>
@@ -129,14 +129,14 @@ ui_header("Shop");
         </a>
       </div>
 
-      <div style="margin-top:14px; padding-top:14px; border-top:1px solid rgba(255,255,255,.08);">
+      <div class="hub-sidebar__status">
         <span class="pill">Player</span>
 
-        <div style="margin-top:10px;">
-          <span class="pill" style="border-color: rgba(57,255,106,.35); background: rgba(57,255,106,.10);">
+        <div class="hub-sidebar__status-block">
+          <span class="pill status-pill--good">
             Store Access
           </span>
-          <div style="margin-top:8px; color: var(--muted); font-size:13px; line-height:1.4;">
+          <div class="hub-sidebar__hint">
             Browse cosmetics, bundles, and currency packs.
           </div>
         </div>
@@ -144,7 +144,7 @@ ui_header("Shop");
     </aside>
 
     <!-- CENTER -->
-    <main style="min-width:0;">
+    <main class="page-main">
       <section class="shop-shell shop-shell--clean">
 
         <nav class="shop-tabsbar" aria-label="Shop categories">
@@ -203,13 +203,13 @@ ui_header("Shop");
           </div>
 
           <?php if (!empty($topupMsg)): ?>
-            <div class="card-soft" style="padding:12px 14px; margin-bottom:14px; border:1px solid rgba(34,197,94,.28); background:rgba(34,197,94,.10);">
+            <div class="card-soft hub-alert hub-alert--success hub-mb-14">
               <strong>Success.</strong> <?= h($topupMsg) ?>
             </div>
           <?php endif; ?>
 
           <?php if (!empty($topupErr)): ?>
-            <div class="card-soft" style="padding:12px 14px; margin-bottom:14px; border:1px solid rgba(255,77,109,.28); background:rgba(255,77,109,.10);">
+            <div class="card-soft hub-alert hub-alert--danger hub-mb-14">
               <strong>Heads up.</strong> <?= h($topupErr) ?>
             </div>
           <?php endif; ?>
@@ -226,14 +226,14 @@ ui_header("Shop");
                 <span class="pill"><?= h($pack['tag']) ?></span>
                 <h3><?= h($pack['name']) ?></h3>
 
-                <p style="margin:0 0 6px; color:var(--text); font-weight:900;">
+                <p class="shop-product-tile__price">
                   <?= number_format($totalCredits) ?> Zeny
                 </p>
 
-                <div class="shop-product-tile__foot" style="align-items:center;">
+                <div class="shop-product-tile__foot shop-product-tile__foot--center">
                   <strong>₱<?= number_format((float)$pack['price_php'], 2) ?></strong>
 
-                  <form method="post" action="<?= h($bp) ?>/api/payments/paymongo-topup-create.php" style="margin:0;">
+                  <form method="post" action="<?= h($bp) ?>/api/payments/paymongo-topup-create.php" class="hub-form-reset">
                     <input type="hidden" name="pack_code" value="<?= h($pack['code']) ?>">
                     <button class="btn btn-primary" type="submit">Buy Zeny</button>
                   </form>
@@ -251,7 +251,7 @@ ui_header("Shop");
             </div>
           </div>
 
-          <div class="category-strip" style="margin-bottom:16px;">
+          <div class="category-strip category-strip--spaced">
             <span class="category-pill is-active">All</span>
             <span class="category-pill">Frames</span>
             <span class="category-pill">Card Backs</span>
@@ -289,7 +289,7 @@ ui_header("Shop");
                 <div class="shop-product-tile__art"></div>
                 <span class="pill"><?= h($item['type']) ?></span>
                 <h3><?= h($item['name']) ?></h3>
-                <p style="margin:0 0 14px; color:var(--muted);">Available today only.</p>
+                <p class="shop-copy-muted">Available today only.</p>
                 <div class="shop-product-tile__foot">
                   <strong><?= h($item['price']) ?></strong>
                   <button class="btn btn-ghost" type="button">Claim</button>
@@ -330,34 +330,34 @@ ui_header("Shop");
 
     <!-- RIGHT -->
     <aside class="hub-right">
-      <div class="card" style="padding:16px; border-radius: calc(var(--radius) + 10px);">
-        <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+      <div class="card panel-card--lg">
+        <div class="panel-head-simple">
           <div>
-            <div style="font-weight:950;">Store Info</div>
-            <div style="color: var(--muted); font-size:13px; margin-top:4px;">
+            <div class="panel-title">Store Info</div>
+            <div class="panel-sub">
               Rotation, bundles, and account wallet
             </div>
           </div>
         </div>
 
-        <div style="margin-top:12px; display:grid; gap:10px;">
-          <div class="card-soft" style="display:block; padding:12px;">
-            <div style="font-weight:900;">💳 Wallet</div>
-            <div style="color: var(--muted); font-size:13px; margin-top:4px;">
+        <div class="stack-10 hub-mt-12">
+          <div class="card-soft link-card link-card--block">
+            <div class="text-strong">💳 Wallet</div>
+            <div class="panel-sub">
               You currently have <?= number_format($currentCredits) ?> Zeny available.
             </div>
           </div>
 
-          <div class="card-soft" style="display:block; padding:12px;">
-            <div style="font-weight:900;">✨ Cosmetics</div>
-            <div style="color: var(--muted); font-size:13px; margin-top:4px;">
+          <div class="card-soft link-card link-card--block">
+            <div class="text-strong">✨ Cosmetics</div>
+            <div class="panel-sub">
               Frames, boards, icons, and card backs rotate through the storefront.
             </div>
           </div>
 
-          <div class="card-soft" style="display:block; padding:12px;">
-            <div style="font-weight:900;">📦 Bundles</div>
-            <div style="color: var(--muted); font-size:13px; margin-top:4px;">
+          <div class="card-soft link-card link-card--block">
+            <div class="text-strong">📦 Bundles</div>
+            <div class="panel-sub">
               Higher-value grouped offers show up in limited windows.
             </div>
           </div>

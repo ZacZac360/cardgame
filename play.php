@@ -2,6 +2,7 @@
 // play.php
 session_start();
 
+require_once __DIR__ . "/includes/db.php";
 require_once __DIR__ . "/includes/helpers.php";
 require_once __DIR__ . "/includes/auth.php";
 require_once __DIR__ . "/includes/ui.php";
@@ -26,19 +27,90 @@ $rankedChecks = [
   ['label' => 'Credits linked', 'ok' => $bankStatus === 'linked'],
 ];
 
+$browserRooms = [];
+$openRoomCount = 0;
+
+if (isset($mysqli) && $mysqli instanceof mysqli) {
+  $countSql = "
+    SELECT COUNT(*) AS c
+    FROM game_rooms r
+    WHERE r.visibility = 'public'
+      AND r.status = 'waiting'
+  ";
+
+  if ($countRes = $mysqli->query($countSql)) {
+    $openRoomCount = (int)($countRes->fetch_assoc()['c'] ?? 0);
+    $countRes->close();
+  }
+
+  $roomSql = "
+    SELECT
+      r.id,
+      r.room_code,
+      r.room_name,
+      r.room_type,
+      r.visibility,
+      r.status,
+      r.max_players,
+      r.password_hash,
+      r.created_at,
+      host.player_name AS host_name,
+      COUNT(p.id) AS player_count
+    FROM game_rooms r
+    LEFT JOIN game_room_players p ON p.room_id = r.id
+    LEFT JOIN game_room_players host
+      ON host.room_id = r.id
+     AND host.is_host = 1
+    WHERE r.visibility = 'public'
+      AND r.status = 'waiting'
+    GROUP BY
+      r.id, r.room_code, r.room_name, r.room_type, r.visibility,
+      r.status, r.max_players, r.password_hash, r.created_at, host.player_name
+    ORDER BY player_count DESC, r.created_at DESC
+    LIMIT 12
+  ";
+
+  if ($roomRes = $mysqli->query($roomSql)) {
+    $browserRooms = $roomRes->fetch_all(MYSQLI_ASSOC);
+    $roomRes->close();
+  }
+}
+
+function play_mode_art_url(string $bp, string $slug): ?string {
+  $candidates = [
+    "/assets/modes/{$slug}.png",
+    "/assets/modes/{$slug}.jpg",
+    "/assets/modes/{$slug}.jpeg",
+    "/assets/modes/{$slug}.webp",
+  ];
+
+  foreach ($candidates as $rel) {
+    $abs = __DIR__ . $rel;
+    if (is_file($abs)) {
+      return rtrim($bp, '/') . $rel;
+    }
+  }
+
+  return null;
+}
+
+$quickArt  = play_mode_art_url($bp, 'quick-match');
+$roomsArt  = play_mode_art_url($bp, 'rooms');
+$rankedArt = play_mode_art_url($bp, 'ranked');
+
 ui_header("Play");
 ?>
 
-<section class="section" style="padding-top:0;">
-  <div class="hub-grid">
+<section class="section section--flush-top">
+  <div class="hub-grid play-mode-layout">
 
     <!-- LEFT -->
-    <aside class="card hub-left" style="padding:14px; position:sticky; top:86px;">
-      <div style="font-weight:950; letter-spacing:.02em; opacity:.9; margin-bottom:10px;">
+    <aside class="card hub-left hub-sidebar">
+      <div class="hub-sidebar__title">
         MENU
       </div>
 
-      <div style="display:grid; gap:10px;">
+      <div class="hub-sidebar__nav">
         <a class="hub-item is-active" href="<?= h($bp) ?>/play.php">
           <span class="hub-ico">🎮</span>
           <span>Play</span>
@@ -55,7 +127,7 @@ ui_header("Play");
             <span>Shop</span>
           </a>
         <?php else: ?>
-          <div class="hub-item" style="opacity:.55; cursor:not-allowed;">
+          <div class="hub-item hub-sidebar__login-lock">
             <span class="hub-ico">🛒</span>
             <span>Shop (Login)</span>
           </div>
@@ -67,15 +139,15 @@ ui_header("Play");
         </a>
       </div>
 
-      <div style="margin-top:14px; padding-top:14px; border-top:1px solid rgba(255,255,255,.08);">
+      <div class="hub-sidebar__status">
         <span class="pill"><?= $is_guest ? "Guest" : "Player" ?></span>
 
-        <div style="margin-top:10px;">
-          <span class="pill" style="border-color: <?= $rankedReady ? 'rgba(57,255,106,.35)' : 'rgba(255,77,109,.40)' ?>; background: <?= $rankedReady ? 'rgba(57,255,106,.10)' : 'rgba(255,77,109,.10)' ?>;">
+        <div class="hub-sidebar__status-block">
+          <span class="pill <?= $rankedReady ? 'status-pill--good' : 'status-pill--bad' ?>">
             <?= $rankedReady ? 'Ranked Unlocked' : 'Ranked Locked' ?>
           </span>
           <?php if (!$rankedReady): ?>
-            <div style="margin-top:8px; color: var(--muted); font-size:13px; line-height:1.4;">
+            <div class="hub-sidebar__hint">
               Finish account checks to unlock Ranked.
             </div>
           <?php endif; ?>
@@ -84,62 +156,229 @@ ui_header("Play");
     </aside>
 
     <!-- CENTER -->
-    <main style="min-width:0;">
+    <main class="play-mode-main">
+      <section class="play-mode-shell">
+        <div class="play-mode-head">
+          <div class="play-mode-head__copy">
+            <span class="chip">MODE SELECT</span>
+            <h1>Select how you want to play.</h1>
+            <p>Three paths. Pick your table and go.</p>
+          </div>
+        </div>
 
-      <div style="margin-top:12px; display:grid; gap:12px;">
-        <section class="route-grid">
-          <article class="route-card route-card--play">
-            <div class="route-card__top">
-              <span class="pill">Casual</span>
-            </div>
-            <h3>Quick Match</h3>
-            <p>Fast entry into open matchmaking with the shortest path to a live table.</p>
+        <section class="play-mode-grid">
+          <article class="play-mode-card play-mode-card--quick <?= $quickArt ? 'has-art' : '' ?>"<?= $quickArt ? ' data-mode-art="' . h($quickArt) . '"' : '' ?>>
+            <div class="play-mode-card__backdrop"></div>
+            <div class="play-mode-card__content">
+              <div class="play-mode-card__top">
+                <span class="pill">Casual</span>
+              </div>
 
-            <div class="route-card__actions">
-              <button class="btn btn-primary" type="button">Find Match</button>
-            </div>
-          </article>
-
-          <article class="route-card route-card--room" id="rooms">
-            <div class="route-card__top">
-              <span class="pill">Custom</span>
-            </div>
-            <h3>Rooms</h3>
-            <p>Create your own table or join one directly with a room code and optional password.</p>
-
-            <div class="route-card__actions">
-              <a class="btn btn-ghost" href="#room-panel">Go to Rooms</a>
+              <div class="play-mode-card__bottom">
+                <h2>Quick Match</h2>
+                <p>Fastest way into a casual table.</p>
+                <button class="btn btn-primary btn-lg" type="button" id="quickMatchBtn">Play Now</button>
+              </div>
             </div>
           </article>
 
-          <article class="route-card route-card--ranked <?= $rankedReady ? '' : 'is-locked' ?>" id="ranked">
-            <div class="route-card__top">
-              <span class="pill <?= $rankedReady ? 'pill-good' : 'pill-warn' ?>">
-                <?= $rankedReady ? 'Competitive' : 'Locked' ?>
-              </span>
-            </div>
-            <h3>Ranked Queue</h3>
-            <p>Competitive matchmaking for verified accounts that have completed access requirements.</p>
+          <article class="play-mode-card play-mode-card--rooms <?= $roomsArt ? 'has-art' : '' ?>"<?= $roomsArt ? ' data-mode-art="' . h($roomsArt) . '"' : '' ?>>
+            <div class="play-mode-card__backdrop"></div>
+            <div class="play-mode-card__content">
+              <div class="play-mode-card__top">
+                <span class="pill">Custom</span>
+                <span class="pill"><?= (int)$openRoomCount ?> public</span>
+              </div>
 
-            <div class="route-card__actions">
-              <button class="btn <?= $rankedReady ? 'btn-primary' : 'btn-ghost' ?>" type="button">
-                <?= $rankedReady ? 'Queue Ranked' : 'View Requirements' ?>
-              </button>
+              <div class="play-mode-card__bottom">
+                <h2>Rooms</h2>
+                <p>Browse lobbies or host your own room.</p>
+                <button class="btn btn-ghost btn-lg" type="button" id="roomsOverlayBtn">Open Rooms</button>
+              </div>
+            </div>
+          </article>
+
+          <article class="play-mode-card play-mode-card--ranked <?= $rankedArt ? 'has-art' : '' ?> <?= $rankedReady ? '' : 'is-locked' ?>"<?= $rankedArt ? ' data-mode-art="' . h($rankedArt) . '"' : '' ?>>
+            <div class="play-mode-card__backdrop"></div>
+            <div class="play-mode-card__content">
+              <div class="play-mode-card__top">
+                <span class="pill <?= $rankedReady ? 'pill-good' : 'pill-warn' ?>">
+                  <?= $rankedReady ? 'Competitive' : 'Locked' ?>
+                </span>
+              </div>
+
+              <div class="play-mode-card__bottom">
+                <h2>Ranked</h2>
+                <p><?= $rankedReady ? 'Competitive queue is ready.' : 'High-stakes play with access requirements.' ?></p>
+                <button class="btn <?= $rankedReady ? 'btn-primary' : 'btn-ghost' ?> btn-lg" type="button" id="rankedQueueBtn">
+                  <?= $rankedReady ? 'Queue Ranked' : 'View Requirements' ?>
+                </button>
+              </div>
             </div>
           </article>
         </section>
+      </section>
+    </main>
 
-        <div class="card" style="padding:14px;" id="room-panel">
-          <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
-            <div>
-              <div style="font-weight:950;">Rooms</div>
-              <div style="color: var(--muted); font-size:13px; margin-top:4px;">
-                Private and public table entry
-              </div>
+    <!-- RIGHT -->
+    <aside class="hub-right play-mode-side">
+      <div class="card play-side-panel">
+        <div class="play-side-panel__head">
+          <div>
+            <div class="panel-title">Queue Notes</div>
+            <div class="panel-sub">
+              Matchmaking and access status
+            </div>
+          </div>
+        </div>
+
+        <div class="play-note-list">
+          <div class="card-soft play-note-card">
+            <div class="text-strong">⚡ Quick Match</div>
+            <div class="panel-sub">
+              Best for immediate casual entry.
             </div>
           </div>
 
-          <div class="split-grid" style="margin-top:12px;">
+          <div class="card-soft play-note-card">
+            <div class="text-strong">🚪 Rooms</div>
+            <div class="panel-sub">
+              Best for friend groups and direct room-code entry.
+            </div>
+          </div>
+
+          <div class="card-soft play-note-card">
+            <div class="text-strong">🏅 Ranked</div>
+            <div class="panel-sub">
+              <?= $rankedReady ? 'Your account is ready for competitive queue.' : 'Missing items will point you to the right page.' ?>
+            </div>
+          </div>
+        </div>
+
+        <div class="play-check-panel">
+          <div class="pill pill-soft-danger">
+            Ranked requirements
+          </div>
+
+          <div class="play-check-list">
+            <?php foreach ($rankedChecks as $check): ?>
+              <div class="play-check-row">
+                <span><?= h($check['label']) ?></span>
+                <span><?= $check['ok'] ? "✅" : "❌" ?></span>
+              </div>
+            <?php endforeach; ?>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+  </div>
+
+  <div class="play-modal" id="quickMatchModal" aria-hidden="true">
+    <div class="play-modal__backdrop" data-close-modal></div>
+    <div class="play-modal__dialog card" role="dialog" aria-modal="true" aria-labelledby="quickMatchTitle">
+      <button class="play-modal__close" type="button" data-close-modal aria-label="Close">×</button>
+      <div class="play-modal__body">
+        <div class="play-modal__eyebrow">CASUAL ENTRY</div>
+        <h3 id="quickMatchTitle">Quick Match</h3>
+        <p class="play-modal__lead">
+          This route finds the shortest path into a public casual table. If none is waiting, a new one is created and opened for other players.
+        </p>
+
+        <div class="play-modal__grid play-modal__grid--three">
+          <div class="play-mini-card">
+            <span>Queue style</span>
+            <strong>Public casual</strong>
+          </div>
+          <div class="play-mini-card">
+            <span>Target size</span>
+            <strong>4 players</strong>
+          </div>
+          <div class="play-mini-card">
+            <span>Current open rooms</span>
+            <strong><?= (int)$openRoomCount ?></strong>
+          </div>
+        </div>
+
+        <div class="play-modal__actions">
+          <button class="btn btn-primary" type="button" id="quickMatchStartBtn">Find Match</button>
+          <button class="btn btn-ghost" type="button" data-close-modal>Cancel</button>
+        </div>
+        <div class="play-inline-msg" id="quickMatchMsg"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="play-modal" id="roomsModal" aria-hidden="true">
+    <div class="play-modal__backdrop" data-close-modal></div>
+    <div class="play-modal__dialog card play-modal__dialog--wide" role="dialog" aria-modal="true" aria-labelledby="roomsTitle">
+      <button class="play-modal__close" type="button" data-close-modal aria-label="Close">×</button>
+      <div class="play-modal__body">
+        <div class="play-modal__eyebrow">CUSTOM LOBBIES</div>
+        <div class="play-modal__header-row">
+          <div>
+            <h3 id="roomsTitle">Rooms</h3>
+            <p class="play-modal__lead">Browse public lobbies, create your own room, or jump directly with a room code.</p>
+          </div>
+          <div class="play-modal__header-pills">
+            <span class="pill"><?= (int)$openRoomCount ?> public waiting</span>
+            <span class="pill">Private via code</span>
+          </div>
+        </div>
+
+        <div class="play-tabbar" role="tablist" aria-label="Room actions">
+          <button class="play-tabbar__item is-active" type="button" data-play-tab="browse">Browse Rooms</button>
+          <button class="play-tabbar__item" type="button" data-play-tab="create">Create Room</button>
+          <button class="play-tabbar__item" type="button" data-play-tab="join">Join by Code</button>
+        </div>
+
+        <div class="play-tabpane is-active" data-play-pane="browse">
+          <div class="play-room-browser">
+            <?php if ($browserRooms): ?>
+              <?php foreach ($browserRooms as $room): ?>
+                <article class="play-room-row card-soft">
+                  <div class="play-room-row__main">
+                    <div class="play-room-row__title">
+                      <?= h($room['room_name'] ?: ('Room ' . $room['room_code'])) ?>
+                    </div>
+                    <div class="play-room-row__meta">
+                      Host: <b><?= h($room['host_name'] ?: 'Unknown host') ?></b>
+                      <span class="sep">•</span>
+                      Code: <b><?= h($room['room_code']) ?></b>
+                    </div>
+                    <div class="play-room-row__chips">
+                      <span class="pill"><?= h(ucfirst((string)$room['room_type'])) ?></span>
+                      <span class="pill"><?= (int)$room['player_count'] ?>/<?= (int)$room['max_players'] ?> players</span>
+                      <?php if (!empty($room['password_hash'])): ?>
+                        <span class="pill">Password</span>
+                      <?php else: ?>
+                        <span class="pill">Open join</span>
+                      <?php endif; ?>
+                    </div>
+                  </div>
+                  <div class="play-room-row__side">
+                    <button
+                      class="btn btn-primary play-room-join-btn"
+                      type="button"
+                      data-room-code="<?= h($room['room_code']) ?>"
+                      data-room-protected="<?= !empty($room['password_hash']) ? '1' : '0' ?>"
+                    >
+                      <?= !empty($room['password_hash']) ? 'Enter Password' : 'Join Room' ?>
+                    </button>
+                  </div>
+                </article>
+              <?php endforeach; ?>
+            <?php else: ?>
+              <div class="play-empty-state card-soft">
+                <strong>No public rooms are waiting right now.</strong>
+                <span>Create one yourself or use Quick Match to spin up a casual table.</span>
+              </div>
+            <?php endif; ?>
+          </div>
+        </div>
+
+        <div class="play-tabpane" data-play-pane="create">
+          <div class="split-grid">
             <article class="info-block">
               <div class="info-block__head">
                 <h3>Create Room</h3>
@@ -151,25 +390,74 @@ ui_header("Play");
                   <label for="room_name">Room Name</label>
                   <input id="room_name" type="text" placeholder="Night Lobby"/>
                 </div>
+
                 <div>
                   <label for="room_mode">Mode</label>
-                  <input id="room_mode" type="text" placeholder="Casual / Ranked / Custom"/>
+                  <select id="room_mode" class="input">
+                    <option value="custom" selected>Custom</option>
+                    <option value="casual">Casual</option>
+                    <option value="solo">Solo</option>
+                    <?php if ($rankedReady): ?>
+                      <option value="ranked">Ranked</option>
+                    <?php endif; ?>
+                  </select>
                 </div>
+
                 <div>
                   <label for="room_slots">Player Slots</label>
-                  <input id="room_slots" type="text" placeholder="2 / 4 / 6"/>
+                  <select id="room_slots" class="input">
+                    <option value="2">2 Players</option>
+                    <option value="3">3 Players</option>
+                    <option value="4" selected>4 Players</option>
+                  </select>
                 </div>
+
                 <div>
+                  <label for="room_visibility">Visibility</label>
+                  <select id="room_visibility" class="input">
+                    <option value="private" selected>Private</option>
+                    <option value="public">Public</option>
+                  </select>
+                </div>
+
+                <div class="form-grid__full">
                   <label for="room_pass">Password</label>
                   <input id="room_pass" type="password" placeholder="Optional"/>
                 </div>
               </div>
 
-              <div class="formrow">
-                <button class="btn btn-primary" type="button">Open Room</button>
+              <div class="formrow play-formrow-inline">
+                <button class="btn btn-primary" type="button" id="createRoomBtn">Open Room</button>
+                <div id="createRoomMsg" class="play-inline-msg"></div>
               </div>
             </article>
 
+            <article class="info-block">
+              <div class="info-block__head">
+                <h3>Preset Notes</h3>
+                <span class="pill">Room Setup</span>
+              </div>
+
+              <div class="stack-list">
+                <div class="stack-card">
+                  <strong>Casual table</strong>
+                  <span>Best for quick public play without the pressure of ranked entry.</span>
+                </div>
+                <div class="stack-card">
+                  <strong>Custom lobby</strong>
+                  <span>Best for friend groups, future rule toggles, and manual host control.</span>
+                </div>
+                <div class="stack-card">
+                  <strong>Private room</strong>
+                  <span>Use code entry and optional password for invite-only matches.</span>
+                </div>
+              </div>
+            </article>
+          </div>
+        </div>
+
+        <div class="play-tabpane" data-play-pane="join">
+          <div class="split-grid">
             <article class="info-block">
               <div class="info-block__head">
                 <h3>Join Room</h3>
@@ -179,7 +467,7 @@ ui_header("Play");
               <div class="form-grid">
                 <div>
                   <label for="join_code">Room Code</label>
-                  <input id="join_code" type="text" placeholder="LGA-4821"/>
+                  <input id="join_code" type="text" placeholder="ABCD1234"/>
                 </div>
                 <div>
                   <label for="join_pass">Password</label>
@@ -187,68 +475,394 @@ ui_header("Play");
                 </div>
               </div>
 
-              <div class="formrow">
-                <button class="btn btn-ghost" type="button">Join Room</button>
+              <div class="formrow play-formrow-inline">
+                <button class="btn btn-ghost" type="button" id="joinRoomBtn">Join Room</button>
+                <div id="joinRoomMsg" class="play-inline-msg"></div>
+              </div>
+            </article>
+
+            <article class="info-block">
+              <div class="info-block__head">
+                <h3>Join Notes</h3>
+                <span class="pill">Private Access</span>
+              </div>
+
+              <div class="stack-list">
+                <div class="stack-card">
+                  <strong>Public rooms</strong>
+                  <span>Visible in the browser when they are waiting for players.</span>
+                </div>
+                <div class="stack-card">
+                  <strong>Private rooms</strong>
+                  <span>Usually accessed with a direct code and optional password.</span>
+                </div>
+                <div class="stack-card">
+                  <strong>Passworded rooms</strong>
+                  <span>Enter the exact code first, then provide the password to enter.</span>
+                </div>
               </div>
             </article>
           </div>
         </div>
       </div>
-    </main>
+    </div>
+  </div>
 
-    <!-- RIGHT -->
-    <aside class="hub-right">
-      <div class="card" style="padding:16px; border-radius: calc(var(--radius) + 10px);">
-        <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
-          <div>
-            <div style="font-weight:950;">Queue Notes</div>
-            <div style="color: var(--muted); font-size:13px; margin-top:4px;">
-              Matchmaking and access status
-            </div>
+  <div class="play-modal" id="rankedModal" aria-hidden="true">
+    <div class="play-modal__backdrop" data-close-modal></div>
+    <div class="play-modal__dialog card" role="dialog" aria-modal="true" aria-labelledby="rankedTitle">
+      <button class="play-modal__close" type="button" data-close-modal aria-label="Close">×</button>
+      <div class="play-modal__body">
+        <div class="play-modal__eyebrow">COMPETITIVE ENTRY</div>
+        <h3 id="rankedTitle">Ranked Queue</h3>
+        <p class="play-modal__lead">
+          Queue for competitive play once your account has completed the required access checks.
+        </p>
+
+        <div class="play-modal__grid play-modal__grid--three">
+          <div class="play-mini-card">
+            <span>Current rank</span>
+            <strong>Unranked</strong>
+          </div>
+          <div class="play-mini-card">
+            <span>Next rank</span>
+            <strong>Bronze I</strong>
+          </div>
+          <div class="play-mini-card">
+            <span>Entry stake</span>
+            <strong>50 Zeny</strong>
           </div>
         </div>
 
-        <div style="margin-top:12px; display:grid; gap:10px;">
-          <a class="card-soft" href="<?= h($bp) ?>/play.php" style="display:block; padding:12px; text-decoration:none;">
-            <div style="font-weight:900;">⚡ Quick Match</div>
-            <div style="color: var(--muted); font-size:13px; margin-top:4px;">
-              Fastest path into a casual table.
-            </div>
-          </a>
-
-          <a class="card-soft" href="#room-panel" style="display:block; padding:12px; text-decoration:none;">
-            <div style="font-weight:900;">🚪 Rooms</div>
-            <div style="color: var(--muted); font-size:13px; margin-top:4px;">
-              Best for friend groups, codes, and direct invites.
-            </div>
-          </a>
-
-          <div class="card-soft" style="display:block; padding:12px;">
-            <div style="font-weight:900;">🏅 Ranked</div>
-            <div style="color: var(--muted); font-size:13px; margin-top:4px;">
-              <?= $rankedReady ? 'Your account is ready for competitive queue.' : 'Complete access checks before ranked opens.' ?>
-            </div>
-          </div>
-        </div>
-
-        <div style="margin-top:14px; padding-top:14px; border-top:1px solid rgba(255,255,255,.08);">
-          <div class="pill" style="border-color: rgba(255,77,109,.40); background: rgba(255,255,255,.06);">
-            Ranked requirements
-          </div>
-
-          <div style="margin-top:10px; display:grid; gap:6px; color: var(--muted); font-size:13px;">
-            <?php foreach ($rankedChecks as $check): ?>
-              <div style="display:flex; justify-content:space-between;">
+        <div class="play-check-list play-check-list--modal">
+          <?php foreach ($rankedChecks as $index => $check): ?>
+            <div class="play-check-row play-check-row--modal">
+              <div class="play-check-row__copy">
                 <span><?= h($check['label']) ?></span>
-                <span><?= $check['ok'] ? "✅" : "❌" ?></span>
+                <?php if (!$check['ok']): ?>
+                  <small>
+                    <?php if ($index === 0): ?>
+                      Approval is handled by the admin review queue.
+                    <?php elseif ($index === 1): ?>
+                      Verify your email from the security section.
+                    <?php else: ?>
+                      Link your credits or payment access from the shop.
+                    <?php endif; ?>
+                  </small>
+                <?php else: ?>
+                  <small>Requirement complete.</small>
+                <?php endif; ?>
               </div>
-            <?php endforeach; ?>
-          </div>
-        </div>
-      </div>
-    </aside>
 
+              <div class="play-check-row__status">
+                <span><?= $check['ok'] ? "✅" : "❌" ?></span>
+                <?php if (!$check['ok']): ?>
+                  <?php if ($index === 0): ?>
+                    <a class="btn btn-ghost btn-sm" href="<?= h($bp) ?>/profile.php?tab=overview">Open Profile</a>
+                  <?php elseif ($index === 1): ?>
+                    <a class="btn btn-ghost btn-sm" href="<?= h($bp) ?>/profile.php?tab=security">Verify Email</a>
+                  <?php else: ?>
+                    <a class="btn btn-ghost btn-sm" href="<?= h($bp) ?>/shop.php?tab=credits">Link Credits</a>
+                  <?php endif; ?>
+                <?php endif; ?>
+              </div>
+            </div>
+          <?php endforeach; ?>
+        </div>
+
+        <?php if (!$rankedReady): ?>
+          <div class="play-requirement-help card-soft">
+            <strong>How to unlock Ranked</strong>
+            <span>Finish the missing checks below, then come back here to queue.</span>
+            <div class="play-requirement-help__actions">
+              <a class="btn btn-ghost" href="<?= h($bp) ?>/profile.php?tab=security">Security</a>
+              <a class="btn btn-ghost" href="<?= h($bp) ?>/shop.php?tab=credits">Credits</a>
+              <a class="btn btn-ghost" href="<?= h($bp) ?>/profile.php?tab=overview">Profile</a>
+            </div>
+          </div>
+        <?php endif; ?>
+
+        <div class="play-modal__actions">
+          <button class="btn <?= $rankedReady ? 'btn-primary' : 'btn-ghost' ?>" type="button" id="rankedQueueStartBtn">
+            <?= $rankedReady ? 'Queue Ranked' : 'Ranked Locked' ?>
+          </button>
+          <button class="btn btn-ghost" type="button" data-close-modal>Close</button>
+        </div>
+        <div class="play-inline-msg" id="rankedQueueMsg"></div>
+      </div>
+    </div>
   </div>
 </section>
+
+<script>
+(() => {
+  document.querySelectorAll('.play-mode-card[data-mode-art]').forEach((card) => {
+    const art = card.getAttribute('data-mode-art');
+    if (art) card.style.setProperty('--mode-art', `url("${art}")`);
+  });
+
+  const BP = <?= json_encode(rtrim($bp, '/')) ?>;
+  const rankedReady = <?= $rankedReady ? 'true' : 'false' ?>;
+
+  const createBtn = document.getElementById('createRoomBtn');
+  const joinBtn = document.getElementById('joinRoomBtn');
+  const quickMatchBtn = document.getElementById('quickMatchBtn');
+  const quickMatchStartBtn = document.getElementById('quickMatchStartBtn');
+  const rankedQueueBtn = document.getElementById('rankedQueueBtn');
+  const rankedQueueStartBtn = document.getElementById('rankedQueueStartBtn');
+  const roomsOverlayBtn = document.getElementById('roomsOverlayBtn');
+
+  const roomNameEl = document.getElementById('room_name');
+  const roomModeEl = document.getElementById('room_mode');
+  const roomSlotsEl = document.getElementById('room_slots');
+  const roomVisibilityEl = document.getElementById('room_visibility');
+  const roomPassEl = document.getElementById('room_pass');
+
+  const joinCodeEl = document.getElementById('join_code');
+  const joinPassEl = document.getElementById('join_pass');
+
+  const createMsgEl = document.getElementById('createRoomMsg');
+  const joinMsgEl = document.getElementById('joinRoomMsg');
+  const quickMatchMsgEl = document.getElementById('quickMatchMsg');
+  const rankedQueueMsgEl = document.getElementById('rankedQueueMsg');
+
+  const quickMatchModal = document.getElementById('quickMatchModal');
+  const roomsModal = document.getElementById('roomsModal');
+  const rankedModal = document.getElementById('rankedModal');
+  const tabButtons = Array.from(document.querySelectorAll('[data-play-tab]'));
+  const tabPanes = Array.from(document.querySelectorAll('[data-play-pane]'));
+  const roomJoinButtons = Array.from(document.querySelectorAll('.play-room-join-btn'));
+
+  function setMsg(el, text, isError = false) {
+    if (!el) return;
+    el.textContent = text || '';
+    el.classList.toggle('is-error', !!isError);
+    el.classList.toggle('is-good', !isError && !!text);
+  }
+
+  async function postJson(url, payload) {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload || {})
+    });
+
+    let data = {};
+    try {
+      data = await res.json();
+    } catch (e) {
+      data = { ok: false, msg: 'Invalid server response.' };
+    }
+
+    if (!res.ok || !data.ok) {
+      throw new Error(data.msg || 'Request failed.');
+    }
+
+    return data;
+  }
+
+  function goToRoomFromPayload(data) {
+    const url = data?.redirect_url;
+    if (url) {
+      window.location.href = url;
+      return;
+    }
+
+    const code = data?.room?.room_code;
+    if (code) {
+      window.location.href = `${BP}/room.php?code=${encodeURIComponent(code)}`;
+      return;
+    }
+
+    throw new Error('Room redirect target missing.');
+  }
+
+  function openModal(modal) {
+    if (!modal) return;
+    modal.classList.add('is-open');
+    modal.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeModal(modal) {
+    if (!modal) return;
+    modal.classList.remove('is-open');
+    modal.setAttribute('aria-hidden', 'true');
+    if (!document.querySelector('.play-modal.is-open')) {
+      document.body.style.overflow = '';
+    }
+  }
+
+  function closeAllModals() {
+    document.querySelectorAll('.play-modal.is-open').forEach(closeModal);
+  }
+
+  function setTab(which) {
+    tabButtons.forEach((btn) => btn.classList.toggle('is-active', btn.dataset.playTab === which));
+    tabPanes.forEach((pane) => pane.classList.toggle('is-active', pane.dataset.playPane === which));
+  }
+
+  async function createRoom(payload, msgEl) {
+    const data = await postJson(`${BP}/api/game/create_room.php`, payload);
+    setMsg(msgEl, data.msg || 'Room created.');
+    goToRoomFromPayload(data);
+  }
+
+  async function joinRoom(payload, msgEl) {
+    const data = await postJson(`${BP}/api/game/join_room.php`, payload);
+    setMsg(msgEl, data.msg || 'Joined room.');
+    goToRoomFromPayload(data);
+  }
+
+  document.querySelectorAll('[data-close-modal]').forEach((el) => {
+    el.addEventListener('click', () => {
+      const modal = el.closest('.play-modal');
+      closeModal(modal);
+    });
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeAllModals();
+  });
+
+  tabButtons.forEach((btn) => {
+    btn.addEventListener('click', () => setTab(btn.dataset.playTab));
+  });
+
+  if (quickMatchBtn) {
+    quickMatchBtn.addEventListener('click', () => {
+      setMsg(quickMatchMsgEl, '');
+      openModal(quickMatchModal);
+    });
+  }
+
+  if (roomsOverlayBtn) {
+    roomsOverlayBtn.addEventListener('click', () => {
+      setTab('browse');
+      setMsg(createMsgEl, '');
+      setMsg(joinMsgEl, '');
+      openModal(roomsModal);
+    });
+  }
+
+  if (rankedQueueBtn) {
+    rankedQueueBtn.addEventListener('click', () => {
+      setMsg(rankedQueueMsgEl, '');
+      openModal(rankedModal);
+    });
+  }
+
+  roomJoinButtons.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const code = (btn.dataset.roomCode || '').trim().toUpperCase();
+      const protectedRoom = btn.dataset.roomProtected === '1';
+      if (joinCodeEl) joinCodeEl.value = code;
+      if (joinPassEl && !protectedRoom) joinPassEl.value = '';
+      setTab('join');
+      openModal(roomsModal);
+      if (joinPassEl) joinPassEl.focus();
+    });
+  });
+
+  if (createBtn) {
+    createBtn.addEventListener('click', async () => {
+      createBtn.disabled = true;
+      setMsg(createMsgEl, '');
+
+      try {
+        const roomName = (roomNameEl?.value || '').trim();
+        const roomType = (roomModeEl?.value || 'custom').trim();
+        const maxPlayers = parseInt(roomSlotsEl?.value || '4', 10);
+        const visibility = (roomVisibilityEl?.value || 'private').trim();
+        const password = (roomPassEl?.value || '').trim();
+
+        await createRoom({
+          room_name: roomName,
+          room_type: roomType,
+          max_players: maxPlayers,
+          visibility,
+          password
+        }, createMsgEl);
+      } catch (err) {
+        setMsg(createMsgEl, err.message || 'Failed to create room.', true);
+      } finally {
+        createBtn.disabled = false;
+      }
+    });
+  }
+
+  if (joinBtn) {
+    joinBtn.addEventListener('click', async () => {
+      joinBtn.disabled = true;
+      setMsg(joinMsgEl, '');
+
+      try {
+        const roomCode = (joinCodeEl?.value || '').trim().toUpperCase();
+        const password = (joinPassEl?.value || '').trim();
+
+        if (!roomCode) {
+          throw new Error('Enter a room code first.');
+        }
+
+        await joinRoom({
+          room_code: roomCode,
+          password
+        }, joinMsgEl);
+      } catch (err) {
+        setMsg(joinMsgEl, err.message || 'Failed to join room.', true);
+      } finally {
+        joinBtn.disabled = false;
+      }
+    });
+  }
+
+  if (quickMatchStartBtn) {
+    quickMatchStartBtn.addEventListener('click', async () => {
+      quickMatchStartBtn.disabled = true;
+      setMsg(quickMatchMsgEl, 'Searching for an open casual table...');
+
+      try {
+        await createRoom({
+          room_name: 'Quick Match',
+          room_type: 'casual',
+          max_players: 4,
+          visibility: 'public',
+          password: ''
+        }, quickMatchMsgEl);
+      } catch (err) {
+        setMsg(quickMatchMsgEl, err.message || 'Failed to start quick match.', true);
+      } finally {
+        quickMatchStartBtn.disabled = false;
+      }
+    });
+  }
+
+  if (rankedQueueStartBtn) {
+    rankedQueueStartBtn.addEventListener('click', async () => {
+      if (!rankedReady) {
+        setMsg(rankedQueueMsgEl, 'Ranked is still locked for this account.', true);
+        return;
+      }
+
+      rankedQueueStartBtn.disabled = true;
+      setMsg(rankedQueueMsgEl, 'Entering ranked queue...');
+
+      try {
+        await createRoom({
+          room_name: 'Ranked Queue',
+          room_type: 'ranked',
+          max_players: 4,
+          visibility: 'public',
+          password: ''
+        }, rankedQueueMsgEl);
+      } catch (err) {
+        setMsg(rankedQueueMsgEl, err.message || 'Failed to queue ranked.', true);
+      } finally {
+        rankedQueueStartBtn.disabled = false;
+      }
+    });
+  }
+})();
+</script>
 
 <?php ui_footer(); ?>

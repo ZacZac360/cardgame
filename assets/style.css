@@ -1387,3 +1387,60 @@ body.adminhub .sitefooter__inner{
 
 #pwReq .ok { color: rgba(57,255,106,.95); }
 #pwReq .bad { color: rgba(255,77,109,.95); }
+
+/* =====================================================
+   LIGHT MODE POLISH TOKENS
+===================================================== */
+body[data-appearance="light"]{
+  --bg0:#d9e8ff;
+  --bg1:#edf5ff;
+  --bg2:#c8dcff;
+
+  --text:#142742;
+  --muted:rgba(20,39,66,.70);
+  --softText:rgba(20,39,66,.88);
+  --faintText:rgba(20,39,66,.56);
+
+  --primary:#1ecf7a;
+  --primary2:#12b86a;
+  --blue:#4b8dff;
+  --violet:#7c86ff;
+  --danger:#df5a74;
+  --warn:#d89a28;
+
+  --border:rgba(43,76,128,.14);
+  --border2:rgba(43,76,128,.09);
+
+  --glass:rgba(227,238,255,.78);
+  --glass2:rgba(255,255,255,.42);
+
+  --surface:rgba(241,247,255,.82);
+  --surfaceHover:rgba(248,251,255,.96);
+  --surfaceStrong:rgba(192,214,248,.34);
+
+  --shadow:0 20px 50px rgba(64,102,168,.16);
+  --shadowSoft:0 12px 28px rgba(64,102,168,.11);
+  --ring:0 0 0 3px rgba(75,141,255,.16);
+
+  --nebulaA:rgba(86,146,255,.18);
+  --nebulaB:rgba(124,134,255,.10);
+  --nebulaC:rgba(30,207,122,.05);
+  --nebulaD:rgba(75,141,255,.07);
+  --nebulaE:rgba(86,146,255,.09);
+  --nebulaF:rgba(124,134,255,.05);
+
+  --star1:rgba(255,255,255,.18);
+  --star2:rgba(75,141,255,.06);
+  --star3:rgba(30,207,122,.04);
+
+  --topnavBg:rgba(235,243,255,.78);
+  --footerBg:rgba(230,240,255,.72);
+  --bannerBg:rgba(219,232,255,.78);
+  --inputBg:rgba(248,251,255,.92);
+  --modalBg:rgba(239,246,255,.97);
+
+  /* new convenience tokens */
+  --panelLite:linear-gradient(180deg, rgba(255,255,255,.70), rgba(233,243,255,.82));
+  --panelLiteStrong:linear-gradient(180deg, rgba(255,255,255,.88), rgba(227,239,255,.96));
+  --iconLite:linear-gradient(180deg, rgba(255,255,255,.92), rgba(220,234,255,.92));
+}

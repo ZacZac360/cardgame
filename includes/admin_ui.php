@@ -75,6 +75,7 @@ function admin_ui_header(string $title = 'Admin'): void {
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title><?= h($title) ?> — Admin • Logia</title>
   <link rel="stylesheet" href="<?= h($bp) ?>/assets/style.css"/>
+  <link rel="stylesheet" href="<?= h($bp) ?>/assets/adminstyle.css"/>
 </head>
 <body>
 

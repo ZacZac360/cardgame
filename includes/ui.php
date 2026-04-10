@@ -129,44 +129,44 @@ function ui_header(string $title = 'Dashboard', bool $is_hub = true): void {
 <body class="<?= $is_hub ? 'hub' : '' ?>" data-appearance="<?= h(ui_appearance_mode($u)) ?>">
 
 <header class="topnav">
-  <div class="topnav__inner" style="display:flex; align-items:center; justify-content:space-between; gap:14px;">
+  <div class="topnav__inner topnav__inner--hub">
 
-    <a href="<?= h($bp) ?>/profile.php" title="Profile & Stats" style="display:flex; align-items:center; gap:12px; text-decoration:none;">
+    <a href="<?= h($bp) ?>/profile.php" title="Profile & Stats" class="topnav-profile">
       <?php $navAvatar = trim((string)($u['avatar_path'] ?? '')); ?>
 
       <?php if ($navAvatar !== ''): ?>
         <img
           src="<?= h($bp . '/' . ltrim($navAvatar, '/')) ?>"
           alt="Profile Avatar"
-          style="width:44px; height:44px; border-radius:14px; object-fit:cover; border:1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.06); display:block;"
+          class="topnav-profile__avatarimg"
         >
       <?php else: ?>
-        <div style="width:44px; height:44px; border-radius:14px; display:grid; place-items:center; border:1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.06); font-weight:950;">
+        <div class="topnav-profile__avatarfallback">
           <?= h(strtoupper(substr((string)$u['username'], 0, 1))) ?>
         </div>
       <?php endif; ?>
 
-      <div style="display:grid; gap:4px; min-width:0;">
-        <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; min-width:0;">
-          <div style="font-weight:950; letter-spacing:.01em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:240px;">
+      <div class="topnav-profile__meta">
+        <div class="topnav-profile__row">
+          <div class="topnav-profile__name">
             <?= h($u['display_name'] ?? $u['username']) ?>
           </div>
 
           <span class="pill"><?= h($role_label) ?></span>
-          <span class="pill" style="opacity:.9;">Lv. <?= (int)$level ?></span>
+          <span class="pill pill-soft">Lv. <?= (int)$level ?></span>
 
           <?php if ($is_guest): ?>
-            <span class="pill" style="border-color: rgba(255,205,102,.45); background: rgba(255,205,102,.10);">Casual Only</span>
+            <span class="pill status-pill--warn">Casual Only</span>
           <?php elseif (!$ranked_ok): ?>
-            <span class="pill" style="border-color: rgba(255,77,109,.40); background: rgba(255,77,109,.10);">Ranked Locked</span>
+            <span class="pill status-pill--bad">Ranked Locked</span>
           <?php endif; ?>
         </div>
 
-        <div style="display:flex; align-items:center; gap:10px; opacity:.9;">
-          <div style="width:180px; max-width:30vw; height:8px; border-radius:999px; background: rgba(255,255,255,.10); overflow:hidden; border:1px solid rgba(255,255,255,.10);">
-            <i style="display:block; height:100%; width: <?= max(0, min(100, $exp_pct)) ?>%; background: rgba(139,92,255,.55);"></i>
+        <div class="topnav-profile__subrow">
+          <div class="topnav-profile__xpbar">
+            <i class="topnav-profile__xpfill" data-progress="<?= max(0, min(100, $exp_pct)) ?>"></i>
           </div>
-          <div style="color: var(--muted); font-size:12px;">Profile & Stats</div>
+          <div class="topnav-profile__subtext">Profile & Stats</div>
         </div>
       </div>
     </a>
@@ -174,25 +174,12 @@ function ui_header(string $title = 'Dashboard', bool $is_hub = true): void {
     <div class="md-icons">
 
           <div
-          class="md-ico-wrap"
+          class="md-ico-wrap md-balance-wrap"
           title="Zeny Balance"
-          style="display:flex; align-items:center; gap:8px; padding:0 2px;"
         >
           <a
             href="<?= h($bp) ?>/shop.php?tab=credits"
-            style="
-              display:inline-flex;
-              align-items:center;
-              gap:8px;
-              text-decoration:none;
-              color:var(--text);
-              padding:10px 12px;
-              border-radius:14px;
-              border:1px solid rgba(255,255,255,.10);
-              background:rgba(255,255,255,.05);
-              font-weight:900;
-              line-height:1;
-            "
+            class="md-balance"
           >
             <span> <?= number_format($zenyBalance) ?> Zeny</span>
           </a>
@@ -210,7 +197,7 @@ function ui_header(string $title = 'Dashboard', bool $is_hub = true): void {
               <div class="dd__sub">Latest updates</div>
             </div>
 
-            <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end;">
+            <div class="dd__actions">
               <button type="button" class="btn btn-ghost" data-notif-read-all="1">Mark all read</button>
               <a class="btn btn-ghost" href="<?= h($bp) ?>/notifications.php">View all</a>
             </div>
@@ -218,7 +205,7 @@ function ui_header(string $title = 'Dashboard', bool $is_hub = true): void {
 
           <div class="dd__body">
             <?php if (!$dd_notes): ?>
-              <div style="color: var(--muted); font-size:13px; padding:6px 2px;">No notifications yet.</div>
+              <div class="dd__empty">No notifications yet.</div>
             <?php else: ?>
               <?php foreach ($dd_notes as $n): ?>
                 <?php
@@ -230,34 +217,33 @@ function ui_header(string $title = 'Dashboard', bool $is_hub = true): void {
                   $isUnread = ((int)($n['is_read'] ?? 0) === 0);
                 ?>
                 <div
-                  class="card-soft"
+                  class="card-soft dd-card"
                   data-notif-card
                   data-notif-id="<?= $notifId ?>"
                   data-notif-type="<?= h($notifType) ?>"
                   data-link-url="<?= h($link) ?>"
-                  style="display:block; padding:12px;"
                 >
-                  <div style="display:flex; gap:10px; align-items:flex-start;">
-                    <div style="width:36px; height:36px; border-radius:14px; display:grid; place-items:center; border:1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.06);">
+                  <div class="dd-card__row">
+                    <div class="dd-card__icon">
                       <?= $icon ?>
                     </div>
 
-                    <div style="flex:1; min-width:0;">
-                      <div style="font-weight:900; font-size:13px; color: var(--text);">
+                    <div class="dd-card__body">
+                      <div class="dd-card__title">
                         <?= h($n['title']) ?>
                       </div>
 
                       <?php if (!empty($n['body'])): ?>
-                        <div style="color: var(--muted); font-size:12px; margin-top:4px; line-height:1.35;">
+                        <div class="dd-card__text">
                           <?= h($n['body']) ?>
                         </div>
                       <?php endif; ?>
 
-                      <div style="color: rgba(238,243,255,.55); font-size:11px; margin-top:6px;">
+                      <div class="dd-card__time">
                         <?= h($when) ?>
                       </div>
 
-                      <div style="display:flex; gap:8px; margin-top:10px; flex-wrap:wrap;">
+                      <div class="dd-card__actions">
                         <?php if ($link !== ''): ?>
                           <button
                             type="button"
@@ -285,7 +271,7 @@ function ui_header(string $title = 'Dashboard', bool $is_hub = true): void {
                     </div>
 
                     <?php if ($isUnread): ?>
-                      <span class="pill notif-new-pill" style="border-color: rgba(57,255,106,.35); background: rgba(57,255,106,.10); font-size:11px;">NEW</span>
+                      <span class="pill notif-new-pill">NEW</span>
                     <?php endif; ?>
                   </div>
                 </div>
@@ -313,7 +299,7 @@ function ui_header(string $title = 'Dashboard', bool $is_hub = true): void {
 
             <div class="dd__body">
               <?php if (!$friend_requests): ?>
-                <div style="color: var(--muted); font-size:13px; padding:6px 2px;">No pending friend requests.</div>
+                <div class="dd__empty">No pending friend requests.</div>
               <?php else: ?>
                 <?php foreach ($friend_requests as $fr): ?>
                   <?php
@@ -322,29 +308,28 @@ function ui_header(string $title = 'Dashboard', bool $is_hub = true): void {
                     $friendName = (string)(($fr['display_name'] ?: $fr['username']) ?? 'Player');
                   ?>
                   <div
-                    class="card-soft"
+                    class="card-soft dd-card"
                     data-friend-request-card
                     data-request-id="<?= $requestId ?>"
-                    style="display:block; padding:12px;"
                   >
-                    <div style="display:flex; gap:10px; align-items:center;">
-                      <div style="width:36px; height:36px; border-radius:14px; overflow:hidden; border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.06); display:grid; place-items:center;">
+                    <div class="dd-card__row dd-card__row--center">
+                      <div class="dd-card__avatar">
                         <?php if (!empty($fr['avatar_path'])): ?>
-                          <img src="<?= h($bp . '/' . ltrim((string)$fr['avatar_path'], '/')) ?>" alt="" style="width:100%; height:100%; object-fit:cover;">
+                          <img src="<?= h($bp . '/' . ltrim((string)$fr['avatar_path'], '/')) ?>" alt="" class="dd-card__avatarimg">
                         <?php else: ?>
                           <?= h(strtoupper(substr((string)($fr['username'] ?? 'U'), 0, 1))) ?>
                         <?php endif; ?>
                       </div>
 
-                      <div style="flex:1; min-width:0;">
-                        <div style="font-weight:900; font-size:13px;">
+                      <div class="dd-card__body">
+                        <div class="dd-card__title">
                           <?= h($friendName) ?>
                         </div>
-                        <div style="color: var(--muted); font-size:12px; margin-top:4px;">
+                        <div class="dd-card__text">
                           Sent you a friend request
                         </div>
 
-                        <div style="display:flex; gap:8px; margin-top:10px; flex-wrap:wrap;">
+                        <div class="dd-card__actions">
                           <button
                             type="button"
                             class="btn"
@@ -375,7 +360,7 @@ function ui_header(string $title = 'Dashboard', bool $is_hub = true): void {
         </div>
       <?php else: ?>
         <div class="md-ico-wrap" title="Friends (Guest)">
-          <div class="md-ico" style="opacity:.55; cursor:not-allowed;">👥</div>
+          <div class="md-ico md-ico--disabled">👥</div>
         </div>
       <?php endif; ?>
 
@@ -395,9 +380,9 @@ function ui_header(string $title = 'Dashboard', bool $is_hub = true): void {
               <a class="btn btn-ghost" href="<?= h($bp) ?>/friends.php">Friends</a>
             </div>
 
-            <div class="dd__body" style="gap:12px;">
+            <div class="dd__body dd__body--spaced">
               <?php if (!$mail_threads): ?>
-                <div style="color: var(--muted); font-size:13px;">No direct messages yet.</div>
+                <div class="dd__empty">No direct messages yet.</div>
               <?php else: ?>
                 <?php foreach ($mail_threads as $thread): ?>
                   <?php
@@ -409,20 +394,19 @@ function ui_header(string $title = 'Dashboard', bool $is_hub = true): void {
                   ?>
                   <button
                     type="button"
-                    class="card-soft chat-thread-launch"
+                    class="card-soft chat-thread-launch dd-thread"
                     data-chat-open="1"
                     data-conversation-id="<?= $conversationId ?>"
-                    style="display:block; width:100%; padding:12px; text-decoration:none; text-align:left; cursor:pointer;"
                   >
-                    <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
-                      <div style="font-weight:900; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+                    <div class="dd-thread__top">
+                      <div class="dd-thread__name">
                         <?= h($name) ?>
                       </div>
                       <?php if ((int)($thread['unread_count'] ?? 0) > 0): ?>
-                        <span class="pill" style="font-size:11px;"><?= (int)$thread['unread_count'] ?> NEW</span>
+                        <span class="pill dd-thread__pill"><?= (int)$thread['unread_count'] ?> NEW</span>
                       <?php endif; ?>
                     </div>
-                    <div style="color: var(--muted); font-size:13px; margin-top:6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                    <div class="dd-thread__preview">
                       <?= h((string)($last['body'] ?? 'No messages yet.')) ?>
                     </div>
                   </button>
@@ -431,7 +415,7 @@ function ui_header(string $title = 'Dashboard', bool $is_hub = true): void {
             </div>
           </div>
         <?php else: ?>
-          <div class="md-ico" style="opacity:.55; cursor:not-allowed;" title="Messages (Guest)">✉️</div>
+          <div class="md-ico md-ico--disabled" title="Messages (Guest)">✉️</div>
         <?php endif; ?>
       </div>
 
@@ -443,7 +427,7 @@ function ui_header(string $title = 'Dashboard', bool $is_hub = true): void {
   </div>
 </header>
 
-<main class="container" style="padding-top:18px;">
+<main class="container container--topspaced">
 
 <?php if (!$is_guest): ?>
   <div id="chatPopup" class="chat-pop" hidden>
@@ -514,6 +498,11 @@ function ui_header(string $title = 'Dashboard', bool $is_hub = true): void {
   document.addEventListener("click", () => closeAllDropdowns());
   $$(".dd").forEach(dd => dd.addEventListener("click", (e) => e.stopPropagation()));
   document.addEventListener("keydown", (e) => { if(e.key === "Escape") closeAllDropdowns(); });
+
+  $$("[data-progress]").forEach((el) => {
+    const value = Math.max(0, Math.min(100, Number(el.getAttribute("data-progress") || 0)));
+    el.style.width = value + "%";
+  });
 })();
 </script>
 
@@ -526,13 +515,13 @@ function ui_footer(): void {
 </main>
 
 <footer class="sitefooter">
-  <div class="sitefooter__inner" style="display:flex; align-items:center; justify-content:space-between; gap:14px;">
+  <div class="sitefooter__inner sitefooter__inner--hubshell">
     <div>
       <div class="footbrand">Logia</div>
       <div class="footmuted">© <?= date('Y') ?> • Platform shell</div>
     </div>
 
-    <div class="footmuted" style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+    <div class="footmuted footmuted--links">
       <a href="<?= h($bp) ?>/dashboard.php">Dashboard</a>
       <span class="sep">•</span>
       <a href="<?= h($bp) ?>/notifications.php">Notifications</a>

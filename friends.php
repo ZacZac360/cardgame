@@ -160,13 +160,13 @@ ui_header("Friends");
     <main class="notif-main">
 
       <?php if ($msg): ?>
-        <div class="card-soft" style="padding:14px; border-color:rgba(57,255,106,.28);">
+        <div class="card-soft hub-alert hub-alert--success">
           <?= h($msg) ?>
         </div>
       <?php endif; ?>
 
       <?php if ($err): ?>
-        <div class="card-soft" style="padding:14px; border-color:rgba(255,77,109,.28);">
+        <div class="card-soft hub-alert hub-alert--danger">
           <?= h($err) ?>
         </div>
       <?php endif; ?>
@@ -191,7 +191,7 @@ ui_header("Friends");
         </form>
 
         <?php if ($q !== ''): ?>
-          <div class="notif-list" style="margin-top:14px;">
+          <div class="notif-list hub-mt-14">
             <?php if (!$results): ?>
               <div class="card-soft notif-empty">
                 <div class="notif-empty__title">No users found.</div>
