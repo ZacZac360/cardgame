@@ -139,11 +139,50 @@ ui_header("Room " . $roomCode);
               <button class="mode-btn" data-mode="4" type="button">4P</button>
             </div>
 
-          <div class="host-buttons">
-            <button id="startGameBtn" type="button" class="ui-btn">Start Game</button>
-            <button id="resetRoomBtn" type="button" class="ui-btn ui-btn--danger">Reset Room</button>
-            <button id="destroyRoomBtn" type="button" class="ui-btn ui-btn--danger">Destroy Room</button>
-          </div>
+            <div class="tools-section__label" style="margin-top:12px;">Room Rules</div>
+
+            <div id="rulesEditor" class="rules-editor">
+              <label class="rule-row">
+                <span>Allow AI Fill</span>
+                <input id="ruleAllowAiFill" type="checkbox">
+              </label>
+
+              <label class="rule-row">
+                <span>Starting Hand Size</span>
+                <input id="ruleStartingHandSize" type="number" min="3" max="10" step="1" value="5">
+              </label>
+
+              <label class="rule-row">
+                <span>Allow Stack +2</span>
+                <input id="ruleAllowStackPlus2" type="checkbox">
+              </label>
+
+              <label class="rule-row">
+                <span>Allow Stack +4</span>
+                <input id="ruleAllowStackPlus4" type="checkbox">
+              </label>
+
+              <label class="rule-row">
+                <span>Draw Until Playable</span>
+                <input id="ruleDrawUntilPlayable" type="checkbox">
+              </label>
+
+              <div class="rules-note">
+                Fixed Match EXP:
+                Casual / Custom / Solo = 500 / 400 / 300 / 200 by placement,
+                Ranked = 1.5x multiplier.
+              </div>
+
+              <div class="host-buttons" style="margin-top:10px;">
+                <button id="saveRulesBtn" type="button" class="ui-btn">Save Rules</button>
+              </div>
+            </div>
+
+            <div class="host-buttons">
+              <button id="startGameBtn" type="button" class="ui-btn">Start Game</button>
+              <button id="resetRoomBtn" type="button" class="ui-btn ui-btn--danger">Reset Room</button>
+              <button id="destroyRoomBtn" type="button" class="ui-btn ui-btn--danger">Destroy Room</button>
+            </div>
 
             <div id="actionMsg" class="inline-msg"></div>
           </div>

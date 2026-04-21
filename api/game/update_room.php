@@ -15,6 +15,7 @@ $data = game_request_json();
 
 $roomCode = strtoupper(trim((string)($data['room_code'] ?? '')));
 $maxPlayers = (int)($data['max_players'] ?? 0);
+$rulesInput = is_array($data['rules'] ?? null) ? $data['rules'] : [];
 
 if ($roomCode === '') {
   game_json_out(['ok' => false, 'msg' => 'Room code is required.'], 400);
@@ -53,15 +54,33 @@ if ($humanCount > $maxPlayers) {
   game_json_out(['ok' => false, 'msg' => 'Too many human players already joined for that mode.'], 409);
 }
 
+$normalizedRules = game_normalize_room_rules($rulesInput, (string)$room['room_type']);
+$rulesJson = game_jencode($normalizedRules);
+
 $stmt = $mysqli->prepare("
   UPDATE game_rooms
-  SET max_players = ?
+  SET max_players = ?, rules_json = ?
   WHERE id = ?
   LIMIT 1
 ");
-$stmt->bind_param('ii', $maxPlayers, $roomId);
+$stmt->bind_param('isi', $maxPlayers, $rulesJson, $roomId);
 $stmt->execute();
 $stmt->close();
+
+if (function_exists('game_audit_log')) {
+  game_audit_log(
+    $mysqli,
+    (int)$u['id'],
+    'ROOM_UPDATE_RULES',
+    'game_room',
+    $roomId,
+    [
+      'room_code' => $roomCode,
+      'max_players' => $maxPlayers,
+      'rules' => $normalizedRules,
+    ]
+  );
+}
 
 $room = game_get_room_by_code($mysqli, $roomCode);
 if (!$room) {

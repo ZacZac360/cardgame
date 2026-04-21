@@ -413,6 +413,16 @@ ui_header("Play");
                 </div>
 
                 <div>
+                  <label for="room_preset">Preset</label>
+                  <select id="room_preset" class="input">
+                    <option value="classic">Classic</option>
+                    <option value="pressure">Pressure</option>
+                    <option value="chain_clash">Chain Clash</option>
+                    <option value="custom" selected>Custom</option>
+                  </select>
+                </div>
+
+                <div>
                   <label for="room_visibility">Visibility</label>
                   <select id="room_visibility" class="input">
                     <option value="private" selected>Private</option>
@@ -440,16 +450,20 @@ ui_header("Play");
 
               <div class="stack-list">
                 <div class="stack-card">
-                  <strong>Casual table</strong>
-                  <span>Best for quick public play without the pressure of ranked entry.</span>
+                  <strong>Classic</strong>
+                  <span>Pass on +2 / +4, no stacking, draw one when you cannot play.</span>
                 </div>
                 <div class="stack-card">
-                  <strong>Custom lobby</strong>
-                  <span>Best for friend groups, future rule toggles, and manual host control.</span>
+                  <strong>Pressure</strong>
+                  <span>Keep playing even under draw pressure, no stacking, draw until a playable card appears.</span>
                 </div>
                 <div class="stack-card">
-                  <strong>Private room</strong>
-                  <span>Use code entry and optional password for invite-only matches.</span>
+                  <strong>Chain Clash</strong>
+                  <span>Keep playing under pressure, +2 stacking enabled, +4 stacking disabled, draw one when blocked.</span>
+                </div>
+                <div class="stack-card">
+                  <strong>Custom</strong>
+                  <span>Open the room first, then tune the rule toggles manually from the room tools panel.</span>
                 </div>
               </div>
             </article>
@@ -615,6 +629,7 @@ ui_header("Play");
   const roomNameEl = document.getElementById('room_name');
   const roomModeEl = document.getElementById('room_mode');
   const roomSlotsEl = document.getElementById('room_slots');
+  const roomPresetEl = document.getElementById('room_preset');
   const roomVisibilityEl = document.getElementById('room_visibility');
   const roomPassEl = document.getElementById('room_pass');
 
@@ -773,6 +788,7 @@ ui_header("Play");
         const roomName = (roomNameEl?.value || '').trim();
         const roomType = (roomModeEl?.value || 'custom').trim();
         const maxPlayers = parseInt(roomSlotsEl?.value || '4', 10);
+        const presetKey = (roomPresetEl?.value || 'custom').trim();
         const visibility = (roomVisibilityEl?.value || 'private').trim();
         const password = (roomPassEl?.value || '').trim();
 
@@ -780,6 +796,7 @@ ui_header("Play");
           room_name: roomName,
           room_type: roomType,
           max_players: maxPlayers,
+          preset_key: presetKey,
           visibility,
           password
         }, createMsgEl);
@@ -826,6 +843,7 @@ ui_header("Play");
           room_name: 'Quick Match',
           room_type: 'casual',
           max_players: 4,
+          preset_key: 'classic',
           visibility: 'public',
           password: ''
         }, quickMatchMsgEl);
@@ -852,6 +870,7 @@ ui_header("Play");
           room_name: 'Ranked Queue',
           room_type: 'ranked',
           max_players: 4,
+          preset_key: 'pressure',
           visibility: 'public',
           password: ''
         }, rankedQueueMsgEl);

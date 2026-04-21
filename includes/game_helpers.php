@@ -195,6 +195,97 @@ define('LOGIA_STRONG_AGAINST', [
     return (int)($room['host_user_id'] ?? 0) === $userId;
   }
 
+  function game_default_room_rules(?string $roomType = 'custom'): array {
+    $roomType = (string)($roomType ?? 'custom');
+
+    $rules = [
+      'allow_ai_fill' => true,
+      'starting_hand_size' => 5,
+      'allow_stack_plus2' => false,
+      'allow_stack_plus4' => false,
+      'draw_until_playable' => false,
+      'must_pass_on_draw_penalty' => true,
+      'preset_key' => 'classic',
+    ];
+
+    if ($roomType === 'solo') {
+      $rules['allow_ai_fill'] = true;
+    }
+
+    if ($roomType === 'ranked') {
+      $rules['allow_ai_fill'] = false;
+      $rules['preset_key'] = 'pressure';
+    }
+
+    return $rules;
+  }
+
+  function game_normalize_room_rules(array $rules, ?string $roomType = 'custom'): array {
+    $defaults = game_default_room_rules($roomType);
+    $merged = array_merge($defaults, $rules);
+
+    $merged['allow_ai_fill'] = !empty($merged['allow_ai_fill']);
+    $merged['allow_stack_plus2'] = !empty($merged['allow_stack_plus2']);
+    $merged['allow_stack_plus4'] = !empty($merged['allow_stack_plus4']);
+    $merged['draw_until_playable'] = !empty($merged['draw_until_playable']);
+    $merged['must_pass_on_draw_penalty'] = !empty($merged['must_pass_on_draw_penalty']);
+    $merged['preset_key'] = trim((string)($merged['preset_key'] ?? $defaults['preset_key'] ?? 'classic'));
+
+    $startingHandSize = (int)($merged['starting_hand_size'] ?? $defaults['starting_hand_size']);
+    if ($startingHandSize < 3) $startingHandSize = 3;
+    if ($startingHandSize > 10) $startingHandSize = 10;
+    $merged['starting_hand_size'] = $startingHandSize;
+
+    return $merged;
+  }
+
+  function game_rules_for_preset(string $presetKey, ?string $roomType = 'custom'): array {
+    $presetKey = trim((string)$presetKey);
+    $base = game_default_room_rules($roomType);
+
+    switch ($presetKey) {
+      case 'classic':
+        return game_normalize_room_rules([
+          'preset_key' => 'classic',
+          'allow_stack_plus2' => false,
+          'allow_stack_plus4' => false,
+          'draw_until_playable' => false,
+          'must_pass_on_draw_penalty' => true,
+        ], $roomType);
+
+      case 'pressure':
+        return game_normalize_room_rules([
+          'preset_key' => 'pressure',
+          'allow_stack_plus2' => false,
+          'allow_stack_plus4' => false,
+          'draw_until_playable' => true,
+          'must_pass_on_draw_penalty' => false,
+        ], $roomType);
+
+      case 'chain_clash':
+        return game_normalize_room_rules([
+          'preset_key' => 'chain_clash',
+          'allow_stack_plus2' => true,
+          'allow_stack_plus4' => false,
+          'draw_until_playable' => false,
+          'must_pass_on_draw_penalty' => false,
+        ], $roomType);
+
+      case 'custom':
+        return game_normalize_room_rules([
+          'preset_key' => 'custom',
+        ], $roomType);
+
+      default:
+        return game_normalize_room_rules($base, $roomType);
+    }
+  }
+
+  function game_room_rules(array $room): array {
+    $decoded = game_jdecode($room['rules_json'] ?? null, []);
+    return game_normalize_room_rules($decoded, (string)($room['room_type'] ?? 'custom'));
+  }
+
   function game_room_seat_order(mysqli $mysqli, int $roomId): array {
     $players = game_get_room_players($mysqli, $roomId);
     return array_values(array_map(fn($p) => (int)$p['seat_no'], $players));
@@ -237,6 +328,242 @@ define('LOGIA_STRONG_AGAINST', [
     $stmt->close();
 
     return (string)($row['player_name'] ?? ('Seat ' . $seatNo));
+  }
+
+  function game_get_user_progress_snapshot(mysqli $mysqli, int $userId): ?array {
+    $stmt = $mysqli->prepare("
+      SELECT id, level, exp, exp_to_next, matches_played, matches_won, is_guest
+      FROM users
+      WHERE id = ?
+      LIMIT 1
+    ");
+    $stmt->bind_param('i', $userId);
+    $stmt->execute();
+    $user = $stmt->get_result()->fetch_assoc() ?: null;
+    $stmt->close();
+
+    if (!$user) {
+      return null;
+    }
+
+    $level = max(1, (int)($user['level'] ?? 1));
+    $exp = max(0, (int)($user['exp'] ?? 0));
+    $expToNext = max(1, (int)($user['exp_to_next'] ?? game_level_exp_required($level)));
+    $progressPct = (int)max(0, min(100, round(($exp / $expToNext) * 100)));
+
+    return [
+      'user_id' => (int)$user['id'],
+      'is_guest' => ((int)($user['is_guest'] ?? 0) === 1),
+      'level' => $level,
+      'exp' => $exp,
+      'exp_to_next' => $expToNext,
+      'progress_pct' => $progressPct,
+      'matches_played' => (int)($user['matches_played'] ?? 0),
+      'matches_won' => (int)($user['matches_won'] ?? 0),
+    ];
+  }
+
+  function game_level_exp_required(int $level): int {
+    $level = max(1, $level);
+    return 500 + (($level - 1) * 250);
+  }
+
+  function game_ranked_exp_multiplier(string $roomType): float {
+    return $roomType === 'ranked' ? 1.5 : 1.0;
+  }
+
+  function game_base_exp_for_place(int $place): int {
+    return match ($place) {
+      1 => 500,
+      2 => 400,
+      3 => 300,
+      4 => 200,
+      default => 100,
+    };
+  }
+
+  function game_exp_for_place(int $place, string $roomType): int {
+    $base = game_base_exp_for_place($place);
+    return (int)round($base * game_ranked_exp_multiplier($roomType));
+  }
+
+  function game_compute_final_standings(mysqli $mysqli, array $room): array {
+    $roomId = (int)$room['id'];
+    $players = game_get_room_players($mysqli, $roomId);
+    $winnerSeat = (int)($room['winner_seat'] ?? 0);
+    $roomType = (string)($room['room_type'] ?? 'custom');
+
+    $rows = [];
+    foreach ($players as $player) {
+      $seatNo = (int)$player['seat_no'];
+      $hand = game_get_hand($mysqli, $roomId, $seatNo);
+
+      $rows[] = [
+        'seat_no' => $seatNo,
+        'user_id' => isset($player['user_id']) ? (int)$player['user_id'] : null,
+        'player_name' => (string)$player['player_name'],
+        'player_type' => (string)$player['player_type'],
+        'card_count' => count($hand),
+      ];
+    }
+
+    usort($rows, function (array $a, array $b) use ($winnerSeat): int {
+      $aWinner = ((int)$a['seat_no'] === $winnerSeat);
+      $bWinner = ((int)$b['seat_no'] === $winnerSeat);
+
+      if ($aWinner && !$bWinner) return -1;
+      if (!$aWinner && $bWinner) return 1;
+
+      if ((int)$a['card_count'] !== (int)$b['card_count']) {
+        return (int)$a['card_count'] <=> (int)$b['card_count'];
+      }
+
+      return (int)$a['seat_no'] <=> (int)$b['seat_no'];
+    });
+
+    foreach ($rows as $idx => &$row) {
+      $row['place'] = $idx + 1;
+      $row['xp_awarded'] = $row['player_type'] === 'human'
+        ? game_exp_for_place($row['place'], $roomType)
+        : 0;
+    }
+    unset($row);
+
+    return $rows;
+  }
+
+  function game_apply_progress_to_user(mysqli $mysqli, int $userId, int $xpGained, bool $didWin): array {
+    $stmt = $mysqli->prepare("
+      SELECT id, is_guest, level, exp, exp_to_next, matches_played, matches_won
+      FROM users
+      WHERE id = ?
+      LIMIT 1
+    ");
+    $stmt->bind_param('i', $userId);
+    $stmt->execute();
+    $user = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
+
+    if (!$user) {
+      return [
+        'applied' => false,
+        'xp_gained' => 0,
+        'level_before' => 1,
+        'level_after' => 1,
+        'exp_after' => 0,
+        'exp_to_next_after' => 500,
+      ];
+    }
+
+    if ((int)($user['is_guest'] ?? 0) === 1) {
+      return [
+        'applied' => false,
+        'xp_gained' => 0,
+        'level_before' => (int)($user['level'] ?? 1),
+        'level_after' => (int)($user['level'] ?? 1),
+        'exp_after' => (int)($user['exp'] ?? 0),
+        'exp_to_next_after' => game_level_exp_required((int)($user['level'] ?? 1)),
+      ];
+    }
+
+    $levelBefore = max(1, (int)($user['level'] ?? 1));
+    $level = $levelBefore;
+    $exp = max(0, (int)($user['exp'] ?? 0));
+    $expToNext = game_level_exp_required($level);
+
+    $exp += max(0, $xpGained);
+
+    while ($exp >= $expToNext) {
+      $exp -= $expToNext;
+      $level++;
+      $expToNext = game_level_exp_required($level);
+    }
+
+    $matchesPlayed = (int)($user['matches_played'] ?? 0) + 1;
+    $matchesWon = (int)($user['matches_won'] ?? 0) + ($didWin ? 1 : 0);
+
+    $stmt = $mysqli->prepare("
+      UPDATE users
+      SET level = ?, exp = ?, exp_to_next = ?, matches_played = ?, matches_won = ?
+      WHERE id = ?
+      LIMIT 1
+    ");
+    $stmt->bind_param('iiiiii', $level, $exp, $expToNext, $matchesPlayed, $matchesWon, $userId);
+    $stmt->execute();
+    $stmt->close();
+
+    return [
+      'applied' => true,
+      'xp_gained' => max(0, $xpGained),
+      'level_before' => $levelBefore,
+      'level_after' => $level,
+      'exp_after' => $exp,
+      'exp_to_next_after' => $expToNext,
+    ];
+  }
+
+  function game_add_match_result_notification(
+    mysqli $mysqli,
+    int $userId,
+    int $place,
+    int $xpGained,
+    string $roomCode,
+    string $roomType,
+    bool $leveledUp = false
+  ): void {
+    $title = $leveledUp ? 'Level Up!' : 'Match Result';
+    $body = 'Placed #' . $place . ' in a ' . $roomType . ' match and earned ' . $xpGained . ' EXP.';
+    $linkUrl = '/room.php?code=' . urlencode($roomCode);
+
+    $stmt = $mysqli->prepare("
+      INSERT INTO dashboard_notifications (
+        user_id, type, title, body, link_url, is_read
+      )
+      VALUES (?, 'match_result', ?, ?, ?, 0)
+    ");
+    $stmt->bind_param('isss', $userId, $title, $body, $linkUrl);
+    $stmt->execute();
+    $stmt->close();
+  }
+
+  function game_award_room_results(mysqli $mysqli, array $room): array {
+    $roomType = (string)($room['room_type'] ?? 'custom');
+    $roomCode = (string)($room['room_code'] ?? '');
+    $standings = game_compute_final_standings($mysqli, $room);
+
+    foreach ($standings as &$entry) {
+      $userId = $entry['user_id'] ?? null;
+      $didWin = ((int)$entry['place'] === 1);
+
+      if ($entry['player_type'] !== 'human' || !$userId) {
+        $entry['progress'] = null;
+        continue;
+      }
+
+      $progress = game_apply_progress_to_user(
+        $mysqli,
+        (int)$userId,
+        (int)$entry['xp_awarded'],
+        $didWin
+      );
+
+      $entry['progress'] = $progress;
+
+      if (!empty($progress['applied'])) {
+        game_add_match_result_notification(
+          $mysqli,
+          (int)$userId,
+          (int)$entry['place'],
+          (int)$entry['xp_awarded'],
+          $roomCode,
+          $roomType,
+          (int)$progress['level_after'] > (int)$progress['level_before']
+        );
+      }
+    }
+    unset($entry);
+
+    return $standings;
   }
 
   /* =========================================================
@@ -470,44 +797,60 @@ define('LOGIA_STRONG_AGAINST', [
     return $card['element'] ?? null;
   }
 
-  function game_can_play_card(array $card, ?array $activeCard, int $pendingDraw): bool {
+  function game_can_play_card(array $card, ?array $activeCard, int $pendingDraw, ?array $rules = null): bool {
     if (!$activeCard) return true;
 
-    if (($activeCard['kind'] ?? '') === 'plus4' && $pendingDraw > 0) {
-      return ($card['kind'] ?? '') === 'plus4';
+    $rules = game_normalize_room_rules($rules ?? [], 'custom');
+    $activeKind = (string)($activeCard['kind'] ?? '');
+    $cardKind = (string)($card['kind'] ?? '');
+
+    if ($pendingDraw > 0) {
+      if (!empty($rules['must_pass_on_draw_penalty'])) {
+        return false;
+      }
+
+      if ($activeKind === 'plus2' && $cardKind === 'plus2') {
+        return !empty($rules['allow_stack_plus2']);
+      }
+
+      if ($activeKind === 'plus4' && $cardKind === 'plus4') {
+        return !empty($rules['allow_stack_plus4']);
+      }
+
+      if (($cardKind === 'plus2' || $cardKind === 'plus4') && $activeKind !== $cardKind) {
+        return false;
+      }
     }
 
-    if (($activeCard['kind'] ?? '') === 'plus2' && $pendingDraw > 0) {
-      return ($card['kind'] ?? '') === 'plus2';
-    }
-
-    if (($card['kind'] ?? '') === 'plus4') {
+    if ($cardKind === 'plus4') {
       return true;
     }
 
     $targetElement = game_get_effective_element($activeCard);
 
-    if (($card['kind'] ?? '') === 'plus2') {
-      return game_compare_elements((string)$card['element'], $targetElement) === 'strong';
-    }
+    if ($cardKind === 'plus2' || $cardKind === 'normal') {
+      $cardElement = (string)($card['element'] ?? '');
 
-    if (($card['kind'] ?? '') === 'normal') {
-      return game_compare_elements((string)$card['element'], $targetElement) === 'strong';
+      if ($cardElement !== '' && $cardElement === $targetElement) {
+        return true;
+      }
+
+      return game_compare_elements($cardElement, $targetElement) === 'strong';
     }
 
     return false;
   }
 
-  function game_get_playable_cards(array $hand, ?array $activeCard, int $pendingDraw): array {
+  function game_get_playable_cards(array $hand, ?array $activeCard, int $pendingDraw, ?array $rules = null): array {
     return array_values(array_filter(
       $hand,
-      fn($card) => game_can_play_card($card, $activeCard, $pendingDraw)
+      fn($card) => game_can_play_card($card, $activeCard, $pendingDraw, $rules)
     ));
   }
 
-  function game_has_any_playable_card(array $hand, ?array $activeCard, int $pendingDraw): bool {
+  function game_has_any_playable_card(array $hand, ?array $activeCard, int $pendingDraw, ?array $rules = null): bool {
     foreach ($hand as $card) {
-      if (game_can_play_card($card, $activeCard, $pendingDraw)) {
+      if (game_can_play_card($card, $activeCard, $pendingDraw, $rules)) {
         return true;
       }
     }
@@ -615,6 +958,7 @@ define('LOGIA_STRONG_AGAINST', [
         password_hash = ?,
         status = ?,
         max_players = ?,
+        rules_json = ?,
         created_by_user_id = ?,
         host_user_id = ?,
         current_turn_seat = ?,
@@ -643,6 +987,12 @@ define('LOGIA_STRONG_AGAINST', [
     $passwordHash    = $room['password_hash'] ?? null;
     $status          = (string)($room['status'] ?? 'waiting');
     $maxPlayers      = (int)($room['max_players'] ?? 4);
+
+    $rules = game_normalize_room_rules(
+        game_jdecode($room['rules_json'] ?? null, []),
+        $roomType
+    );
+    $rulesJson = game_jencode($rules);
 
     $createdByUserId = isset($room['created_by_user_id']) && $room['created_by_user_id'] !== null
         ? (int)$room['created_by_user_id']
@@ -679,13 +1029,14 @@ define('LOGIA_STRONG_AGAINST', [
     $roomId          = (int)$room['id'];
 
     $stmt->bind_param(
-        'sssssiiiiiiissiissssi',
+        'ssssssiiiiiiissiissssi',
         $roomName,
         $roomType,
         $visibility,
         $passwordHash,
         $status,
         $maxPlayers,
+        $rulesJson,
         $createdByUserId,
         $hostUserId,
         $currentTurnSeat,
@@ -740,8 +1091,9 @@ define('LOGIA_STRONG_AGAINST', [
 
     $activeCard = game_jdecode($room['active_card_json'] ?? null, null);
     $pendingDraw = (int)($room['pending_draw'] ?? 0);
+    $rules = game_room_rules($room);
 
-    if (!game_can_play_card($card, $activeCard, $pendingDraw)) {
+    if (!game_can_play_card($card, $activeCard, $pendingDraw, $rules)) {
       return ['ok' => false, 'msg' => 'That card cannot be played right now.'];
     }
 
@@ -791,6 +1143,22 @@ define('LOGIA_STRONG_AGAINST', [
       $room['finished_at'] = game_now_mysql();
 
       game_add_log($mysqli, $roomId, $playerName . ' wins the game.');
+
+      $standings = game_award_room_results($mysqli, $room);
+
+      foreach ($standings as $result) {
+        if (($result['player_type'] ?? '') !== 'human') {
+          continue;
+        }
+
+        game_add_log(
+          $mysqli,
+          $roomId,
+          (string)$result['player_name'] . ' finished #' . (int)$result['place'] .
+          ' and earned ' . (int)$result['xp_awarded'] . ' EXP.'
+        );
+      }
+
       game_save_room_state($mysqli, $room);
       return ['ok' => true];
     }
@@ -817,11 +1185,61 @@ define('LOGIA_STRONG_AGAINST', [
     $roomId = (int)$room['id'];
     $playerName = game_get_player_name_by_seat($mysqli, $roomId, $seatNo);
     $pendingDraw = (int)($room['pending_draw'] ?? 0);
+    $rules = game_room_rules($room);
 
     if ($pendingDraw > 0) {
       $drawn = game_draw_cards_for_seat($mysqli, $room, $seatNo, $pendingDraw);
       $room['pending_draw'] = 0;
+      $room['pass_count'] = ((int)$room['pass_count']) + 1;
+
       game_add_log($mysqli, $roomId, $playerName . ' passed and drew ' . $drawn . ' card(s).');
+
+      $seatCount = count(game_room_seat_order($mysqli, $roomId));
+      $leadSeat = (int)($room['lead_seat'] ?? 0);
+
+      if ($leadSeat > 0 && $room['pass_count'] >= max(1, $seatCount - 1)) {
+        $room['pass_count'] = 0;
+        $room['current_turn_seat'] = $leadSeat;
+        game_add_log(
+          $mysqli,
+          $roomId,
+          game_get_player_name_by_seat($mysqli, $roomId, $leadSeat) . ' regains initiative.'
+        );
+        game_save_room_state($mysqli, $room);
+        return ['ok' => true];
+      }
+
+      $room['current_turn_seat'] = game_next_turn_seat($mysqli, $roomId, $seatNo);
+      game_save_room_state($mysqli, $room);
+      return ['ok' => true];
+    }
+
+    if (!empty($rules['draw_until_playable'])) {
+      $drawn = 0;
+      $hand = game_get_hand($mysqli, $roomId, $seatNo);
+      $activeCard = game_jdecode($room['active_card_json'] ?? null, null);
+
+      while (true) {
+        $drawCount = game_draw_cards_for_seat($mysqli, $room, $seatNo, 1);
+        if ($drawCount <= 0) {
+          break;
+        }
+
+        $drawn += $drawCount;
+        $hand = game_get_hand($mysqli, $roomId, $seatNo);
+
+        if (game_has_any_playable_card($hand, $activeCard, 0, $rules)) {
+          game_add_log($mysqli, $roomId, $playerName . ' drew ' . $drawn . ' card(s) until a playable card appeared.');
+          game_save_room_state($mysqli, $room);
+          return ['ok' => true, 'msg' => 'Drew until playable. Your turn continues.'];
+        }
+
+        if ($drawn >= 20) {
+          break;
+        }
+      }
+
+      game_add_log($mysqli, $roomId, $playerName . ' drew ' . $drawn . ' card(s) and still had no playable card.');
     } else {
       $drawn = game_draw_cards_for_seat($mysqli, $room, $seatNo, 1);
       game_add_log($mysqli, $roomId, $playerName . ' passed and drew ' . $drawn . ' card.');
@@ -1009,14 +1427,33 @@ define('LOGIA_STRONG_AGAINST', [
     }
 
     $myHand = [];
+    $viewerProgress = null;
+
     if ($me) {
       $myHand = game_get_hand($mysqli, $roomId, (int)$me['seat_no']);
       $myHand = game_enrich_cards_for_output($myHand, $bp);
+      $viewerProgress = game_get_user_progress_snapshot($mysqli, $userId);
     }
 
     $activeCard = game_jdecode($room['active_card_json'] ?? null, null);
     if ($activeCard) {
       $activeCard = game_enrich_card_for_output($activeCard, $bp);
+    }
+
+    $finalResults = [];
+    $meResult = null;
+
+    if ((string)($room['status'] ?? '') === 'finished') {
+      $finalResults = game_compute_final_standings($mysqli, $room);
+
+      if ($me) {
+        foreach ($finalResults as $result) {
+          if ((int)$result['seat_no'] === (int)$me['seat_no']) {
+            $meResult = $result;
+            break;
+          }
+        }
+      }
     }
 
     return [
@@ -1029,6 +1466,7 @@ define('LOGIA_STRONG_AGAINST', [
         'visibility' => (string)($room['visibility'] ?? 'private'),
         'status' => (string)$room['status'],
         'max_players' => (int)$room['max_players'],
+        'rules' => game_room_rules($room),
         'human_count' => count(array_filter($players, fn($p) => ($p['player_type'] ?? '') === 'human')),
         'total_count' => count($players),
         'is_host' => game_is_room_host($room, $userId),
@@ -1049,11 +1487,15 @@ define('LOGIA_STRONG_AGAINST', [
         'has_playable_card' => game_has_any_playable_card(
           $myHand,
           $activeCard,
-          (int)$room['pending_draw']
+          (int)$room['pending_draw'],
+          game_room_rules($room)
         ),
       ] : null,
       'seats' => array_values($seats),
       'logs' => game_get_logs($mysqli, $roomId, 20),
+      'final_results' => $finalResults,
+      'me_result' => $meResult,
+      'viewer_progress' => $viewerProgress,
     ];
   }
 
@@ -1230,6 +1672,8 @@ define('LOGIA_STRONG_AGAINST', [
     }
 
     $maxPlayers = (int)$room['max_players'];
+    $rules = game_room_rules($room);
+    $startingHandSize = (int)($rules['starting_hand_size'] ?? 5);
 
     $mysqli->begin_transaction();
 
@@ -1252,21 +1696,23 @@ define('LOGIA_STRONG_AGAINST', [
       $players = game_get_room_players($mysqli, $roomId);
       $takenSeats = array_map(fn($p) => (int)$p['seat_no'], $players);
 
-      for ($seat = 1; $seat <= $maxPlayers; $seat++) {
-        if (!in_array($seat, $takenSeats, true)) {
-          $name = 'AI ' . $seat;
-          $isHost = 0;
-          $nullUserId = null;
+      if (!empty($rules['allow_ai_fill'])) {
+        for ($seat = 1; $seat <= $maxPlayers; $seat++) {
+          if (!in_array($seat, $takenSeats, true)) {
+            $name = 'AI ' . $seat;
+            $isHost = 0;
+            $nullUserId = null;
 
-          $stmt = $mysqli->prepare("
-            INSERT INTO game_room_players (
-              room_id, user_id, seat_no, player_name, player_type, is_host
-            )
-            VALUES (?, ?, ?, ?, 'ai', ?)
-          ");
-          $stmt->bind_param('iiisi', $roomId, $nullUserId, $seat, $name, $isHost);
-          $stmt->execute();
-          $stmt->close();
+            $stmt = $mysqli->prepare("
+              INSERT INTO game_room_players (
+                room_id, user_id, seat_no, player_name, player_type, is_host
+              )
+              VALUES (?, ?, ?, ?, 'ai', ?)
+            ");
+            $stmt->bind_param('iiisi', $roomId, $nullUserId, $seat, $name, $isHost);
+            $stmt->execute();
+            $stmt->close();
+          }
         }
       }
 
@@ -1277,7 +1723,7 @@ define('LOGIA_STRONG_AGAINST', [
         $seatNo = (int)$player['seat_no'];
         $hand = [];
 
-        for ($i = 0; $i < 7; $i++) {
+        for ($i = 0; $i < $startingHandSize; $i++) {
           $card = array_pop($deck);
           if ($card) $hand[] = $card;
         }

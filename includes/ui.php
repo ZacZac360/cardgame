@@ -88,6 +88,22 @@ function ui_header(string $title = 'Dashboard', bool $is_hub = true): void {
   if (!$u) redirect($bp . "/index.php");
 
   $uid = (int)$u['id'];
+
+  $stmt = $mysqli->prepare("
+    SELECT *
+    FROM users
+    WHERE id = ?
+    LIMIT 1
+  ");
+  $stmt->bind_param("i", $uid);
+  $stmt->execute();
+  $freshUser = $stmt->get_result()->fetch_assoc();
+  $stmt->close();
+
+  if ($freshUser) {
+    $u = $freshUser;
+  }
+
   $unread = count_unread_notifications($mysqli, $uid);
 
   $is_guest = ((int)($u['is_guest'] ?? 0) === 1);
@@ -153,7 +169,7 @@ function ui_header(string $title = 'Dashboard', bool $is_hub = true): void {
           </div>
 
           <span class="pill"><?= h($role_label) ?></span>
-          <span class="pill pill-soft">Lv. <?= (int)$level ?></span>
+          <span class="pill pill-soft" id="topnavLevelPill">Lv. <?= (int)$level ?></span>
 
           <?php if ($is_guest): ?>
             <span class="pill status-pill--warn">Casual Only</span>
@@ -164,9 +180,15 @@ function ui_header(string $title = 'Dashboard', bool $is_hub = true): void {
 
         <div class="topnav-profile__subrow">
           <div class="topnav-profile__xpbar">
-            <i class="topnav-profile__xpfill" data-progress="<?= max(0, min(100, $exp_pct)) ?>"></i>
+            <i
+              class="topnav-profile__xpfill"
+              id="topnavXpFill"
+              data-progress="<?= max(0, min(100, $exp_pct)) ?>"
+            ></i>
           </div>
-          <div class="topnav-profile__subtext">Profile & Stats</div>
+          <div class="topnav-profile__subtext" id="topnavXpText">
+            <?= number_format($exp) ?> / <?= number_format($expNext) ?> EXP
+          </div>
         </div>
       </div>
     </a>

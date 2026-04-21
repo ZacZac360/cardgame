@@ -18,6 +18,7 @@ $roomType = trim((string)($data['room_type'] ?? 'custom'));
 $visibility = trim((string)($data['visibility'] ?? 'private'));
 $maxPlayers = (int)($data['max_players'] ?? 4);
 $password = trim((string)($data['password'] ?? ''));
+$presetKey = trim((string)($data['preset_key'] ?? ''));
 
 if ($roomName !== '' && mb_strlen($roomName) > 80) {
   $roomName = mb_substr($roomName, 0, 80);
@@ -40,6 +41,15 @@ if ($roomType === 'solo') {
   $visibility = 'private';
 }
 
+if ($presetKey === '') {
+  $presetKey = match ($roomType) {
+    'casual' => 'classic',
+    'ranked' => 'pressure',
+    'solo' => 'classic',
+    default => 'custom',
+  };
+}
+
 try {
   $room = game_create_room(
     $mysqli,
@@ -50,6 +60,25 @@ try {
     $maxPlayers,
     $password !== '' ? $password : null
   );
+
+  $roomId = (int)$room['id'];
+  $rules = game_rules_for_preset($presetKey, $roomType);
+  $rulesJson = game_jencode($rules);
+
+  $stmt = $mysqli->prepare("
+    UPDATE game_rooms
+    SET rules_json = ?
+    WHERE id = ?
+    LIMIT 1
+  ");
+  $stmt->bind_param('si', $rulesJson, $roomId);
+  $stmt->execute();
+  $stmt->close();
+
+  $room = game_get_room_by_id($mysqli, $roomId);
+  if (!$room) {
+    game_json_out(['ok' => false, 'msg' => 'Room not found after create.'], 404);
+  }
 
   $bp = function_exists('base_path') ? rtrim(base_path(), '/') : '';
   $payload = game_room_state_payload($mysqli, $room, (int)$u['id'], $bp);

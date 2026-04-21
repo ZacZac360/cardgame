@@ -1,6 +1,3 @@
-C:\xampp\htdocs\cardgame>tree /f
-Folder PATH listing for volume System
-Volume serial number is 3E7B-6DED
 C:.
 │  .gitattributes
 │  .gitignore

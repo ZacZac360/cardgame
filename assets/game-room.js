@@ -33,6 +33,14 @@ const toolsCloseBtn = document.getElementById("toolsCloseBtn");
 const logCloseBtn = document.getElementById("logCloseBtn");
 const hostControlsSectionEl = document.getElementById("hostControlsSection");
 
+const rulesEditorEl = document.getElementById("rulesEditor");
+const saveRulesBtn = document.getElementById("saveRulesBtn");
+const ruleAllowAiFillEl = document.getElementById("ruleAllowAiFill");
+const ruleStartingHandSizeEl = document.getElementById("ruleStartingHandSize");
+const ruleAllowStackPlus2El = document.getElementById("ruleAllowStackPlus2");
+const ruleAllowStackPlus4El = document.getElementById("ruleAllowStackPlus4");
+const ruleDrawUntilPlayableEl = document.getElementById("ruleDrawUntilPlayable");
+
 const IS_TOUCH_DEVICE =
   window.matchMedia("(pointer: coarse)").matches ||
   "ontouchstart" in window ||
@@ -42,6 +50,8 @@ let latestState = null;
 let selectedCardId = null;
 let pendingPlus4CardId = null;
 let busy = false;
+let resultsModalShown = false;
+let topnavSnapshot = null;
 
 function escapeHtml(value) {
   return String(value ?? "")
@@ -54,6 +64,217 @@ function escapeHtml(value) {
 
 function addLocalMsg(el, text) {
   if (el) el.textContent = text || "";
+}
+
+function getTopnavSnapshot() {
+  const levelPill = document.getElementById("topnavLevelPill");
+  const xpFill = document.getElementById("topnavXpFill");
+  const xpText = document.getElementById("topnavXpText");
+
+  const levelMatch = (levelPill?.textContent || "").match(/Lv\.\s*(\d+)/i);
+  const textMatch = (xpText?.textContent || "").match(/([\d,]+)\s*\/\s*([\d,]+)\s*EXP/i);
+
+  return {
+    level: levelMatch ? Number(levelMatch[1]) : 1,
+    progressPct: Number(xpFill?.dataset.progress || 0),
+    exp: textMatch ? Number(String(textMatch[1]).replaceAll(",", "")) : 0,
+    expToNext: textMatch ? Number(String(textMatch[2]).replaceAll(",", "")) : 500,
+  };
+}
+
+function updateTopnavProgress(profile) {
+  if (!profile) return;
+
+  const levelPill = document.getElementById("topnavLevelPill");
+  const xpFill = document.getElementById("topnavXpFill");
+  const xpText = document.getElementById("topnavXpText");
+
+  if (levelPill) {
+    levelPill.textContent = `Lv. ${Number(profile.level || 1)}`;
+  }
+
+  if (xpFill) {
+    const pct = Number(profile.progress_pct || 0);
+    xpFill.dataset.progress = String(pct);
+    xpFill.style.width = `${pct}%`;
+  }
+
+  if (xpText) {
+    xpText.textContent = `${Number(profile.exp || 0).toLocaleString()} / ${Number(profile.exp_to_next || 0).toLocaleString()} EXP`;
+  }
+}
+
+function ensureResultsModal() {
+  let modal = document.getElementById("resultsModal");
+  if (modal) return modal;
+
+  modal = document.createElement("div");
+  modal.id = "resultsModal";
+  modal.className = "results-modal hidden";
+  modal.innerHTML = `
+    <div class="results-modal__dialog">
+      <div class="results-modal__head">
+        <div class="results-modal__titlewrap">
+          <div class="results-modal__eyebrow">Match Complete</div>
+          <h2 class="results-modal__title">Results</h2>
+          <div class="results-modal__sub" id="resultsModalSub">Placements and EXP</div>
+        </div>
+
+        <button type="button" class="icon-btn" id="resultsModalCloseBtn">✕</button>
+      </div>
+
+      <div class="results-modal__body">
+        <div class="results-summary">
+          <div class="results-card">
+            <div class="results-card__label">Your Result</div>
+
+            <div class="results-place">
+              <div class="results-place__badge" id="resultsPlaceBadge">#1</div>
+              <div class="results-place__meta">
+                <div class="results-place__name" id="resultsPlaceName">You</div>
+                <div class="results-place__xp" id="resultsPlaceXp">+0 EXP</div>
+              </div>
+            </div>
+
+            <div class="results-xpbar">
+              <div class="results-xpbar__fill" id="resultsXpFill"></div>
+            </div>
+            <div class="results-xpbar__text" id="resultsXpText">0 / 0 EXP</div>
+          </div>
+
+          <div class="results-card">
+            <div class="results-card__label">Placements</div>
+            <div class="results-placements" id="resultsPlacementsList"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="results-modal__actions">
+        <button type="button" class="ui-btn" id="resultsBackBtn">Back to Dashboard</button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+
+  const close = () => modal.classList.add("hidden");
+  modal.querySelector("#resultsModalCloseBtn")?.addEventListener("click", () => {
+    window.location.href = `${BASE_PATH}/dashboard.php`;
+  });
+  const backBtn = modal.querySelector("#resultsBackBtn");
+  if (backBtn) {
+    backBtn.addEventListener("click", () => {
+      window.location.href = `${BASE_PATH}/dashboard.php`;
+    });
+  }
+
+  return modal;
+}
+
+function showResultsModal() {
+  const room = latestState?.room;
+  const finalResults = latestState?.final_results || [];
+  const meResult = latestState?.me_result || null;
+  const viewerProgress = latestState?.viewer_progress || null;
+
+  if (!room || room.status !== "finished" || !meResult || !finalResults.length) {
+    return;
+  }
+
+  const modal = ensureResultsModal();
+  const placeBadge = modal.querySelector("#resultsPlaceBadge");
+  const placeName = modal.querySelector("#resultsPlaceName");
+  const placeXp = modal.querySelector("#resultsPlaceXp");
+  const placementsList = modal.querySelector("#resultsPlacementsList");
+  const xpFill = modal.querySelector("#resultsXpFill");
+  const xpText = modal.querySelector("#resultsXpText");
+  const sub = modal.querySelector("#resultsModalSub");
+
+  if (placeBadge) placeBadge.textContent = `#${meResult.place}`;
+  if (placeName) placeName.textContent = meResult.player_name || "You";
+  if (placeXp) placeXp.textContent = `+${Number(meResult.xp_awarded || 0)} EXP`;
+  if (sub) sub.textContent = `${String(room.room_type || "match").replace(/^./, (c) => c.toUpperCase())} results for room ${room.room_code}`;
+
+  if (placementsList) {
+    placementsList.innerHTML = finalResults.map((row) => `
+      <div class="results-row ${Number(row.seat_no) === Number(meResult.seat_no) ? "results-row--me" : ""}">
+        <div class="results-row__place">#${Number(row.place || 0)}</div>
+        <div>
+          <div class="results-row__name">${escapeHtml(row.player_name || "Player")}</div>
+          <div class="results-row__meta">${escapeHtml(row.player_type === "ai" ? "AI" : `Seat ${row.seat_no}`)} · ${Number(row.card_count || 0)} card(s) left</div>
+        </div>
+        <div class="results-row__xp">${row.player_type === "human" ? `+${Number(row.xp_awarded || 0)} EXP` : "—"}</div>
+      </div>
+    `).join("");
+  }
+
+  const fromPct = Number(topnavSnapshot?.progressPct || 0);
+  const toPct = Number(viewerProgress?.progress_pct || 0);
+
+  if (xpFill) {
+    xpFill.style.width = `${fromPct}%`;
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        xpFill.style.width = `${toPct}%`;
+      });
+    });
+  }
+
+  if (xpText) {
+    xpText.textContent = `${Number(viewerProgress?.exp || 0).toLocaleString()} / ${Number(viewerProgress?.exp_to_next || 0).toLocaleString()} EXP`;
+  }
+
+  modal.classList.remove("hidden");
+}
+
+function maybeHandleFinishedMatch() {
+  const room = latestState?.room;
+  if (!room || room.status !== "finished") return;
+
+  if (!resultsModalShown) {
+    showResultsModal();
+    resultsModalShown = true;
+    sessionStorage.setItem(`logia_results_shown_${ROOM_CODE}`, "1");
+  }
+
+  if (latestState?.viewer_progress) {
+    updateTopnavProgress(latestState.viewer_progress);
+  }
+}
+
+function getCurrentRoomRules() {
+  return latestState?.room?.rules || {};
+}
+
+function syncRulesFormFromState() {
+  const rules = getCurrentRoomRules();
+
+  if (ruleAllowAiFillEl) ruleAllowAiFillEl.checked = !!rules.allow_ai_fill;
+  if (ruleStartingHandSizeEl) ruleStartingHandSizeEl.value = Number(rules.starting_hand_size ?? 5);
+  if (ruleAllowStackPlus2El) ruleAllowStackPlus2El.checked = !!rules.allow_stack_plus2;
+  if (ruleAllowStackPlus4El) ruleAllowStackPlus4El.checked = !!rules.allow_stack_plus4;
+  if (ruleDrawUntilPlayableEl) ruleDrawUntilPlayableEl.checked = !!rules.draw_until_playable;
+}
+
+function collectRulesFromForm() {
+  return {
+    allow_ai_fill: !!ruleAllowAiFillEl?.checked,
+    starting_hand_size: Number(ruleStartingHandSizeEl?.value || 5),
+    allow_stack_plus2: !!ruleAllowStackPlus2El?.checked,
+    allow_stack_plus4: !!ruleAllowStackPlus4El?.checked,
+    draw_until_playable: !!ruleDrawUntilPlayableEl?.checked,
+  };
+}
+
+async function saveRoomSettings(nextMaxPlayers = null) {
+  const currentMaxPlayers = Number(latestState?.room?.max_players || 4);
+  const payload = {
+    room_code: ROOM_CODE,
+    max_players: Number(nextMaxPlayers || currentMaxPlayers),
+    rules: collectRulesFromForm(),
+  };
+
+  return postJson(`${BASE_PATH}/api/game/update_room.php`, payload);
 }
 
 function setBusy(nextBusy) {
@@ -144,9 +365,14 @@ function canPlayCard(card, activeCard, pendingDraw) {
   }
 
   const targetElement = getEffectiveElement(activeCard);
+  const cardElement = card.element || null;
 
   if (card.kind === "plus2" || card.kind === "normal") {
-    return compareElements(card.element, targetElement) === "strong";
+    if (cardElement && targetElement && cardElement === targetElement) {
+      return true;
+    }
+
+    return compareElements(cardElement, targetElement) === "strong";
   }
 
   return false;
@@ -197,7 +423,9 @@ function applyState(data) {
     wildChooserEl.classList.add("hidden");
   }
 
+  syncRulesFormFromState();
   render();
+  maybeHandleFinishedMatch();
 }
 
 async function fetchState() {
@@ -341,26 +569,41 @@ function getTurnHint() {
       : `${playable.length} playable card(s). Double click to play.`;
   }
 
-  return "No stronger element. Pass or use +4.";
+  return "No matching or stronger element. Pass or use +4.";
 }
 
 function renderHudAndSummary() {
   const room = latestState?.room;
   const me = latestState?.me;
+  const meResult = latestState?.me_result || null;
   if (!room) return;
 
   const turnSeat = room.current_turn_seat;
   const turnSeatData = turnSeat ? getSeatByNo(turnSeat) : null;
   const playableCount = me ? getPlayableCards(me.hand || [], room).length : 0;
   const activeText = room.active_card ? cardText(room.active_card) : "None";
+  const modeLabel = room.room_type
+    ? `${room.max_players}P ${String(room.room_type).replace(/^./, (c) => c.toUpperCase())}`
+    : `${room.max_players}P`;
 
   roomStatusValueEl.textContent = room.status;
-  roomModeValueEl.textContent = `${room.max_players}P`;
+  roomModeValueEl.textContent = modeLabel;
   turnValueEl.textContent = turnSeatData?.player_name || "-";
   meValueEl.textContent = me ? `${me.player_name} (Seat ${me.seat_no})` : "Not Joined";
 
+  if (room.status === "finished" && meResult) {
+    humanSummaryEl.innerHTML = `
+      <div class="summary-pill">Result #${meResult.place}</div>
+      <div class="summary-pill">EXP +${meResult.xp_awarded || 0}</div>
+      <div class="summary-pill">Cards Left ${meResult.card_count ?? 0}</div>
+      <div class="summary-pill">Mode ${escapeHtml(modeLabel)}</div>
+      <div class="summary-pill">${escapeHtml(getTurnHint() || "Finished")}</div>
+    `;
+    return;
+  }
+
   humanSummaryEl.innerHTML = `
-    <div class="summary-pill">Mode ${room.max_players}P</div>
+    <div class="summary-pill">Mode ${escapeHtml(modeLabel)}</div>
     <div class="summary-pill">Pending ${room.pending_draw || 0}</div>
     <div class="summary-pill">Playable ${playableCount}</div>
     <div class="summary-pill">Active ${escapeHtml(activeText)}</div>
@@ -501,7 +744,7 @@ async function handleCardPrimaryAction(cardId) {
     updateControls();
 
     if (!playable) {
-      addLocalMsg(actionMsgEl, "That card cannot be played right now.");
+      addLocalMsg(actionMsgEl, "That card does not match the same element and is not stronger.");
     } else {
       addLocalMsg(actionMsgEl, card.kind === "plus4"
         ? `Selected ${cardText(card)}. Tap again to choose element and play.`
@@ -638,6 +881,10 @@ function updatePanelsVisibility() {
     hostControlsSectionEl.classList.toggle("hidden", !isHost);
   }
 
+  if (rulesEditorEl) {
+    rulesEditorEl.classList.toggle("hidden", !isHost || !isWaiting);
+  }
+
   document.querySelectorAll(".mode-buttons").forEach((wrap) => {
     wrap.classList.toggle("hidden", !isHost || !isWaiting);
   });
@@ -647,14 +894,14 @@ function updatePanelsVisibility() {
   }
 
   if (resetRoomBtn) {
-  resetRoomBtn.classList.toggle("hidden", !isHost);
-  resetRoomBtn.disabled = busy || !isHost;
-    }
+    resetRoomBtn.classList.toggle("hidden", !isHost);
+    resetRoomBtn.disabled = busy || !isHost;
+  }
 
-    if (destroyRoomBtn) {
+  if (destroyRoomBtn) {
     destroyRoomBtn.classList.toggle("hidden", !isHost);
     destroyRoomBtn.disabled = busy || !isHost;
-    }
+  }
 }
 
 
@@ -670,11 +917,23 @@ function updateControls() {
     canPlaySelected &&
     pendingPlus4CardId === selectedCard.id
   );
+  const hostCanEditWaitingRoom = !!(room?.is_host && room?.status === "waiting");
 
   if (refreshBtn) refreshBtn.disabled = busy;
   if (startGameBtn) startGameBtn.disabled = busy || !room?.is_host || room?.status !== "waiting";
   if (passBtn) passBtn.disabled = busy || !myTurn;
   if (playBtn) playBtn.disabled = busy || !myTurn || !selectedCard || !canPlaySelected || waitingForWild;
+  if (saveRulesBtn) saveRulesBtn.disabled = busy || !hostCanEditWaitingRoom;
+
+  [
+    ruleAllowAiFillEl,
+    ruleStartingHandSizeEl,
+    ruleAllowStackPlus2El,
+    ruleAllowStackPlus4El,
+    ruleDrawUntilPlayableEl,
+  ].forEach((el) => {
+    if (el) el.disabled = busy || !hostCanEditWaitingRoom;
+  });
 
   if (!selectedCard || selectedCard.kind !== "plus4" || !canPlaySelected) {
     wildChooserEl.classList.add("hidden");
@@ -742,10 +1001,7 @@ document.querySelectorAll("[data-mode]").forEach((btn) => {
 
     try {
       setBusy(true);
-      await postJson(`${BASE_PATH}/api/game/update_room.php`, {
-        room_code: ROOM_CODE,
-        max_players: Number(btn.dataset.mode || 4)
-      });
+      await saveRoomSettings(Number(btn.dataset.mode || 4));
       addLocalMsg(actionMsgEl, `Room mode set to ${btn.dataset.mode} players.`);
       await fetchState();
     } catch (err) {
@@ -763,6 +1019,22 @@ if (refreshBtn) {
       setBusy(true);
       await fetchState();
       addLocalMsg(actionMsgEl, "Refreshed.");
+    } catch (err) {
+      addLocalMsg(actionMsgEl, err.message);
+    } finally {
+      setBusy(false);
+      updateControls();
+    }
+  });
+}
+
+if (saveRulesBtn) {
+  saveRulesBtn.addEventListener("click", async () => {
+    try {
+      setBusy(true);
+      await saveRoomSettings();
+      addLocalMsg(actionMsgEl, "Room rules saved.");
+      await fetchState();
     } catch (err) {
       addLocalMsg(actionMsgEl, err.message);
     } finally {
@@ -996,6 +1268,10 @@ setInterval(() => {
     .then(() => updateControls())
     .catch(() => {});
 }, 1000);
+
+topnavSnapshot = getTopnavSnapshot();
+resultsModalShown = sessionStorage.getItem(`logia_results_shown_${ROOM_CODE}`) === "1";
+ensureResultsModal();
 
 fetchState()
   .then(() => {
