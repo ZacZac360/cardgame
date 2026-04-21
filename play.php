@@ -15,16 +15,40 @@ $u  = current_user();
 $is_guest = ((int)($u['is_guest'] ?? 0) === 1);
 
 $username = $u['username'] ?? $u['display_name'] ?? 'Player';
-$approval = (string)($u['approval_status'] ?? 'pending');
-$emailVerified = !empty($u['email_verified_at']);
-$bankStatus = (string)($u['bank_link_status'] ?? 'none');
 
-$rankedReady = ($approval === 'approved' && $emailVerified && $bankStatus === 'linked');
+$req = ranked_requirements($mysqli, $u);
+$rankedUnlocked = (!$is_guest && !empty($req['ranked_unlocked']));
+$rankedReady = (!$is_guest && !empty($req['ranked_ok']));
 
 $rankedChecks = [
-  ['label' => 'Account approved', 'ok' => $approval === 'approved'],
-  ['label' => 'Email verified', 'ok' => $emailVerified],
-  ['label' => 'Credits linked', 'ok' => $bankStatus === 'linked'],
+  [
+    'label' => 'Account approved',
+    'ok' => !empty($req['approved_ok']),
+    'hint' => 'Approval is handled by the admin review queue.',
+    'href' => $bp . '/profile.php?tab=overview',
+    'action' => 'Open Profile',
+  ],
+  [
+    'label' => 'Email verified',
+    'ok' => !empty($req['email_ok']),
+    'hint' => 'Verify your email from the security section.',
+    'href' => $bp . '/profile.php?tab=security',
+    'action' => 'Verify Email',
+  ],
+  [
+    'label' => '2FA enabled',
+    'ok' => !empty($req['twofa_ok']),
+    'hint' => 'Turn on 2FA from the security section.',
+    'href' => $bp . '/profile.php?tab=security',
+    'action' => 'Enable 2FA',
+  ],
+  [
+    'label' => 'Minimum Zeny (' . (int)$req['unlock_threshold'] . ')',
+    'ok' => !empty($req['credits_ok']),
+    'hint' => 'Top up until you reach the ranked unlock threshold.',
+    'href' => $bp . '/shop.php?tab=credits',
+    'action' => 'Get Zeny',
+  ],
 ];
 
 $browserRooms = [];
@@ -198,18 +222,24 @@ ui_header("Play");
             </div>
           </article>
 
-          <article class="play-mode-card play-mode-card--ranked <?= $rankedArt ? 'has-art' : '' ?> <?= $rankedReady ? '' : 'is-locked' ?>"<?= $rankedArt ? ' data-mode-art="' . h($rankedArt) . '"' : '' ?>>
+          <article class="play-mode-card play-mode-card--ranked <?= $rankedArt ? 'has-art' : '' ?> <?= $rankedUnlocked ? '' : 'is-locked' ?>"<?= $rankedArt ? ' data-mode-art="' . h($rankedArt) . '"' : '' ?>>
             <div class="play-mode-card__backdrop"></div>
             <div class="play-mode-card__content">
               <div class="play-mode-card__top">
                 <span class="pill <?= $rankedReady ? 'pill-good' : 'pill-warn' ?>">
-                  <?= $rankedReady ? 'Competitive' : 'Locked' ?>
+                  <?= $rankedReady ? 'Competitive' : ($rankedUnlocked ? 'Need Zeny' : 'Locked') ?>
                 </span>
               </div>
 
               <div class="play-mode-card__bottom">
                 <h2>Ranked</h2>
-                <p><?= $rankedReady ? 'Competitive queue is ready.' : 'High-stakes play with access requirements.' ?></p>
+                <p>
+                  <?= $rankedReady
+                    ? 'Competitive queue is ready.'
+                    : ($rankedUnlocked
+                        ? 'Ranked is unlocked, but you need ' . (int)$req['entry_fee'] . ' Zeny to enter right now.'
+                        : 'High-stakes play with access requirements.') ?>
+                </p>
                 <button class="btn <?= $rankedReady ? 'btn-primary' : 'btn-ghost' ?> btn-lg" type="button" id="rankedQueueBtn">
                   <?= $rankedReady ? 'Queue Ranked' : 'View Requirements' ?>
                 </button>
@@ -250,7 +280,11 @@ ui_header("Play");
           <div class="card-soft play-note-card">
             <div class="text-strong">🏅 Ranked</div>
             <div class="panel-sub">
-              <?= $rankedReady ? 'Your account is ready for competitive queue.' : 'Missing items will point you to the right page.' ?>
+              <?= $rankedReady
+                ? 'Your account is ready for competitive queue.'
+                : ($rankedUnlocked
+                    ? 'Ranked is unlocked. You only need ' . (int)$req['entry_fee'] . ' Zeny to queue.'
+                    : 'Missing items will point you to the right page.') ?>
             </div>
           </div>
         </div>
@@ -544,25 +578,17 @@ ui_header("Play");
           </div>
           <div class="play-mini-card">
             <span>Entry stake</span>
-            <strong>50 Zeny</strong>
+            <strong><?= (int)$req['entry_fee'] ?> Zeny</strong>
           </div>
         </div>
 
         <div class="play-check-list play-check-list--modal">
-          <?php foreach ($rankedChecks as $index => $check): ?>
+          <?php foreach ($rankedChecks as $check): ?>
             <div class="play-check-row play-check-row--modal">
               <div class="play-check-row__copy">
                 <span><?= h($check['label']) ?></span>
                 <?php if (!$check['ok']): ?>
-                  <small>
-                    <?php if ($index === 0): ?>
-                      Approval is handled by the admin review queue.
-                    <?php elseif ($index === 1): ?>
-                      Verify your email from the security section.
-                    <?php else: ?>
-                      Link your credits or payment access from the shop.
-                    <?php endif; ?>
-                  </small>
+                  <small><?= h($check['hint']) ?></small>
                 <?php else: ?>
                   <small>Requirement complete.</small>
                 <?php endif; ?>
@@ -571,13 +597,7 @@ ui_header("Play");
               <div class="play-check-row__status">
                 <span><?= $check['ok'] ? "✅" : "❌" ?></span>
                 <?php if (!$check['ok']): ?>
-                  <?php if ($index === 0): ?>
-                    <a class="btn btn-ghost btn-sm" href="<?= h($bp) ?>/profile.php?tab=overview">Open Profile</a>
-                  <?php elseif ($index === 1): ?>
-                    <a class="btn btn-ghost btn-sm" href="<?= h($bp) ?>/profile.php?tab=security">Verify Email</a>
-                  <?php else: ?>
-                    <a class="btn btn-ghost btn-sm" href="<?= h($bp) ?>/shop.php?tab=credits">Link Credits</a>
-                  <?php endif; ?>
+                  <a class="btn btn-ghost btn-sm" href="<?= h($check['href']) ?>"><?= h($check['action']) ?></a>
                 <?php endif; ?>
               </div>
             </div>
@@ -586,11 +606,15 @@ ui_header("Play");
 
         <?php if (!$rankedReady): ?>
           <div class="play-requirement-help card-soft">
-            <strong>How to unlock Ranked</strong>
-            <span>Finish the missing checks below, then come back here to queue.</span>
+            <strong><?= $rankedUnlocked ? 'Ranked is unlocked' : 'How to unlock Ranked' ?></strong>
+            <span>
+              <?= $rankedUnlocked
+                ? 'You already unlocked Ranked. You just need ' . (int)$req['entry_fee'] . ' Zeny to enter a match right now.'
+                : 'Finish the missing checks below and reach ' . (int)$req['unlock_threshold'] . ' Zeny to unlock Ranked.' ?>
+            </span>
             <div class="play-requirement-help__actions">
               <a class="btn btn-ghost" href="<?= h($bp) ?>/profile.php?tab=security">Security</a>
-              <a class="btn btn-ghost" href="<?= h($bp) ?>/shop.php?tab=credits">Credits</a>
+              <a class="btn btn-ghost" href="<?= h($bp) ?>/shop.php?tab=credits">Get Zeny</a>
               <a class="btn btn-ghost" href="<?= h($bp) ?>/profile.php?tab=overview">Profile</a>
             </div>
           </div>
@@ -616,7 +640,9 @@ ui_header("Play");
   });
 
   const BP = <?= json_encode(rtrim($bp, '/')) ?>;
+  const rankedUnlocked = <?= $rankedUnlocked ? 'true' : 'false' ?>;
   const rankedReady = <?= $rankedReady ? 'true' : 'false' ?>;
+  const rankedEntryFee = <?= (int)$req['entry_fee'] ?>;
 
   const createBtn = document.getElementById('createRoomBtn');
   const joinBtn = document.getElementById('joinRoomBtn');
@@ -857,8 +883,13 @@ ui_header("Play");
 
   if (rankedQueueStartBtn) {
     rankedQueueStartBtn.addEventListener('click', async () => {
-      if (!rankedReady) {
+      if (!rankedUnlocked) {
         setMsg(rankedQueueMsgEl, 'Ranked is still locked for this account.', true);
+        return;
+      }
+
+      if (!rankedReady) {
+        setMsg(rankedQueueMsgEl, `You need at least ${rankedEntryFee} Zeny to enter ranked right now.`, true);
         return;
       }
 

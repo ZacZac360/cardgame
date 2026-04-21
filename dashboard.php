@@ -16,7 +16,8 @@ if ($is_guest) {
   header("Location: {$bp}/guest_dashboard.php");
   exit;
 }
-$req       = ranked_requirements($mysqli, $u);
+$req = ranked_requirements($mysqli, $u);
+$ranked_unlocked = (!$is_guest && !empty($req['ranked_unlocked']));
 $ranked_ok = (!$is_guest && !empty($req['ranked_ok']));
 
 $notes  = fetch_notifications($mysqli, (int)$u['id'], 6);
@@ -66,16 +67,23 @@ ui_header("Dashboard");
       <div class="hub-sidebar__status">
         <span class="pill"><?= $is_guest ? "Guest" : "Player" ?></span>
 
-        <?php if (!$is_guest && !$ranked_ok): ?>
+        <?php if (!$is_guest && !$ranked_unlocked): ?>
           <div class="hub-sidebar__status-block">
             <span class="pill status-pill--bad">Ranked Locked</span>
             <div class="hub-sidebar__hint">
-              Finish security steps to unlock Ranked.
+              Finish account checks and reach <?= (int)$req['unlock_threshold'] ?> Zeny to unlock Ranked.
+            </div>
+          </div>
+        <?php elseif (!$is_guest && !$ranked_ok): ?>
+          <div class="hub-sidebar__status-block">
+            <span class="pill status-pill--warn">Ranked Unlocked</span>
+            <div class="hub-sidebar__hint">
+              Need <?= (int)$req['entry_fee'] ?> Zeny to queue right now.
             </div>
           </div>
         <?php elseif (!$is_guest && $ranked_ok): ?>
           <div class="hub-sidebar__status-block">
-            <span class="pill status-pill--good">Ranked Unlocked</span>
+            <span class="pill status-pill--good">Ranked Ready</span>
           </div>
         <?php endif; ?>
       </div>
@@ -89,6 +97,8 @@ ui_header("Dashboard");
             <span class="pill status-pill--warn">Guest: Casual only</span>
           <?php elseif ($ranked_ok): ?>
             <span class="pill status-pill--good">Ranked Ready</span>
+          <?php elseif ($ranked_unlocked): ?>
+            <span class="pill status-pill--warn">Need <?= (int)$req['entry_fee'] ?> Zeny</span>
           <?php else: ?>
             <span class="pill status-pill--bad">Ranked Locked</span>
           <?php endif; ?>
@@ -239,9 +249,10 @@ ui_header("Dashboard");
             </div>
 
             <div class="requirements-list">
+              <div class="requirements-row"><span>Account approved</span><span><?= $req['approved_ok'] ? "✅" : "❌" ?></span></div>
               <div class="requirements-row"><span>Email verified</span><span><?= $req['email_ok'] ? "✅" : "❌" ?></span></div>
               <div class="requirements-row"><span>2FA enabled</span><span><?= $req['twofa_ok'] ? "✅" : "❌" ?></span></div>
-              <div class="requirements-row"><span>Credits linked</span><span><?= $req['bank_ok'] ? "✅" : "❌" ?></span></div>
+              <div class="requirements-row"><span>Minimum Zeny (<?= (int)$req['unlock_threshold'] ?>)</span><span><?= $req['credits_ok'] ? "✅" : "❌" ?></span></div>
             </div>
           </div>
         <?php endif; ?>

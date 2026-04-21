@@ -50,7 +50,18 @@ function count_unread_notifications(mysqli $mysqli, int $user_id): int {
 }
 
 function ranked_requirements(mysqli $mysqli, array $u): array {
-  $uid = (int)$u['id'];
+  $uid = (int)($u['id'] ?? 0);
+
+  $stmt = $mysqli->prepare("
+    SELECT id, approval_status, email_verified_at, credits, ranked_unlocked
+    FROM users
+    WHERE id = ?
+    LIMIT 1
+  ");
+  $stmt->bind_param("i", $uid);
+  $stmt->execute();
+  $dbUser = $stmt->get_result()->fetch_assoc() ?: [];
+  $stmt->close();
 
   $stmt = $mysqli->prepare("SELECT is_enabled FROM two_factor_secrets WHERE user_id = ? LIMIT 1");
   $stmt->bind_param("i", $uid);
@@ -58,15 +69,68 @@ function ranked_requirements(mysqli $mysqli, array $u): array {
   $twofa = (int)($stmt->get_result()->fetch_assoc()['is_enabled'] ?? 0);
   $stmt->close();
 
-  $email_ok = !empty($u['email_verified_at']);
-  $bank_ok  = (($u['bank_link_status'] ?? 'none') === 'linked');
+  $approved_ok = (($dbUser['approval_status'] ?? '') === 'approved');
+  $email_ok = !empty($dbUser['email_verified_at']);
   $twofa_ok = ($twofa === 1);
 
+  $credits = (int)($dbUser['credits'] ?? 0);
+  $unlock_threshold = 250;
+  $entry_fee = 250;
+
+  $ranked_unlocked = ((int)($dbUser['ranked_unlocked'] ?? 0) === 1);
+
+  $can_unlock_now = $approved_ok && $email_ok && $twofa_ok && $credits >= $unlock_threshold;
+
+  if (!$ranked_unlocked && $can_unlock_now && $uid > 0) {
+    $stmt = $mysqli->prepare("
+      UPDATE users
+      SET ranked_unlocked = 1
+      WHERE id = ?
+      LIMIT 1
+    ");
+    $stmt->bind_param("i", $uid);
+    $stmt->execute();
+    $stmt->close();
+
+    $ranked_unlocked = true;
+
+    $stmt = $mysqli->prepare("
+      SELECT id
+      FROM dashboard_notifications
+      WHERE user_id = ? AND type = 'ranked_unlock'
+      LIMIT 1
+    ");
+    $stmt->bind_param("i", $uid);
+    $stmt->execute();
+    $existingUnlockNotif = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
+
+    if (!$existingUnlockNotif) {
+      $stmt = $mysqli->prepare("
+        INSERT INTO dashboard_notifications (user_id, type, title, body, link_url, is_read)
+        VALUES (?, 'ranked_unlock', 'Ranked Unlocked', ?, '/play.php', 0)
+      ");
+      $body = 'You unlocked Ranked. Keep at least ' . number_format($entry_fee) . ' Zeny ready to enter a match.';
+      $stmt->bind_param("is", $uid, $body);
+      $stmt->execute();
+      $stmt->close();
+    }
+  }
+
+  $credits_ok = ($credits >= $unlock_threshold);
+  $can_afford_queue = ($credits >= $entry_fee);
+
   return [
-    'email_ok'  => $email_ok,
-    'bank_ok'   => $bank_ok,
-    'twofa_ok'  => $twofa_ok,
-    'ranked_ok' => (($u['approval_status'] ?? '') === 'approved') && $email_ok && $bank_ok && $twofa_ok
+    'approved_ok' => $approved_ok,
+    'email_ok' => $email_ok,
+    'twofa_ok' => $twofa_ok,
+    'credits_ok' => $credits_ok,
+    'credits' => $credits,
+    'unlock_threshold' => $unlock_threshold,
+    'entry_fee' => $entry_fee,
+    'ranked_unlocked' => $ranked_unlocked,
+    'can_afford_queue' => $can_afford_queue,
+    'ranked_ok' => $ranked_unlocked && $can_afford_queue,
   ];
 }
 
@@ -116,6 +180,7 @@ function ui_header(string $title = 'Dashboard', bool $is_hub = true): void {
   $exp_pct = $expNext > 0 ? min(100, round(($exp / $expNext) * 100)) : 0;
 
   $req = ranked_requirements($mysqli, $u);
+  $ranked_unlocked = (!$is_guest && !empty($req['ranked_unlocked']));
   $ranked_ok = (!$is_guest && !empty($req['ranked_ok']));
 
   $dd_notes       = fetch_notifications($mysqli, $uid, 6);
@@ -173,8 +238,10 @@ function ui_header(string $title = 'Dashboard', bool $is_hub = true): void {
 
           <?php if ($is_guest): ?>
             <span class="pill status-pill--warn">Casual Only</span>
-          <?php elseif (!$ranked_ok): ?>
+          <?php elseif (!$ranked_unlocked): ?>
             <span class="pill status-pill--bad">Ranked Locked</span>
+          <?php elseif (!$ranked_ok): ?>
+            <span class="pill status-pill--warn">Need <?= (int)$req['entry_fee'] ?> Zeny</span>
           <?php endif; ?>
         </div>
 
