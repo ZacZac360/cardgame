@@ -1029,7 +1029,7 @@ define('LOGIA_STRONG_AGAINST', [
     $roomId          = (int)$room['id'];
 
     $stmt->bind_param(
-        'ssssssiiiiiiissiissssi',
+        'sssssisiiiiiissiissssi',
         $roomName,
         $roomType,
         $visibility,
@@ -1057,6 +1057,78 @@ define('LOGIA_STRONG_AGAINST', [
     $stmt->execute();
     $stmt->close();
     }
+
+  function game_restart_training_1_try_phase(mysqli $mysqli, array &$room): void {
+    $roomId = (int)$room['id'];
+    $setup = game_build_solo_scripted_setup('training_1');
+
+    $players = game_get_room_players($mysqli, $roomId);
+
+    foreach ($players as $player) {
+      $seatNo = (int)$player['seat_no'];
+
+      if ($seatNo === 1) {
+        $hand = $setup['player_hand'] ?? [];
+      } else {
+        $hand = $setup['ai_hands'][$seatNo] ?? [];
+      }
+
+      game_set_hand($mysqli, $roomId, $seatNo, $hand);
+    }
+
+    $drawPile = array_values($setup['draw_pile'] ?? game_build_deck());
+    $usedIds = [];
+
+    $activeCard = $setup['active_card'] ?? null;
+    if ($activeCard && !empty($activeCard['id'])) {
+      $usedIds[$activeCard['id']] = true;
+    }
+
+    foreach (($setup['player_hand'] ?? []) as $card) {
+      if (!empty($card['id'])) {
+        $usedIds[$card['id']] = true;
+      }
+    }
+
+    foreach (($setup['ai_hands'] ?? []) as $seatCards) {
+      foreach ($seatCards as $card) {
+        if (!empty($card['id'])) {
+          $usedIds[$card['id']] = true;
+        }
+      }
+    }
+
+    $drawPile = array_values(array_filter($drawPile, function ($card) use ($usedIds) {
+      $id = (string)($card['id'] ?? '');
+      return $id === '' || !isset($usedIds[$id]);
+    }));
+
+    $rules = game_room_rules($room);
+    $rules['training_1_phase'] = 'try';
+    $rules['training_1_round'] = 2;
+    $rules['tutorial_objective'] = 'Try it yourself.';
+    $rules['tutorial_explanation'] = 'The hand has been reset. This time, no card is forced. Use the element rule yourself: match the table element, or play the element that beats it.';
+    $rules['tutorial_tip'] = 'Look at the table card first, then choose the correct playable card.';
+    $rules['tutorial_expected_element'] = '';
+    $rules['tutorial_expected_kind'] = '';
+
+    $room['rules_json'] = game_jencode($rules);
+    $room['status'] = 'playing';
+    $room['current_turn_seat'] = 1;
+    $room['lead_seat'] = 1;
+    $room['last_played_seat'] = null;
+    $room['winner_seat'] = null;
+    $room['active_card_json'] = $activeCard ? game_jencode($activeCard) : null;
+    $room['active_element'] = $activeCard ? game_get_effective_element($activeCard) : null;
+    $room['pending_draw'] = 0;
+    $room['pass_count'] = 0;
+    $room['draw_pile_json'] = game_jencode($drawPile);
+    $room['discard_pile_json'] = $activeCard ? game_jencode([$activeCard]) : game_jencode([]);
+    $room['finished_at'] = null;
+
+    game_add_log($mysqli, $roomId, 'Guided round complete. Training 1 has reset for try-it-yourself mode.');
+    game_add_log($mysqli, $roomId, 'Try it yourself: match the table element or play the element that beats it.');
+  }
 
   /* =========================================================
      CORE ACTIONS
@@ -1138,6 +1210,21 @@ define('LOGIA_STRONG_AGAINST', [
     game_add_log($mysqli, $roomId, $playerName . ' played ' . game_card_text($played) . '.');
 
     if (count($hand) === 0) {
+      $rules = game_room_rules($room);
+      $soloLevelKey = (string)($rules['solo_level_key'] ?? '');
+      $training1Round = (int)($rules['training_1_round'] ?? 1);
+
+      if (
+        (string)($room['room_type'] ?? '') === 'solo' &&
+        $soloLevelKey === 'training_1' &&
+        $training1Round < 2
+      ) {
+        game_restart_training_1_try_phase($mysqli, $room);
+        game_save_room_state($mysqli, $room);
+
+        return ['ok' => true];
+      }
+
       $room['winner_seat'] = $seatNo;
       $room['status'] = 'finished';
       $room['finished_at'] = game_now_mysql();
@@ -1443,6 +1530,70 @@ define('LOGIA_STRONG_AGAINST', [
     $finalResults = [];
     $meResult = null;
 
+    $rules = game_room_rules($room);
+    $soloTutorial = null;
+
+    if ((string)($room['room_type'] ?? '') === 'solo') {
+      $soloLevelKey = (string)($rules['solo_level_key'] ?? 'training_1');
+
+      $tutorialDefaults = [
+        'training_1' => [
+          'title' => 'Training 1 — Same Element',
+          'speaker' => 'Guide',
+          'objective' => 'Play the Wind card.',
+          'explanation' => 'The active card is Wind. Same-element cards can be played even if the number is lower.',
+          'tip' => 'Click your Wind card, then press Play or double-click it.',
+          'type' => 'training',
+          'expected_element' => 'Wind',
+          'expected_kind' => 'normal',
+        ],
+        'training_2' => [
+          'title' => 'Training 2 — Stronger Element',
+          'speaker' => 'Guide',
+          'objective' => 'Use Earth to beat Lightning.',
+          'explanation' => 'The active card is Lightning. Earth beats Lightning in the matchup chart.',
+          'tip' => 'Click the Earth card, then press Play or double-click it.',
+          'type' => 'training',
+          'expected_element' => 'Earth',
+          'expected_kind' => 'normal',
+        ],
+        'training_3' => [
+          'title' => 'Training 3 — Special Cards',
+          'speaker' => 'Guide',
+          'objective' => 'Use a special card.',
+          'explanation' => '+2 pressures the next player. +4 lets you choose the next active element.',
+          'tip' => 'Try playing +2 or +4. If you use +4, choose the next element.',
+          'type' => 'training',
+          'expected_element' => '',
+          'expected_kind' => 'special',
+        ],
+        'campaign_1' => [
+          'title' => 'Campaign — Foundations',
+          'speaker' => 'Guide',
+          'objective' => 'Win the match.',
+          'explanation' => 'Use same elements, stronger elements, and special cards to empty your hand first.',
+          'tip' => 'Play normally and try to win.',
+          'type' => 'campaign',
+          'expected_element' => '',
+          'expected_kind' => '',
+        ],
+      ];
+
+      $defaults = $tutorialDefaults[$soloLevelKey] ?? $tutorialDefaults['training_1'];
+
+      $soloTutorial = [
+        'level_key' => $soloLevelKey,
+        'title' => (string)($rules['tutorial_title'] ?? $defaults['title']),
+        'speaker' => (string)($rules['tutorial_speaker'] ?? $defaults['speaker']),
+        'objective' => (string)($rules['tutorial_objective'] ?? $defaults['objective']),
+        'explanation' => (string)($rules['tutorial_explanation'] ?? $defaults['explanation']),
+        'tip' => (string)($rules['tutorial_tip'] ?? $defaults['tip']),
+        'type' => (string)($rules['solo_type'] ?? $defaults['type']),
+        'expected_element' => (string)($rules['tutorial_expected_element'] ?? $defaults['expected_element']),
+        'expected_kind' => (string)($rules['tutorial_expected_kind'] ?? $defaults['expected_kind']),
+      ];
+    }
+
     if ((string)($room['status'] ?? '') === 'finished') {
       $finalResults = game_compute_final_standings($mysqli, $room);
 
@@ -1496,8 +1647,339 @@ define('LOGIA_STRONG_AGAINST', [
       'final_results' => $finalResults,
       'me_result' => $meResult,
       'viewer_progress' => $viewerProgress,
+      'solo_tutorial' => $soloTutorial,
     ];
   }
+
+  /* =========================================================
+   SOLO LEVEL DEFINITIONS
+========================================================= */
+
+function game_solo_levels(): array {
+  return [
+
+    'training_1' => [
+      'title' => 'Training 1 — Element Basics',
+      'type' => 'training',
+      'description' => 'Learn same-element plays and the basic element matchup rule.',
+      'xp_reward' => 100,
+      'scripted' => true,
+    ],
+
+    'training_2' => [
+      'title' => 'Training 2 — Stronger Element',
+      'type' => 'training',
+      'description' => 'Use a stronger element to beat the active card.',
+      'xp_reward' => 150,
+      'scripted' => true,
+    ],
+
+    'training_3' => [
+      'title' => 'Training 3 — Special Cards',
+      'type' => 'training',
+      'description' => 'Use +2 and +4 cards properly.',
+      'xp_reward' => 200,
+      'scripted' => true,
+    ],
+
+    'campaign_1' => [
+      'title' => 'Campaign — Foundations',
+      'type' => 'campaign',
+      'description' => 'Apply everything in a real match.',
+      'xp_reward' => 300,
+      'scripted' => false,
+    ],
+
+  ];
+}
+
+function game_get_solo_level(string $key): ?array {
+  $levels = game_solo_levels();
+  return $levels[$key] ?? null;
+}
+
+function game_is_solo_scripted(string $key): bool {
+  $lvl = game_get_solo_level($key);
+  return !empty($lvl['scripted']);
+}
+
+function game_build_solo_room_rules(string $soloLevelKey): array {
+  $level = game_get_solo_level($soloLevelKey);
+
+  if (!$level) {
+    $soloLevelKey = 'training_1';
+    $level = game_get_solo_level($soloLevelKey);
+  }
+
+  $baseRules = game_default_room_rules('solo');
+
+  if ($soloLevelKey === 'training_1') {
+    return game_normalize_room_rules(array_merge($baseRules, [
+      'solo_level_key' => 'training_1',
+      'solo_scripted' => true,
+      'starting_hand_size' => 4,
+      'allow_stack_plus2' => false,
+      'allow_stack_plus4' => false,
+      'draw_until_playable' => false,
+      'solo_type' => 'training',
+      'tutorial_title' => 'Training 1 — Element Basics',
+      'tutorial_speaker' => 'Guide',
+      'tutorial_objective' => 'Start with the safe move: match the element.',
+      'tutorial_explanation' => 'The table has Wind. A Wind card can be played on another Wind card, even if the number is lower.',
+      'tutorial_tip' => 'Click the glowing Wind card, then press Play or double-click it.',
+      'tutorial_expected_element' => 'Wind',
+      'tutorial_expected_kind' => 'normal',
+      'training_1_phase' => 'guided',
+      'training_1_round' => 1,
+    ]), 'solo');
+  }
+
+  if ($soloLevelKey === 'training_2') {
+    return game_normalize_room_rules(array_merge($baseRules, [
+      'solo_level_key' => 'training_2',
+      'solo_scripted' => true,
+      'starting_hand_size' => 4,
+      'solo_type' => 'training',
+      'tutorial_title' => 'Training 2 — Stronger Element',
+      'tutorial_speaker' => 'Guide',
+      'tutorial_objective' => 'Use Earth to beat Lightning.',
+      'tutorial_explanation' => 'The active card is Lightning. Earth is stronger against Lightning, so it can be played.',
+      'tutorial_tip' => 'Click the Earth card, then press Play or double-click it.',
+      'tutorial_expected_element' => 'Earth',
+      'tutorial_expected_kind' => 'normal',
+    ]), 'solo');
+  }
+
+  if ($soloLevelKey === 'training_3') {
+    return game_normalize_room_rules(array_merge($baseRules, [
+      'solo_level_key' => 'training_3',
+      'solo_scripted' => true,
+      'starting_hand_size' => 4,
+      'solo_type' => 'training',
+      'tutorial_title' => 'Training 3 — Special Cards',
+      'tutorial_speaker' => 'Guide',
+      'tutorial_objective' => 'Use a special card.',
+      'tutorial_explanation' => '+2 pressures the next player. +4 lets you choose the next active element.',
+      'tutorial_tip' => 'Try playing +2 or +4. If you use +4, choose the next element.',
+      'tutorial_expected_element' => '',
+      'tutorial_expected_kind' => 'special',
+    ]), 'solo');
+  }
+
+  return game_normalize_room_rules(array_merge($baseRules, [
+    'solo_level_key' => 'campaign_1',
+    'solo_scripted' => false,
+    'starting_hand_size' => 5,
+    'solo_type' => 'campaign',
+    'tutorial_title' => 'Campaign — Foundations',
+    'tutorial_speaker' => 'Guide',
+    'tutorial_objective' => 'Win the match.',
+    'tutorial_explanation' => 'This is a normal solo encounter. Use same elements, stronger elements, and special cards to empty your hand first.',
+    'tutorial_tip' => 'Play normally and try to win.',
+    'tutorial_expected_element' => '',
+    'tutorial_expected_kind' => '',
+  ]), 'solo');
+}
+
+function game_build_solo_scripted_setup(string $soloLevelKey): array {
+  if ($soloLevelKey === 'training_1') {
+    return [
+      'player_hand' => [
+        game_create_normal_card('Wind', 6),
+        game_create_normal_card('Wood', 8),
+        game_create_normal_card('Water', 4),
+        game_create_normal_card('Earth', 2),
+      ],
+      'ai_hands' => [
+        2 => [
+          game_create_normal_card('Earth', 7),
+          game_create_normal_card('Lightning', 3),
+          game_create_normal_card('Fire', 5),
+          game_create_normal_card('Water', 2),
+        ],
+        3 => [
+          game_create_normal_card('Lightning', 8),
+          game_create_normal_card('Fire', 4),
+          game_create_normal_card('Wood', 2),
+          game_create_normal_card('Earth', 1),
+        ],
+        4 => [
+          game_create_normal_card('Fire', 6),
+          game_create_normal_card('Water', 7),
+          game_create_normal_card('Wind', 3),
+          game_create_normal_card('Lightning', 2),
+        ],
+      ],
+      'active_card' => game_create_normal_card('Wind', 9),
+      'draw_pile' => game_build_deck(),
+      'hint' => 'Training 1 teaches the core rule: match the element, or play the element that beats it.',
+    ];
+  }
+
+  if ($soloLevelKey === 'training_2') {
+    return [
+      'player_hand' => [
+        game_create_normal_card('Earth', 8),
+        game_create_normal_card('Fire', 3),
+        game_create_normal_card('Water', 5),
+        game_create_plus4(),
+      ],
+      'ai_hands' => [
+        2 => [game_create_normal_card('Fire', 6), game_create_normal_card('Wood', 4), game_create_normal_card('Water', 8), game_create_normal_card('Lightning', 1)],
+        3 => [game_create_normal_card('Wood', 7), game_create_normal_card('Fire', 9), game_create_normal_card('Water', 2), game_create_normal_card('Wind', 1)],
+        4 => [game_create_normal_card('Lightning', 5), game_create_normal_card('Earth', 1), game_create_normal_card('Wood', 6), game_create_normal_card('Fire', 2)],
+      ],
+      'active_card' => game_create_normal_card('Lightning', 9),
+      'draw_pile' => game_build_deck(),
+      'hint' => 'Use a stronger element to beat the active card.',
+    ];
+  }
+
+  if ($soloLevelKey === 'training_3') {
+    return [
+      'player_hand' => [
+        game_create_plus2('Fire'),
+        game_create_plus4(),
+        game_create_normal_card('Water', 4),
+        game_create_normal_card('Earth', 6),
+      ],
+      'ai_hands' => [
+        2 => [game_create_normal_card('Wood', 8), game_create_normal_card('Fire', 5), game_create_normal_card('Lightning', 4), game_create_normal_card('Wind', 2)],
+        3 => [game_create_normal_card('Water', 7), game_create_normal_card('Wood', 3), game_create_normal_card('Earth', 5), game_create_normal_card('Fire', 1)],
+        4 => [game_create_normal_card('Lightning', 6), game_create_normal_card('Water', 2), game_create_normal_card('Wood', 9), game_create_normal_card('Earth', 1)],
+      ],
+      'active_card' => game_create_normal_card('Wood', 7),
+      'draw_pile' => game_build_deck(),
+      'hint' => 'Try using a special card like +2 or +4.',
+    ];
+  }
+
+  return [];
+}
+
+function game_start_solo_scripted_room(mysqli $mysqli, array &$room): void {
+  $roomId = (int)$room['id'];
+
+  if (($room['status'] ?? '') !== 'waiting') {
+    throw new RuntimeException('Room is not in waiting state.');
+  }
+
+  $rules = game_room_rules($room);
+  $soloLevelKey = (string)($rules['solo_level_key'] ?? '');
+  $setup = game_build_solo_scripted_setup($soloLevelKey);
+
+  if (!$setup) {
+    game_start_room($mysqli, $room);
+    return;
+  }
+
+  $mysqli->begin_transaction();
+
+  try {
+    $stmt = $mysqli->prepare("
+      DELETE FROM game_room_players
+      WHERE room_id = ? AND player_type = 'ai'
+    ");
+    $stmt->bind_param('i', $roomId);
+    $stmt->execute();
+    $stmt->close();
+
+    game_clear_hands($mysqli, $roomId);
+
+    $stmt = $mysqli->prepare("DELETE FROM game_logs WHERE room_id = ?");
+    $stmt->bind_param('i', $roomId);
+    $stmt->execute();
+    $stmt->close();
+
+    $maxPlayers = (int)($room['max_players'] ?? 4);
+    $players = game_get_room_players($mysqli, $roomId);
+    $takenSeats = array_map(fn($p) => (int)$p['seat_no'], $players);
+
+    for ($seat = 1; $seat <= $maxPlayers; $seat++) {
+      if (!in_array($seat, $takenSeats, true)) {
+        $name = 'AI ' . $seat;
+        $isHost = 0;
+        $nullUserId = null;
+
+        $stmt = $mysqli->prepare("
+          INSERT INTO game_room_players (
+            room_id, user_id, seat_no, player_name, player_type, is_host
+          )
+          VALUES (?, ?, ?, ?, 'ai', ?)
+        ");
+        $stmt->bind_param('iiisi', $roomId, $nullUserId, $seat, $name, $isHost);
+        $stmt->execute();
+        $stmt->close();
+      }
+    }
+
+    $players = game_get_room_players($mysqli, $roomId);
+
+    foreach ($players as $player) {
+      $seatNo = (int)$player['seat_no'];
+
+      if ($seatNo === 1) {
+        $hand = $setup['player_hand'] ?? [];
+      } else {
+        $hand = $setup['ai_hands'][$seatNo] ?? [];
+      }
+
+      game_set_hand($mysqli, $roomId, $seatNo, $hand);
+    }
+
+    $drawPile = array_values($setup['draw_pile'] ?? game_build_deck());
+    $usedIds = [];
+
+    $activeCard = $setup['active_card'] ?? null;
+    if ($activeCard && !empty($activeCard['id'])) {
+      $usedIds[$activeCard['id']] = true;
+    }
+
+    foreach (($setup['player_hand'] ?? []) as $card) {
+      if (!empty($card['id'])) $usedIds[$card['id']] = true;
+    }
+
+    foreach (($setup['ai_hands'] ?? []) as $seatCards) {
+      foreach ($seatCards as $card) {
+        if (!empty($card['id'])) $usedIds[$card['id']] = true;
+      }
+    }
+
+    $drawPile = array_values(array_filter($drawPile, function ($card) use ($usedIds) {
+      $id = (string)($card['id'] ?? '');
+      return $id === '' || !isset($usedIds[$id]);
+    }));
+
+    $firstSeat = 1;
+
+    $room['status'] = 'playing';
+    $room['current_turn_seat'] = $firstSeat;
+    $room['lead_seat'] = $firstSeat;
+    $room['last_played_seat'] = null;
+    $room['winner_seat'] = null;
+    $room['active_card_json'] = $activeCard ? game_jencode($activeCard) : null;
+    $room['active_element'] = $activeCard ? game_get_effective_element($activeCard) : null;
+    $room['pending_draw'] = 0;
+    $room['pass_count'] = 0;
+    $room['draw_pile_json'] = game_jencode($drawPile);
+    $room['discard_pile_json'] = $activeCard ? game_jencode([$activeCard]) : game_jencode([]);
+    $room['started_at'] = game_now_mysql();
+    $room['finished_at'] = null;
+
+    game_save_room_state($mysqli, $room);
+
+    game_add_log($mysqli, $roomId, 'Solo lesson started.');
+    if (!empty($setup['hint'])) {
+      game_add_log($mysqli, $roomId, (string)$setup['hint']);
+    }
+    game_add_log($mysqli, $roomId, game_get_player_name_by_seat($mysqli, $roomId, $firstSeat) . ' takes the first turn.');
+
+    $mysqli->commit();
+  } catch (Throwable $e) {
+    $mysqli->rollback();
+    throw $e;
+  }
+}
 
   /* =========================================================
      ROOM CREATION / MEMBERSHIP

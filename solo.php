@@ -16,6 +16,34 @@ $username = $u['username'] ?? $u['display_name'] ?? 'Player';
 
 ui_header("Solo");
 ?>
+<script>
+async function launchSolo(levelKey) {
+  try {
+    const res = await fetch('<?= h($bp) ?>/api/game/create_room.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        room_type: 'solo',
+        solo_level_key: levelKey
+      })
+    });
+
+    const data = await res.json();
+
+    if (!data.ok) {
+      alert(data.msg || 'Failed to create solo match.');
+      return;
+    }
+
+    if (data.redirect_url) {
+      window.location.href = data.redirect_url;
+    }
+  } catch (e) {
+    console.error(e);
+    alert('Error launching solo match.');
+  }
+}
+</script>
 
 <section class="section section--flush-top">
   <div class="hub-grid">
@@ -96,6 +124,83 @@ ui_header("Solo");
       </div>
 
       <div class="stack-12">
+
+        <section id="training" class="card panel-card--lg">
+          <div class="panel-head-simple">
+            <div>
+              <div class="panel-title">Training Path</div>
+              <div class="panel-sub">
+                Short guided levels that teach the core mechanics.
+              </div>
+            </div>
+          </div>
+
+          <div class="stack-10 hub-mt-12">
+
+            <div class="card-soft link-card link-card--block">
+              <div class="text-strong">Training 1 — Same Element</div>
+              <div class="panel-sub">
+                Learn how to match the same element as the active card.
+              </div>
+              <div class="hero-actions hub-mt-12">
+                <button class="btn btn-primary" type="button" onclick="launchSolo('training_1')">
+                  Start Training 1
+                </button>
+              </div>
+            </div>
+
+            <div class="card-soft link-card link-card--block">
+              <div class="text-strong">Training 2 — Stronger Element</div>
+              <div class="panel-sub">
+                Learn how stronger elements can beat the current active card.
+              </div>
+              <div class="hero-actions hub-mt-12">
+                <button class="btn btn-primary" type="button" onclick="launchSolo('training_2')">
+                  Start Training 2
+                </button>
+              </div>
+            </div>
+
+            <div class="card-soft link-card link-card--block">
+              <div class="text-strong">Training 3 — Special Cards</div>
+              <div class="panel-sub">
+                Practice using +2 and +4 cards in a guided setup.
+              </div>
+              <div class="hero-actions hub-mt-12">
+                <button class="btn btn-primary" type="button" onclick="launchSolo('training_3')">
+                  Start Training 3
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+        <section id="chapters" class="card panel-card--lg">
+          <div class="panel-head-simple">
+            <div>
+              <div class="panel-title">Campaign</div>
+              <div class="panel-sub">
+                Apply what you learned in a more normal solo match.
+              </div>
+            </div>
+          </div>
+
+          <div class="stack-10 hub-mt-12">
+            <div class="card-soft link-card link-card--block">
+              <div class="text-strong">Campaign 1 — Foundations</div>
+              <div class="panel-sub">
+                A beginner solo encounter built around the core rules and pacing of a normal game.
+              </div>
+              <div class="hero-actions hub-mt-12">
+                <button class="btn btn-primary" type="button" onclick="launchSolo('campaign_1')">
+                  Play Campaign 1
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+
       </div>
     </main>
 

@@ -51,7 +51,79 @@ let selectedCardId = null;
 let pendingPlus4CardId = null;
 let busy = false;
 let resultsModalShown = false;
+let trainingTransitionModalShown = false;
 let topnavSnapshot = null;
+
+const SOLO_TUTORIAL_DIALOGUES = {
+  training_1: {
+    idle: {
+      objective: "Match the table first.",
+      explanation: "The table card is Wind. Your glowing Wind card is playable because matching the same element is always allowed.",
+      tip: "Click the glowing Wind card beside me.",
+    },
+    selected: {
+      objective: "Good. Now play it.",
+      explanation: "Correct. Same element works even if your number is lower. Wind can go on Wind.",
+      tip: "Press Play, or double-click the selected card.",
+    },
+    watching: {
+      objective: "Watch what the opponent does.",
+      explanation: "After your move, the table will change. Pay attention to the new element because your next move depends on it.",
+      tip: "When your turn comes back, either match the element or play the element that beats it.",
+    },
+    no_target: {
+      objective: "Try it yourself.",
+      explanation: "No glowing card this time. Use what you learned: match the table element, or use the element that beats it.",
+      tip: "Look at the table card, then choose a playable card from your hand.",
+    },
+  },
+
+  training_2: {
+    idle: {
+      objective: "Play the glowing stronger card.",
+      explanation: "This time, you are not matching the same element. You are using the element that beats the card on the table.",
+      tip: "Click the glowing card beside me.",
+    },
+    selected: {
+      objective: "Correct. Play that card.",
+      explanation: "That card wins because its element is stronger than the active card.",
+      tip: "Press Play, or double-click the glowing card.",
+    },
+    watching: {
+      objective: "Good counter. Watch the table.",
+      explanation: "The active card may change after the opponent moves.",
+      tip: "Wait for the next glowing card.",
+    },
+    no_target: {
+      objective: "No counter card right now.",
+      explanation: "The lesson has moved past the planned counter step.",
+      tip: "Press Pass to continue.",
+    },
+  },
+
+  training_3: {
+    idle: {
+      objective: "Play the glowing special card.",
+      explanation: "Special cards change the flow of the match. +2 adds pressure. +4 lets you choose the next element.",
+      tip: "Click the glowing special card beside me.",
+    },
+    selected: {
+      objective: "Special card selected.",
+      explanation: "Now commit the move. If it is +4, choose the element you want next.",
+      tip: "Press Play. Choose an element if asked.",
+    },
+    watching: {
+      objective: "Special card played. Watch the effect.",
+      explanation: "The next player must respond to the new pressure or chosen element.",
+      tip: "Wait for your next guided move.",
+    },
+    no_target: {
+      objective: "No special card target right now.",
+      explanation: "The special-card lesson has moved forward.",
+      tip: "Press Pass to continue.",
+    },
+  },
+};
 
 function escapeHtml(value) {
   return String(value ?? "")
@@ -102,6 +174,71 @@ function updateTopnavProgress(profile) {
   if (xpText) {
     xpText.textContent = `${Number(profile.exp || 0).toLocaleString()} / ${Number(profile.exp_to_next || 0).toLocaleString()} EXP`;
   }
+}
+
+function ensureTrainingTransitionModal() {
+  let modal = document.getElementById("trainingTransitionModal");
+  if (modal) return modal;
+
+  modal = document.createElement("div");
+  modal.id = "trainingTransitionModal";
+  modal.className = "results-modal hidden";
+  modal.innerHTML = `
+    <div class="results-modal__dialog">
+      <div class="results-modal__head">
+        <div class="results-modal__titlewrap">
+          <div class="results-modal__eyebrow">Tutorial Checkpoint</div>
+          <h2 class="results-modal__title">Nice! You got the basics.</h2>
+          <div class="results-modal__sub">Now try the same rule without the glowing guide.</div>
+        </div>
+
+        <button type="button" class="icon-btn" id="trainingTransitionCloseBtn">✕</button>
+      </div>
+
+      <div class="results-modal__body">
+        <div class="results-card">
+          <div class="results-card__label">Next Round</div>
+          <p style="margin:0; line-height:1.6;">
+            Your hand has been reset. This time, choose the card yourself:
+            match the table element, or play the element that beats it.
+          </p>
+        </div>
+      </div>
+
+      <div class="results-modal__actions">
+        <button type="button" class="ui-btn" id="trainingTransitionContinueBtn">Try It Myself</button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+
+  const close = () => modal.classList.add("hidden");
+
+  modal.querySelector("#trainingTransitionCloseBtn")?.addEventListener("click", close);
+  modal.querySelector("#trainingTransitionContinueBtn")?.addEventListener("click", close);
+
+  return modal;
+}
+
+function maybeShowTrainingTransitionModal() {
+  const room = latestState?.room;
+  const rules = room?.rules || {};
+
+  if (!room || room.status !== "playing") return;
+  if (room.room_type !== "solo") return;
+  if (rules.solo_level_key !== "training_1") return;
+  if (String(rules.training_1_phase || "") !== "try") return;
+
+  const storageKey = `logia_training_transition_${ROOM_CODE}`;
+  if (trainingTransitionModalShown || sessionStorage.getItem(storageKey) === "1") {
+    return;
+  }
+
+  trainingTransitionModalShown = true;
+  sessionStorage.setItem(storageKey, "1");
+
+  ensureTrainingTransitionModal().classList.remove("hidden");
 }
 
 function ensureResultsModal() {
@@ -246,6 +383,148 @@ function getCurrentRoomRules() {
   return latestState?.room?.rules || {};
 }
 
+function getSoloTutorialInfo() {
+  const room = latestState?.room || {};
+  const tutorial = latestState?.solo_tutorial || null;
+
+  if (room.room_type !== "solo" || !tutorial) {
+    return null;
+  }
+
+  return {
+    title: tutorial.title || "Solo Training",
+    speaker: tutorial.speaker || "Guide",
+    objective: tutorial.objective || "Complete the solo encounter.",
+    explanation: tutorial.explanation || "Use the rules you learned to win the match.",
+    tip: tutorial.tip || getTurnHint() || "Play the best available card.",
+    type: tutorial.type || "solo",
+    expectedElement: tutorial.expected_element || "",
+    expectedKind: tutorial.expected_kind || "",
+    levelKey: tutorial.level_key || "",
+  };
+}
+
+function isSoloTrainingRoom() {
+  const room = latestState?.room || {};
+  const tutorial = getSoloTutorialInfo();
+  const rules = room.rules || {};
+
+  if (
+    room.room_type === "solo" &&
+    rules.solo_level_key === "training_1" &&
+    String(rules.training_1_phase || "") === "try"
+  ) {
+    return false;
+  }
+
+  return room.room_type === "solo" && tutorial && tutorial.type === "training";
+}
+
+function pickSoloTutorialTargetFromRaw(rawPlayable, tutorial) {
+  if (!tutorial || !Array.isArray(rawPlayable) || !rawPlayable.length) {
+    return null;
+  }
+
+  const expectedKind = String(tutorial.expectedKind || "");
+  const expectedElement = String(tutorial.expectedElement || "");
+
+  if (expectedKind === "" && expectedElement === "") {
+    return null;
+  }
+
+  if (expectedKind === "special") {
+    return rawPlayable.find((card) => card.kind === "plus2" || card.kind === "plus4") || null;
+  }
+
+  if (expectedKind !== "" && expectedElement !== "") {
+    const exactTarget = rawPlayable.find((card) => {
+      return card.kind === expectedKind && card.element === expectedElement;
+    });
+
+    if (exactTarget) return exactTarget;
+  }
+
+  return null;
+}
+
+function getSoloTutorialTargetCard(hand, room) {
+  const tutorial = getSoloTutorialInfo();
+  if (!tutorial || !Array.isArray(hand) || !room) return null;
+
+  const activeCard = room.active_card || null;
+  const pendingDraw = Number(room.pending_draw || 0);
+  const rawPlayable = hand.filter((card) => canPlayCard(card, activeCard, pendingDraw));
+
+  return pickSoloTutorialTargetFromRaw(rawPlayable, tutorial);
+}
+
+function getSoloTutorialDynamicCopy() {
+  const room = latestState?.room || {};
+  const me = latestState?.me || null;
+  const tutorial = getSoloTutorialInfo();
+
+  if (!tutorial || !me || room.status !== "playing") {
+    return tutorial;
+  }
+
+  const levelKey = latestState?.solo_tutorial?.level_key || latestState?.room?.rules?.solo_level_key || "";
+  const dialogueSet = SOLO_TUTORIAL_DIALOGUES[levelKey] || {};
+  const myTurn = room.current_turn_seat === me.seat_no;
+  const hand = me.hand || [];
+  const target = getSoloTutorialTargetCard(hand, room);
+  const selected = selectedCardId ? getCardById(selectedCardId) : null;
+
+  let stage = "idle";
+
+  if (!myTurn) {
+    stage = "watching";
+  } else if (!target) {
+    stage = "no_target";
+  } else if (selected && selected.id === target.id) {
+    stage = "selected";
+  }
+
+  const line = dialogueSet[stage] || {};
+
+  if (!myTurn) {
+    const turnSeat = room.current_turn_seat ? getSeatByNo(room.current_turn_seat) : null;
+
+    return {
+      ...tutorial,
+      objective: line.objective || "Watch the opponent.",
+      explanation: line.explanation || `${turnSeat?.player_name || "The opponent"} is taking a turn.`,
+      tip: line.tip || "Wait for your next guided move.",
+    };
+  }
+
+  if (!target) {
+    const activeElement = getEffectiveElement(room.active_card || null) || room.active_element || "the table element";
+
+    return {
+      ...tutorial,
+      objective: line.objective || "Try it yourself.",
+      explanation: `The table is now ${activeElement}. Choose any card that matches ${activeElement}, or any element that beats it.`,
+      tip: line.tip || "Use the element rule yourself this time.",
+    };
+  }
+
+  if (stage === "selected") {
+    return {
+      ...tutorial,
+      objective: line.objective || `Now play ${cardText(target)}.`,
+      explanation: line.explanation || "Correct card selected.",
+      tip: line.tip || "Press Play or double-click the highlighted card.",
+    };
+  }
+
+  return {
+    ...tutorial,
+    objective: line.objective || "Play the glowing card.",
+    explanation: line.explanation || "This card is the correct tutorial move.",
+    tip: line.tip || "Click the glowing card beside me.",
+  };
+}
+
 function syncRulesFormFromState() {
   const rules = getCurrentRoomRules();
 
@@ -381,7 +660,19 @@ function canPlayCard(card, activeCard, pendingDraw) {
 function getPlayableCards(hand, room) {
   const activeCard = room?.active_card || null;
   const pendingDraw = Number(room?.pending_draw || 0);
-  return (hand || []).filter((card) => canPlayCard(card, activeCard, pendingDraw));
+  const rawPlayable = (hand || []).filter((card) => canPlayCard(card, activeCard, pendingDraw));
+
+  if (isSoloTrainingRoom() && latestState?.me && hand === latestState.me.hand) {
+    const target = getSoloTutorialTargetCard(hand, room);
+
+    if (target) {
+      return [target];
+    }
+
+    return rawPlayable;
+  }
+
+  return rawPlayable;
 }
 
 function getCardById(cardId) {
@@ -425,6 +716,7 @@ function applyState(data) {
 
   syncRulesFormFromState();
   render();
+  maybeShowTrainingTransitionModal();
   maybeHandleFinishedMatch();
 }
 
@@ -448,7 +740,18 @@ function cardIsPlayable(card) {
   if (!me) return false;
   if (room.current_turn_seat !== me.seat_no) return false;
 
-  return canPlayCard(card, room.active_card || null, Number(room.pending_draw || 0));
+  const normallyPlayable = canPlayCard(card, room.active_card || null, Number(room.pending_draw || 0));
+  if (!normallyPlayable) return false;
+
+  if (isSoloTrainingRoom()) {
+    const target = getSoloTutorialTargetCard(me.hand || [], room);
+
+    if (target && target.id !== card.id) {
+      return false;
+    }
+  }
+
+  return true;
 }
 
 function renderAICardBacks(count, isTop = false) {
@@ -636,6 +939,37 @@ function renderCenterTable() {
     ? `background-image:url('${activeCard.image_url}');`
     : `background:${getCardGradient(activeCard)};`;
 
+  const tutorialInfo = getSoloTutorialDynamicCopy();
+  const tutorialBanner = tutorialInfo
+    ? `
+      <div class="solo-coach">
+        <div class="solo-coach__portrait">
+          <div class="solo-coach__avatar">🧙</div>
+          <div class="solo-coach__name">${escapeHtml(tutorialInfo.speaker)}</div>
+        </div>
+
+        <div class="solo-coach__bubble">
+          <div class="solo-coach__top">
+            <span class="solo-coach__badge">${escapeHtml(String(tutorialInfo.type).toUpperCase())}</span>
+            <strong>${escapeHtml(tutorialInfo.title)}</strong>
+          </div>
+
+          <div class="solo-coach__objective">
+            ${escapeHtml(tutorialInfo.objective)}
+          </div>
+
+          <div class="solo-coach__text">
+            ${escapeHtml(tutorialInfo.explanation)}
+          </div>
+
+          <div class="solo-coach__tip">
+            ${escapeHtml(tutorialInfo.tip)}
+          </div>
+        </div>
+      </div>
+    `
+    : "";
+
   tableAreaEl.innerHTML = `
     <div class="board-center">
       <div class="center-meta">
@@ -647,9 +981,13 @@ function renderCenterTable() {
       </div>
 
       <div class="center-play">
-        <div class="stack-wrap">
-          <div class="stack-label">Draw Pile</div>
-          <div class="deck-stack">DECK</div>
+        <div class="deck-tutorial-row">
+          <div class="stack-wrap">
+            <div class="stack-label">Draw Pile</div>
+            <div class="deck-stack">DECK</div>
+          </div>
+
+
         </div>
 
         ${
@@ -794,6 +1132,7 @@ function renderHand() {
     return;
   }
 
+  const tutorialInfo = getSoloTutorialDynamicCopy();
   const total = myHand.length;
 
   const cardsHtml = myHand.map((card, index) => {
@@ -801,6 +1140,15 @@ function renderHand() {
     const playable = cardIsPlayable(card);
     const selectedClass = selected ? "selected-card" : "";
     const disabledClass = playable ? "" : "is-unplayable";
+
+    let tutorialClass = "";
+    if (tutorialInfo && playable && isSoloTrainingRoom()) {
+      const target = getSoloTutorialTargetCard(myHand, room);
+
+      if (target && target.id === card.id) {
+        tutorialClass = "tutorial-target-card";
+      }
+    }
     const useImage = !!(card.has_image && card.image_url);
     const inlineStyle = useImage
       ? `${getHandFanTransform(index, total, selected, playable)} background-image:url('${card.image_url}');`
@@ -809,7 +1157,7 @@ function renderHand() {
     return `
       <button
         type="button"
-        class="hand-card ${selectedClass} ${disabledClass}"
+        class="hand-card ${selectedClass} ${disabledClass} ${tutorialClass}"
         data-card-id="${escapeHtml(card.id)}"
         data-playable="${playable ? "1" : "0"}"
         title="${escapeHtml(cardText(card))}"
@@ -827,7 +1175,33 @@ function renderHand() {
     `;
   }).join("");
 
-  handAreaEl.innerHTML = `<div class="hand-fan">${cardsHtml}</div>`;
+  const handCoach = tutorialInfo && isSoloTrainingRoom()
+    ? `
+      <div class="hand-tutorial-coach">
+        <div class="solo-coach__portrait">
+          <div class="solo-coach__avatar">🧙</div>
+          <div class="solo-coach__name">${escapeHtml(tutorialInfo.speaker)}</div>
+        </div>
+
+        <div class="solo-coach__bubble">
+          <div class="solo-coach__top">
+            <span class="solo-coach__badge">${escapeHtml(String(tutorialInfo.type).toUpperCase())}</span>
+            <strong>${escapeHtml(tutorialInfo.title)}</strong>
+          </div>
+          <div class="solo-coach__objective">${escapeHtml(tutorialInfo.objective)}</div>
+          <div class="solo-coach__text">${escapeHtml(tutorialInfo.explanation)}</div>
+          <div class="solo-coach__tip">${escapeHtml(tutorialInfo.tip)}</div>
+        </div>
+      </div>
+    `
+    : "";
+
+  handAreaEl.innerHTML = `
+    <div class="hand-tutorial-row">
+      ${handCoach}
+      <div class="hand-fan">${cardsHtml}</div>
+    </div>
+  `;
 
   handAreaEl.querySelectorAll("[data-card-id]").forEach((btn) => {
     btn.addEventListener("click", async () => {
@@ -1272,6 +1646,7 @@ setInterval(() => {
 topnavSnapshot = getTopnavSnapshot();
 resultsModalShown = sessionStorage.getItem(`logia_results_shown_${ROOM_CODE}`) === "1";
 ensureResultsModal();
+ensureTrainingTransitionModal();
 
 fetchState()
   .then(() => {

@@ -14,6 +14,7 @@ $u = game_current_user_or_fail();
 $data = game_request_json();
 
 $roomCode = strtoupper(trim((string)($data['room_code'] ?? '')));
+
 if ($roomCode === '') {
   game_json_out(['ok' => false, 'msg' => 'Room code is required.'], 400);
 }
@@ -23,12 +24,28 @@ if (!$room) {
   game_json_out(['ok' => false, 'msg' => 'Room not found.'], 404);
 }
 
+$me = game_get_room_player_by_user($mysqli, (int)$room['id'], (int)$u['id']);
+if (!$me) {
+  game_json_out(['ok' => false, 'msg' => 'Join the room first.'], 403);
+}
+
 if (!game_is_room_host($room, (int)$u['id'])) {
   game_json_out(['ok' => false, 'msg' => 'Only the host can start the game.'], 403);
 }
 
 try {
-  game_start_room($mysqli, $room);
+  $rules = game_room_rules($room);
+  $isSoloScripted = (
+    (string)($room['room_type'] ?? '') === 'solo' &&
+    !empty($rules['solo_scripted']) &&
+    !empty($rules['solo_level_key'])
+  );
+
+  if ($isSoloScripted) {
+    game_start_solo_scripted_room($mysqli, $room);
+  } else {
+    game_start_room($mysqli, $room);
+  }
 
   $room = game_get_room_by_code($mysqli, $roomCode);
   if (!$room) {
@@ -40,8 +57,9 @@ try {
   $payload['msg'] = 'Game started.';
 
   game_json_out($payload);
-} catch (RuntimeException $e) {
-  game_json_out(['ok' => false, 'msg' => $e->getMessage()], 409);
 } catch (Throwable $e) {
-  game_json_out(['ok' => false, 'msg' => 'Failed to start game: ' . $e->getMessage()], 500);
+  game_json_out([
+    'ok' => false,
+    'msg' => 'Failed to start game: ' . $e->getMessage(),
+  ], 500);
 }

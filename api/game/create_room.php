@@ -19,6 +19,7 @@ $visibility = trim((string)($data['visibility'] ?? 'private'));
 $maxPlayers = (int)($data['max_players'] ?? 4);
 $password = trim((string)($data['password'] ?? ''));
 $presetKey = trim((string)($data['preset_key'] ?? ''));
+$soloLevelKey = trim((string)($data['solo_level_key'] ?? ''));
 
 if ($roomName !== '' && mb_strlen($roomName) > 80) {
   $roomName = mb_substr($roomName, 0, 80);
@@ -37,11 +38,27 @@ if (!in_array($maxPlayers, [2, 3, 4], true)) {
 }
 
 if ($roomType === 'solo') {
-  $maxPlayers = 4;
   $visibility = 'private';
+
+  if ($soloLevelKey === '') {
+    $soloLevelKey = 'training_1';
+  }
+
+  $soloLevel = game_get_solo_level($soloLevelKey);
+  if (!$soloLevel) {
+    game_json_out(['ok' => false, 'msg' => 'Invalid solo level.'], 400);
+  }
+
+  $maxPlayers = 4;
+
+  if ($roomName === '') {
+    $roomName = (string)($soloLevel['title'] ?? 'Solo Match');
+  }
 }
 
-if ($presetKey === '') {
+if ($roomType === 'solo') {
+  $presetKey = 'custom';
+} elseif ($presetKey === '') {
   $presetKey = match ($roomType) {
     'casual' => 'classic',
     'ranked' => 'pressure',
@@ -62,7 +79,13 @@ try {
   );
 
   $roomId = (int)$room['id'];
-  $rules = game_rules_for_preset($presetKey, $roomType);
+
+  if ($roomType === 'solo') {
+    $rules = game_build_solo_room_rules($soloLevelKey);
+  } else {
+    $rules = game_rules_for_preset($presetKey, $roomType);
+  }
+
   $rulesJson = game_jencode($rules);
 
   $stmt = $mysqli->prepare("
@@ -80,9 +103,29 @@ try {
     game_json_out(['ok' => false, 'msg' => 'Room not found after create.'], 404);
   }
 
+  if ($roomType === 'solo') {
+    $soloRules = game_room_rules($room);
+
+    $isSoloScripted = (
+      !empty($soloRules['solo_scripted']) &&
+      !empty($soloRules['solo_level_key'])
+    );
+
+    if ($isSoloScripted && function_exists('game_start_solo_scripted_room')) {
+      game_start_solo_scripted_room($mysqli, $room);
+    } else {
+      game_start_room($mysqli, $room);
+    }
+
+    $room = game_get_room_by_id($mysqli, $roomId);
+    if (!$room) {
+      game_json_out(['ok' => false, 'msg' => 'Room not found after solo auto-start.'], 404);
+    }
+  }
+
   $bp = function_exists('base_path') ? rtrim(base_path(), '/') : '';
   $payload = game_room_state_payload($mysqli, $room, (int)$u['id'], $bp);
-  $payload['msg'] = 'Room created.';
+  $payload['msg'] = $roomType === 'solo' ? 'Solo match launched.' : 'Room created.';
   $payload['redirect_url'] = $bp . '/room.php?code=' . urlencode((string)$room['room_code']);
 
   game_json_out($payload);
