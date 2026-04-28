@@ -1,3 +1,6 @@
+C:\xampp\htdocs\cardgame>tree /f
+Folder PATH listing for volume System
+Volume serial number is 3E7B-6DED
 C:.
 │  .gitattributes
 │  .gitignore
@@ -16,6 +19,7 @@ C:.
 │  notifications.php
 │  play.php
 │  profile.php
+│  ranked.php
 │  reset-password.php
 │  room.php
 │  shop.php
@@ -55,6 +59,9 @@ C:.
 │  │      leave_room.php
 │  │      pass_turn.php
 │  │      play_card.php
+│  │      ranked_cancel.php
+│  │      ranked_join.php
+│  │      ranked_status.php
 │  │      reset_room.php
 │  │      start_game.php
 │  │      state.php
@@ -81,6 +88,7 @@ C:.
 │  │  game-room.js
 │  │  hub.css
 │  │  main.js
+│  │  ranked.js
 │  │  style.css
 │  │  userstyle.css
 │  │
@@ -101,6 +109,7 @@ C:.
 │      notification_action.php
 │      profanity_helper.php
 │      profile_helpers.php
+│      ranked_helpers.php
 │      ui.php
 │
 ├─uploads

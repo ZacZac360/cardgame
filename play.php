@@ -240,9 +240,27 @@ ui_header("Play");
                         ? 'Ranked is unlocked, but you need ' . (int)$req['entry_fee'] . ' Zeny to enter right now.'
                         : 'High-stakes play with access requirements.') ?>
                 </p>
-                <button class="btn <?= $rankedReady ? 'btn-primary' : 'btn-ghost' ?> btn-lg" type="button" id="rankedQueueBtn">
-                  <?= $rankedReady ? 'Queue Ranked' : 'View Requirements' ?>
-                </button>
+                <?php if ($rankedReady): ?>
+
+                  <button
+                    class="btn btn-primary btn-lg"
+                    type="button"
+                    id="rankedQueueDirectBtn"
+                  >
+                    Queue Ranked
+                  </button>
+
+                <?php else: ?>
+
+                  <button
+                    class="btn btn-ghost btn-lg"
+                    type="button"
+                    id="rankedQueueBtn"
+                  >
+                    View Requirements
+                  </button>
+
+                <?php endif; ?>
               </div>
             </div>
           </article>
@@ -881,35 +899,60 @@ ui_header("Play");
     });
   }
 
+  async function enterRankedQueue(buttonEl, msgEl) {
+    if (!rankedUnlocked) {
+      setMsg(msgEl, 'Ranked is still locked for this account.', true);
+      return;
+    }
+
+    if (!rankedReady) {
+      setMsg(msgEl, `You need at least ${rankedEntryFee} Zeny to enter ranked right now.`, true);
+      return;
+    }
+
+    if (buttonEl) buttonEl.disabled = true;
+    setMsg(msgEl, 'Entering ranked queue...');
+
+    try {
+      const res = await fetch(`${BP}/api/game/ranked_join.php`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        credentials: 'same-origin',
+        body: JSON.stringify({})
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || !data.ok) {
+        throw new Error(data.msg || 'Failed to queue ranked.');
+      }
+
+      const roomCode = data?.status?.match?.room_code;
+      if (roomCode) {
+        window.location.href = `${BP}/room.php?code=${encodeURIComponent(roomCode)}`;
+        return;
+      }
+
+      window.location.href = `${BP}/ranked.php`;
+    } catch (err) {
+      setMsg(msgEl, err.message || 'Failed to queue ranked.', true);
+      if (buttonEl) buttonEl.disabled = false;
+    }
+  }
+
+  const rankedQueueDirectBtn = document.getElementById('rankedQueueDirectBtn');
+
+  if (rankedQueueDirectBtn) {
+    rankedQueueDirectBtn.addEventListener('click', async () => {
+      await enterRankedQueue(rankedQueueDirectBtn, null);
+    });
+  }
+
   if (rankedQueueStartBtn) {
     rankedQueueStartBtn.addEventListener('click', async () => {
-      if (!rankedUnlocked) {
-        setMsg(rankedQueueMsgEl, 'Ranked is still locked for this account.', true);
-        return;
-      }
-
-      if (!rankedReady) {
-        setMsg(rankedQueueMsgEl, `You need at least ${rankedEntryFee} Zeny to enter ranked right now.`, true);
-        return;
-      }
-
-      rankedQueueStartBtn.disabled = true;
-      setMsg(rankedQueueMsgEl, 'Entering ranked queue...');
-
-      try {
-        await createRoom({
-          room_name: 'Ranked Queue',
-          room_type: 'ranked',
-          max_players: 4,
-          preset_key: 'pressure',
-          visibility: 'public',
-          password: ''
-        }, rankedQueueMsgEl);
-      } catch (err) {
-        setMsg(rankedQueueMsgEl, err.message || 'Failed to queue ranked.', true);
-      } finally {
-        rankedQueueStartBtn.disabled = false;
-      }
+      await enterRankedQueue(rankedQueueStartBtn, rankedQueueMsgEl);
     });
   }
 })();

@@ -1367,3 +1367,75 @@ body[data-appearance="light"] .micro-table td:last-child{
     width:min(360px, calc(100vw - 28px));
   }
 }
+
+/* =========================================
+   ADMIN GAME CONTROL CENTER
+   ========================================= */
+
+.admin-form-grid{
+  display:grid;
+  grid-template-columns:repeat(2, minmax(0, 1fr));
+  gap:12px;
+}
+
+.admin-form-grid--one{
+  grid-template-columns:1fr;
+}
+
+.admin-form-row{
+  display:grid;
+  gap:7px;
+}
+
+.admin-form-row label{
+  font-size:11px;
+  font-weight:900;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+  color:var(--muted);
+}
+
+.admin-form-row input,
+.admin-form-row textarea{
+  width:100%;
+  border:1px solid rgba(255,255,255,.10);
+  background:rgba(255,255,255,.05);
+  color:var(--text);
+  border-radius:14px;
+  padding:11px 12px;
+  outline:none;
+  font:inherit;
+}
+
+.admin-form-row textarea{
+  resize:vertical;
+  min-height:110px;
+  line-height:1.5;
+}
+
+.admin-form-row input:focus,
+.admin-form-row textarea:focus{
+  border-color:rgba(118,180,255,.35);
+  box-shadow:0 0 0 3px rgba(118,180,255,.10);
+}
+
+.admin-form-actions{
+  grid-column:1 / -1;
+  display:flex;
+  justify-content:flex-end;
+  gap:8px;
+  margin-top:4px;
+}
+
+body[data-appearance="light"] .admin-form-row input,
+body[data-appearance="light"] .admin-form-row textarea{
+  background:rgba(255,255,255,.72);
+  border-color:rgba(18,35,63,.12);
+  color:#12233f;
+}
+
+@media (max-width: 760px){
+  .admin-form-grid{
+    grid-template-columns:1fr;
+  }
+}

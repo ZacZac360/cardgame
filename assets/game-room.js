@@ -188,8 +188,8 @@ function ensureTrainingTransitionModal() {
       <div class="results-modal__head">
         <div class="results-modal__titlewrap">
           <div class="results-modal__eyebrow">Tutorial Checkpoint</div>
-          <h2 class="results-modal__title">Nice! You got the basics.</h2>
-          <div class="results-modal__sub">Now try the same rule without the glowing guide.</div>
+          <h2 class="results-modal__title" id="trainingTransitionTitle">Nice! You got the lesson.</h2>
+          <div class="results-modal__sub" id="trainingTransitionSub">Now try the same rule without the glowing guide.</div>
         </div>
 
         <button type="button" class="icon-btn" id="trainingTransitionCloseBtn">✕</button>
@@ -198,9 +198,8 @@ function ensureTrainingTransitionModal() {
       <div class="results-modal__body">
         <div class="results-card">
           <div class="results-card__label">Next Round</div>
-          <p style="margin:0; line-height:1.6;">
-            Your hand has been reset. This time, choose the card yourself:
-            match the table element, or play the element that beats it.
+          <p id="trainingTransitionBody" style="margin:0; line-height:1.6;">
+            Your hand has been reset. This time, choose the correct card yourself.
           </p>
         </div>
       </div>
@@ -227,8 +226,8 @@ function maybeShowTrainingTransitionModal() {
 
   if (!room || room.status !== "playing") return;
   if (room.room_type !== "solo") return;
-  if (rules.solo_level_key !== "training_1") return;
-  if (String(rules.training_1_phase || "") !== "try") return;
+  if (!["training_1", "training_2", "training_3"].includes(String(rules.solo_level_key || ""))) return;
+  if (String(rules[String(rules.solo_level_key || "") + "_phase"] || "") !== "try") return;
 
   const storageKey = `logia_training_transition_${ROOM_CODE}`;
   if (trainingTransitionModalShown || sessionStorage.getItem(storageKey) === "1") {
@@ -238,7 +237,36 @@ function maybeShowTrainingTransitionModal() {
   trainingTransitionModalShown = true;
   sessionStorage.setItem(storageKey, "1");
 
-  ensureTrainingTransitionModal().classList.remove("hidden");
+  const modal = ensureTrainingTransitionModal();
+  const levelKey = String(rules.solo_level_key || "");
+
+  const copy = {
+    training_1: {
+      title: "Nice! You got the basics.",
+      sub: "Now try the same element rule without the glowing guide.",
+      body: "Your hand has been reset. This time, choose the card yourself: match the table element, or play the element that beats it.",
+    },
+    training_2: {
+      title: "Good. You used a +2.",
+      sub: "Now try a +2 round without the glowing guide.",
+      body: "Your hand has been reset. Use +2 cards when they are valid. Remember: a +2 creates pressure, and stacking only works when another +2 is allowed.",
+    },
+    training_3: {
+      title: "Good. You used a Wildcard.",
+      sub: "Now try a +4 Wild round without the glowing guide.",
+      body: "Your hand has been reset. Use +4 Wild to change the active element and set up your next move.",
+    },
+  }[levelKey] || {
+    title: "Nice! You got the lesson.",
+    sub: "Now try it without the glowing guide.",
+    body: "Your hand has been reset. Win this round by yourself.",
+  };
+
+  modal.querySelector("#trainingTransitionTitle").textContent = copy.title;
+  modal.querySelector("#trainingTransitionSub").textContent = copy.sub;
+  modal.querySelector("#trainingTransitionBody").textContent = copy.body;
+
+  modal.classList.remove("hidden");
 }
 
 function ensureResultsModal() {
@@ -411,8 +439,8 @@ function isSoloTrainingRoom() {
 
   if (
     room.room_type === "solo" &&
-    rules.solo_level_key === "training_1" &&
-    String(rules.training_1_phase || "") === "try"
+    ["training_1", "training_2", "training_3"].includes(String(rules.solo_level_key || "")) &&
+    String(rules[String(rules.solo_level_key || "") + "_phase"] || "") === "try"
   ) {
     return false;
   }

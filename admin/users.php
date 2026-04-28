@@ -63,7 +63,6 @@ function page_header(string $title, string $bp, string $adminName, string $activ
         <a class="admin-menu__item <?= $active === 'users' ? 'is-active' : '' ?>" href="<?= h($bp) ?>/admin/users.php"><span class="admin-menu__icon">👥</span><span>Users</span></a>
         <a class="admin-menu__item <?= $active === 'reports' ? 'is-active' : '' ?>" href="<?= h($bp) ?>/admin/reports.php"><span class="admin-menu__icon">📝</span><span>Reports</span></a>
         <a class="admin-menu__item" href="<?= h($bp) ?>/admin/game.php"><span class="admin-menu__icon">🎮</span><span>Game</span></a>
-        <a class="admin-menu__item" href="<?= h($bp) ?>/admin/notifications.php"><span class="admin-menu__icon">🔔</span><span>Notifications</span></a>
         <a class="admin-menu__item <?= $active === 'settings' ? 'is-active' : '' ?>" href="<?= h($bp) ?>/admin/settings.php"><span class="admin-menu__icon">⚙</span><span>Settings</span></a>
       </nav>
     </aside>

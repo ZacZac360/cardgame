@@ -8,6 +8,8 @@ define('LOGIA_GAME_HELPERS', true);
 
 define('LOGIA_AI_TURN_DELAY_MS', 900);
 
+require_once __DIR__ . '/ranked_helpers.php';
+
 define('LOGIA_ELEMENTS', ['Fire', 'Water', 'Lightning', 'Earth', 'Wind', 'Wood']);
 
 define('LOGIA_STRONG_AGAINST', [
@@ -214,7 +216,13 @@ define('LOGIA_STRONG_AGAINST', [
 
     if ($roomType === 'ranked') {
       $rules['allow_ai_fill'] = false;
-      $rules['preset_key'] = 'pressure';
+      $rules['starting_hand_size'] = 5;
+      $rules['allow_stack_plus2'] = true;
+      $rules['allow_stack_plus4'] = true;
+      $rules['draw_until_playable'] = false;
+      $rules['must_pass_on_draw_penalty'] = false;
+      $rules['preset_key'] = 'ranked';
+      $rules['ranked_locked'] = true;
     }
 
     return $rules;
@@ -382,9 +390,9 @@ define('LOGIA_STRONG_AGAINST', [
     };
   }
 
-  function game_exp_for_place(int $place, string $roomType): int {
+  function game_exp_for_place(int $place, string $roomType, float $extraMultiplier = 1.0): int {
     $base = game_base_exp_for_place($place);
-    return (int)round($base * game_ranked_exp_multiplier($roomType));
+    return (int)round($base * game_ranked_exp_multiplier($roomType) * max(1.0, $extraMultiplier));
   }
 
   function game_compute_final_standings(mysqli $mysqli, array $room): array {
@@ -423,9 +431,21 @@ define('LOGIA_STRONG_AGAINST', [
 
     foreach ($rows as $idx => &$row) {
       $row['place'] = $idx + 1;
+      $extraMultiplier = 1.0;
+
+      if ($roomType === 'ranked' && $row['player_type'] === 'human' && !empty($row['user_id'])) {
+        $profile = ranked_ensure_profile($mysqli, (int)$row['user_id']);
+        $tier = ranked_tier_for_trophy((int)($profile['trophy'] ?? 1000));
+        $extraMultiplier = ranked_exp_multiplier($tier, (int)($profile['win_streak'] ?? 0));
+      }
+
       $row['xp_awarded'] = $row['player_type'] === 'human'
-        ? game_exp_for_place($row['place'], $roomType)
+        ? game_exp_for_place($row['place'], $roomType, $extraMultiplier)
         : 0;
+
+      if ($roomType === 'ranked') {
+        $row['ranked_exp_multiplier'] = $extraMultiplier;
+      }
     }
     unset($row);
 
@@ -530,6 +550,8 @@ define('LOGIA_STRONG_AGAINST', [
     $roomType = (string)($room['room_type'] ?? 'custom');
     $roomCode = (string)($room['room_code'] ?? '');
     $standings = game_compute_final_standings($mysqli, $room);
+
+    ranked_apply_room_results($mysqli, $room, $standings);
 
     foreach ($standings as &$entry) {
       $userId = $entry['user_id'] ?? null;
@@ -1133,6 +1155,54 @@ define('LOGIA_STRONG_AGAINST', [
   /* =========================================================
      CORE ACTIONS
   ========================================================= */
+  function game_restart_training_try_phase(mysqli $mysqli, array &$room, string $trainingKey): void {
+    $roomId = (int)$room['id'];
+    $setup = game_build_solo_scripted_setup($trainingKey);
+
+    $players = game_get_room_players($mysqli, $roomId);
+
+    foreach ($players as $player) {
+      $seatNo = (int)$player['seat_no'];
+
+      if ($seatNo === 1) {
+        $hand = $setup['player_hand'] ?? [];
+      } else {
+        $hand = $setup['ai_hands'][$seatNo] ?? [];
+      }
+
+      game_set_hand($mysqli, $roomId, $seatNo, $hand);
+    }
+
+    $activeCard = $setup['active_card'] ?? null;
+    $drawPile = array_values($setup['draw_pile'] ?? game_build_deck());
+
+    $rules = game_room_rules($room);
+    $rules[$trainingKey . '_phase'] = 'try';
+    $rules[$trainingKey . '_round'] = 2;
+    $rules['tutorial_objective'] = 'Try it yourself.';
+    $rules['tutorial_explanation'] = 'The hand has been reset. This time, no card is forced. Use the lesson yourself and win the round.';
+    $rules['tutorial_tip'] = 'No guide this time. Choose the correct playable card.';
+    $rules['tutorial_expected_element'] = '';
+    $rules['tutorial_expected_kind'] = '';
+
+    $room['rules_json'] = game_jencode($rules);
+    $room['status'] = 'playing';
+    $room['current_turn_seat'] = 1;
+    $room['lead_seat'] = 1;
+    $room['last_played_seat'] = null;
+    $room['winner_seat'] = null;
+    $room['active_card_json'] = $activeCard ? game_jencode($activeCard) : null;
+    $room['active_element'] = $activeCard ? game_get_effective_element($activeCard) : null;
+    $room['pending_draw'] = 0;
+    $room['pass_count'] = 0;
+    $room['draw_pile_json'] = game_jencode($drawPile);
+    $room['discard_pile_json'] = $activeCard ? game_jencode([$activeCard]) : game_jencode([]);
+    $room['finished_at'] = null;
+
+    game_add_log($mysqli, $roomId, 'Guided round complete. ' . $trainingKey . ' has reset for try-it-yourself mode.');
+  }
+
+
 
   function game_apply_play_action(
     mysqli $mysqli,
@@ -1211,6 +1281,20 @@ define('LOGIA_STRONG_AGAINST', [
 
     if (count($hand) === 0) {
       $rules = game_room_rules($room);
+      $soloLevelKey = (string)($rules['solo_level_key'] ?? '');
+
+      if (
+        (string)($room['room_type'] ?? '') === 'solo' &&
+        in_array($soloLevelKey, ['training_1', 'training_2', 'training_3'], true) &&
+        (int)($rules[$soloLevelKey . '_round'] ?? 1) < 2
+      ) {
+        game_restart_training_try_phase($mysqli, $room, $soloLevelKey);
+        game_save_room_state($mysqli, $room);
+
+        return ['ok' => true];
+      }
+
+      $room['winner_seat'] = $seatNo;
       $soloLevelKey = (string)($rules['solo_level_key'] ?? '');
       $training1Round = (int)($rules['training_1_round'] ?? 1);
 
@@ -1620,7 +1704,7 @@ define('LOGIA_STRONG_AGAINST', [
         'rules' => game_room_rules($room),
         'human_count' => count(array_filter($players, fn($p) => ($p['player_type'] ?? '') === 'human')),
         'total_count' => count($players),
-        'is_host' => game_is_room_host($room, $userId),
+        'is_host' => (string)($room['room_type'] ?? '') === 'ranked' ? false : game_is_room_host($room, $userId),
         'current_turn_seat' => $room['current_turn_seat'] !== null ? (int)$room['current_turn_seat'] : null,
         'lead_seat' => $room['lead_seat'] !== null ? (int)$room['lead_seat'] : null,
         'last_played_seat' => $room['last_played_seat'] !== null ? (int)$room['last_played_seat'] : null,
@@ -1739,14 +1823,20 @@ function game_build_solo_room_rules(string $soloLevelKey): array {
       'solo_level_key' => 'training_2',
       'solo_scripted' => true,
       'starting_hand_size' => 4,
+      'allow_stack_plus2' => true,
+      'allow_stack_plus4' => false,
+      'draw_until_playable' => false,
+      'must_pass_on_draw_penalty' => false,
       'solo_type' => 'training',
-      'tutorial_title' => 'Training 2 — Stronger Element',
+      'tutorial_title' => 'Training 2 — Plus 2 Cards',
       'tutorial_speaker' => 'Guide',
-      'tutorial_objective' => 'Use Earth to beat Lightning.',
-      'tutorial_explanation' => 'The active card is Lightning. Earth is stronger against Lightning, so it can be played.',
-      'tutorial_tip' => 'Click the Earth card, then press Play or double-click it.',
-      'tutorial_expected_element' => 'Earth',
-      'tutorial_expected_kind' => 'normal',
+      'tutorial_objective' => 'Use the glowing +2 card.',
+      'tutorial_explanation' => '+2 cards are attack cards. When you play one, the next player must answer with another +2 or take the penalty.',
+      'tutorial_tip' => 'Click the glowing +2 card, then press Play or double-click it.',
+      'tutorial_expected_element' => '',
+      'tutorial_expected_kind' => 'plus2',
+      'training_2_phase' => 'guided',
+      'training_2_round' => 1,
     ]), 'solo');
   }
 
@@ -1755,14 +1845,20 @@ function game_build_solo_room_rules(string $soloLevelKey): array {
       'solo_level_key' => 'training_3',
       'solo_scripted' => true,
       'starting_hand_size' => 4,
+      'allow_stack_plus2' => false,
+      'allow_stack_plus4' => true,
+      'draw_until_playable' => false,
+      'must_pass_on_draw_penalty' => false,
       'solo_type' => 'training',
-      'tutorial_title' => 'Training 3 — Special Cards',
+      'tutorial_title' => 'Training 3 — Wildcards',
       'tutorial_speaker' => 'Guide',
-      'tutorial_objective' => 'Use a special card.',
-      'tutorial_explanation' => '+2 pressures the next player. +4 lets you choose the next active element.',
-      'tutorial_tip' => 'Try playing +2 or +4. If you use +4, choose the next element.',
+      'tutorial_objective' => 'Use the glowing +4 Wild card.',
+      'tutorial_explanation' => '+4 Wild lets you change the active element. After playing it, choose the element you want next.',
+      'tutorial_tip' => 'Click the glowing +4 Wild card, press Play, then choose an element.',
       'tutorial_expected_element' => '',
-      'tutorial_expected_kind' => 'special',
+      'tutorial_expected_kind' => 'plus4',
+      'training_3_phase' => 'guided',
+      'training_3_round' => 1,
     ]), 'solo');
   }
 
@@ -1819,38 +1915,68 @@ function game_build_solo_scripted_setup(string $soloLevelKey): array {
   if ($soloLevelKey === 'training_2') {
     return [
       'player_hand' => [
-        game_create_normal_card('Earth', 8),
+        game_create_plus2('Fire'),
         game_create_normal_card('Fire', 3),
         game_create_normal_card('Water', 5),
-        game_create_plus4(),
+        game_create_normal_card('Earth', 8),
       ],
       'ai_hands' => [
-        2 => [game_create_normal_card('Fire', 6), game_create_normal_card('Wood', 4), game_create_normal_card('Water', 8), game_create_normal_card('Lightning', 1)],
-        3 => [game_create_normal_card('Wood', 7), game_create_normal_card('Fire', 9), game_create_normal_card('Water', 2), game_create_normal_card('Wind', 1)],
-        4 => [game_create_normal_card('Lightning', 5), game_create_normal_card('Earth', 1), game_create_normal_card('Wood', 6), game_create_normal_card('Fire', 2)],
+        2 => [
+          game_create_plus2('Fire'),
+          game_create_normal_card('Wood', 4),
+          game_create_normal_card('Water', 8),
+          game_create_normal_card('Lightning', 1),
+        ],
+        3 => [
+          game_create_normal_card('Wood', 7),
+          game_create_normal_card('Fire', 9),
+          game_create_normal_card('Water', 2),
+          game_create_normal_card('Wind', 1),
+        ],
+        4 => [
+          game_create_normal_card('Lightning', 5),
+          game_create_normal_card('Earth', 1),
+          game_create_normal_card('Wood', 6),
+          game_create_normal_card('Fire', 2),
+        ],
       ],
-      'active_card' => game_create_normal_card('Lightning', 9),
+      'active_card' => game_create_normal_card('Fire', 9),
       'draw_pile' => game_build_deck(),
-      'hint' => 'Use a stronger element to beat the active card.',
+      'hint' => 'Training 2 teaches +2 cards. Play +2 Fire on Fire to pressure the next player.',
     ];
   }
 
   if ($soloLevelKey === 'training_3') {
     return [
       'player_hand' => [
-        game_create_plus2('Fire'),
         game_create_plus4(),
         game_create_normal_card('Water', 4),
         game_create_normal_card('Earth', 6),
+        game_create_normal_card('Wind', 2),
       ],
       'ai_hands' => [
-        2 => [game_create_normal_card('Wood', 8), game_create_normal_card('Fire', 5), game_create_normal_card('Lightning', 4), game_create_normal_card('Wind', 2)],
-        3 => [game_create_normal_card('Water', 7), game_create_normal_card('Wood', 3), game_create_normal_card('Earth', 5), game_create_normal_card('Fire', 1)],
-        4 => [game_create_normal_card('Lightning', 6), game_create_normal_card('Water', 2), game_create_normal_card('Wood', 9), game_create_normal_card('Earth', 1)],
+        2 => [
+          game_create_normal_card('Wood', 8),
+          game_create_normal_card('Fire', 5),
+          game_create_normal_card('Lightning', 4),
+          game_create_normal_card('Wind', 2),
+        ],
+        3 => [
+          game_create_normal_card('Water', 7),
+          game_create_normal_card('Wood', 3),
+          game_create_normal_card('Earth', 5),
+          game_create_normal_card('Fire', 1),
+        ],
+        4 => [
+          game_create_normal_card('Lightning', 6),
+          game_create_normal_card('Water', 2),
+          game_create_normal_card('Wood', 9),
+          game_create_normal_card('Earth', 1),
+        ],
       ],
       'active_card' => game_create_normal_card('Wood', 7),
       'draw_pile' => game_build_deck(),
-      'hint' => 'Try using a special card like +2 or +4.',
+      'hint' => 'Training 3 teaches +4 Wild cards. Play +4, then choose the next element.',
     ];
   }
 

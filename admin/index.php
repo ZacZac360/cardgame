@@ -233,11 +233,6 @@ $recentAudit = recent_audit_rows($mysqli, 4);
             <span>Game</span>
           </a>
 
-          <a class="admin-menu__item" href="<?= h($bp) ?>/admin/notifications.php">
-            <span class="admin-menu__icon">🔔</span>
-            <span>Notifications</span>
-          </a>
-
           <a class="admin-menu__item" href="<?= h($bp) ?>/admin/settings.php">
             <span class="admin-menu__icon">⚙</span>
             <span>Settings</span>
@@ -470,7 +465,6 @@ $recentAudit = recent_audit_rows($mysqli, 4);
             <a class="btn btn-primary" href="<?= h($bp) ?>/admin/users.php">Review Users</a>
             <a class="btn btn-ghost" href="<?= h($bp) ?>/admin/reports.php">Security Reports</a>
             <a class="btn btn-ghost" href="<?= h($bp) ?>/admin/game.php">Game Access</a>
-            <a class="btn btn-ghost" href="<?= h($bp) ?>/admin/notifications.php">Notifications</a>
           </div>
         </article>
       </aside>

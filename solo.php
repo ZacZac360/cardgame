@@ -105,21 +105,10 @@ async function launchSolo(levelKey) {
         </div>
 
         <div class="hero-body">
-          <h2>Campaign and tutorial track</h2>
+          <h2>Solo Mode</h2>
           <p class="lead hero-lead hero-lead--wide">
             Learn rules, master element matchups, and unlock tougher solo encounters over time.
           </p>
-
-          <div class="hero-actions">
-            <a class="btn btn-primary btn-lg" href="#chapters">Campaign</a>
-            <a class="btn btn-ghost btn-lg" href="#training">Training Path</a>
-          </div>
-
-          <div class="hero-meta">
-            <span class="note">User: <b><?= h($username) ?></b></span>
-            <span class="note">Mode: <b>Solo</b></span>
-            <span class="note">Track: <b>Tutorial + Campaign</b></span>
-          </div>
         </div>
       </div>
 
@@ -129,9 +118,6 @@ async function launchSolo(levelKey) {
           <div class="panel-head-simple">
             <div>
               <div class="panel-title">Training Path</div>
-              <div class="panel-sub">
-                Short guided levels that teach the core mechanics.
-              </div>
             </div>
           </div>
 
@@ -139,9 +125,6 @@ async function launchSolo(levelKey) {
 
             <div class="card-soft link-card link-card--block">
               <div class="text-strong">Training 1 — Same Element</div>
-              <div class="panel-sub">
-                Learn how to match the same element as the active card.
-              </div>
               <div class="hero-actions hub-mt-12">
                 <button class="btn btn-primary" type="button" onclick="launchSolo('training_1')">
                   Start Training 1
@@ -151,9 +134,6 @@ async function launchSolo(levelKey) {
 
             <div class="card-soft link-card link-card--block">
               <div class="text-strong">Training 2 — Stronger Element</div>
-              <div class="panel-sub">
-                Learn how stronger elements can beat the current active card.
-              </div>
               <div class="hero-actions hub-mt-12">
                 <button class="btn btn-primary" type="button" onclick="launchSolo('training_2')">
                   Start Training 2
@@ -163,9 +143,6 @@ async function launchSolo(levelKey) {
 
             <div class="card-soft link-card link-card--block">
               <div class="text-strong">Training 3 — Special Cards</div>
-              <div class="panel-sub">
-                Practice using +2 and +4 cards in a guided setup.
-              </div>
               <div class="hero-actions hub-mt-12">
                 <button class="btn btn-primary" type="button" onclick="launchSolo('training_3')">
                   Start Training 3
@@ -175,32 +152,6 @@ async function launchSolo(levelKey) {
 
           </div>
         </section>
-
-        <section id="chapters" class="card panel-card--lg">
-          <div class="panel-head-simple">
-            <div>
-              <div class="panel-title">Campaign</div>
-              <div class="panel-sub">
-                Apply what you learned in a more normal solo match.
-              </div>
-            </div>
-          </div>
-
-          <div class="stack-10 hub-mt-12">
-            <div class="card-soft link-card link-card--block">
-              <div class="text-strong">Campaign 1 — Foundations</div>
-              <div class="panel-sub">
-                A beginner solo encounter built around the core rules and pacing of a normal game.
-              </div>
-              <div class="hero-actions hub-mt-12">
-                <button class="btn btn-primary" type="button" onclick="launchSolo('campaign_1')">
-                  Play Campaign 1
-                </button>
-              </div>
-            </div>
-          </div>
-        </section>
-
       </div>
     </main>
 
