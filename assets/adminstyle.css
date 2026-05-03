@@ -1439,3 +1439,530 @@ body[data-appearance="light"] .admin-form-row textarea{
     grid-template-columns:1fr;
   }
 }
+
+/* =====================================================
+   RESPONSIVE STANDARDIZATION PASS - ADMIN
+===================================================== */
+
+/* Desktop admin layout */
+@media (min-width:1281px){
+  .admin-shell{
+    grid-template-columns:260px minmax(0, 1fr) 320px;
+    gap:16px;
+  }
+
+  .reports-top,
+  .reports-main,
+  .settings-top{
+    gap:16px;
+  }
+}
+
+/* Normal laptops */
+@media (max-width:1280px){
+  .admin-shell{
+    grid-template-columns:240px minmax(0, 1fr);
+    gap:14px;
+  }
+
+  .admin-right{
+    grid-column:1 / -1;
+  }
+
+  .admin-side{
+    top:78px;
+  }
+
+  .reports-top,
+  .reports-main,
+  .settings-top,
+  .settings-main{
+    grid-template-columns:1fr;
+  }
+
+  .reports-summary,
+  .reports-side,
+  .settings-side{
+    grid-template-columns:repeat(2, minmax(0, 1fr));
+  }
+
+  .admin-hero h1,
+  .reports-hero h1,
+  .settings-hero h1{
+    font-size:36px;
+  }
+}
+
+/* Tablet */
+@media (max-width:1024px){
+  .admin-shell{
+    grid-template-columns:1fr;
+  }
+
+  .admin-side{
+    position:static;
+    order:0;
+  }
+
+  .admin-main{
+    order:1;
+  }
+
+  .admin-right{
+    order:2;
+  }
+
+  .admin-menu{
+    grid-template-columns:repeat(2, minmax(0, 1fr));
+  }
+
+  .admin-hero{
+    grid-template-columns:1fr;
+  }
+
+  .admin-blocks,
+  .admin-blocks--two,
+  .settings-main{
+    grid-template-columns:1fr;
+  }
+
+  .reports-toolbar{
+    grid-template-columns:repeat(2, minmax(0, 1fr));
+  }
+
+  .reports-toolbar .field-search,
+  .reports-toolbar .actions{
+    grid-column:1 / -1;
+  }
+
+  .reports-toolbar .actions{
+    justify-content:flex-start;
+  }
+}
+
+/* Mobile admin compression */
+@media (max-width:860px){
+  .admin-page,
+  .admin-reports-page,
+  .admin-settings-page{
+    padding-top:10px;
+    padding-bottom:18px;
+  }
+
+  .admin-shell,
+  .admin-main,
+  .admin-right,
+  .reports-summary,
+  .reports-side,
+  .settings-side{
+    gap:10px;
+  }
+
+  .admin-side,
+  .admin-panel,
+  .admin-hero,
+  .reports-hero,
+  .summary-card,
+  .panel,
+  .settings-hero{
+    padding:12px;
+    border-radius:20px;
+  }
+
+  .admin-side__head h2{
+    font-size:20px;
+  }
+
+  .admin-menu{
+    grid-template-columns:1fr;
+    gap:8px;
+  }
+
+  .admin-menu__item{
+    padding:10px 12px;
+    border-radius:13px;
+  }
+
+  .admin-hero h1,
+  .reports-hero h1,
+  .settings-hero h1{
+    font-size:30px;
+  }
+
+  .admin-panel__head,
+  .summary-head,
+  .panel-head,
+  .settings-panel-head{
+    align-items:flex-start;
+    flex-direction:column;
+  }
+
+  .admin-panel h2,
+  .panel-head h2,
+  .panel-head h3,
+  .summary-head h3{
+    font-size:22px;
+  }
+
+  .statgrid,
+  .reports-summary,
+  .reports-side,
+  .settings-side{
+    grid-template-columns:1fr;
+  }
+
+  .stat,
+  .metric-card,
+  .activity-item,
+  .queue-item,
+  .note-row,
+  .settings-readout-row{
+    padding:12px;
+    border-radius:16px;
+  }
+
+  .stat__value,
+  .metric-card__value{
+    font-size:26px;
+  }
+
+  .queue-item{
+    flex-direction:column;
+  }
+
+  .queue-form{
+    min-width:0;
+    width:100%;
+  }
+
+  .queue-form__actions,
+  .queue-actions,
+  .settings-actions,
+  .tabbar,
+  .panel-tools{
+    width:100%;
+  }
+
+  .queue-form__actions .btn,
+  .queue-actions .btn,
+  .settings-actions .btn,
+  .panel-tools .btn{
+    flex:1 1 140px;
+  }
+
+  .reports-toolbar{
+    grid-template-columns:1fr;
+    gap:10px;
+  }
+
+  .reports-toolbar .field-search,
+  .reports-toolbar .actions{
+    grid-column:auto;
+  }
+
+  .reports-toolbar .actions{
+    width:100%;
+  }
+
+  .reports-toolbar .actions .btn{
+    flex:1 1 140px;
+  }
+
+  .micro-table{
+    border-spacing:0 8px;
+  }
+
+  .micro-table td{
+    display:block;
+    width:100% !important;
+    border-left:1px solid var(--border);
+    border-right:1px solid var(--border);
+    text-align:left !important;
+  }
+
+  .micro-table td:first-child{
+    border-radius:14px 14px 0 0;
+    border-bottom:0;
+  }
+
+  .micro-table td:last-child{
+    border-radius:0 0 14px 14px;
+    border-top:0;
+  }
+
+  .users-filter-form{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:10px;
+  }
+
+  .users-filter-field,
+  .users-filter-field--search{
+    min-width:0;
+  }
+}
+
+/* Phone */
+@media (max-width:640px){
+  .app-topbar__inner{
+    align-items:flex-start;
+    flex-direction:column;
+  }
+
+  .brand{
+    width:100%;
+  }
+
+  .nav,
+  .actions{
+    width:100%;
+    justify-content:flex-start;
+  }
+
+  .nav{
+    overflow-x:auto;
+    flex-wrap:nowrap;
+    padding-bottom:2px;
+  }
+
+  .nav__link{
+    white-space:nowrap;
+  }
+
+  .userchip__meta{
+    display:none;
+  }
+
+  .dropdown,
+  .dropdown--wide{
+    position:fixed;
+    top:76px;
+    left:8px;
+    right:8px;
+    width:auto;
+    max-width:none;
+  }
+
+  .admin-hero h1,
+  .reports-hero h1,
+  .settings-hero h1{
+    font-size:26px;
+  }
+
+  .tabbar{
+    overflow-x:auto;
+    flex-wrap:nowrap;
+    padding-bottom:2px;
+  }
+
+  .tabbar .tab{
+    white-space:nowrap;
+  }
+
+  .activity-item{
+    grid-template-columns:34px 1fr;
+  }
+}
+
+/* Very tight phones */
+@media (max-width:480px){
+  .admin-side,
+  .admin-panel,
+  .admin-hero,
+  .reports-hero,
+  .summary-card,
+  .panel,
+  .settings-hero{
+    padding:10px;
+    border-radius:18px;
+  }
+
+  .admin-hero h1,
+  .reports-hero h1,
+  .settings-hero h1{
+    font-size:24px;
+  }
+
+  .stat__value,
+  .metric-card__value{
+    font-size:24px;
+  }
+
+  .queue-form__actions .btn,
+  .queue-actions .btn,
+  .settings-actions .btn,
+  .panel-tools .btn{
+    flex:1 1 100%;
+  }
+}
+
+/* =====================================================
+   REPORTS PAGINATION / FILTER READABILITY
+===================================================== */
+
+.reports-pagination{
+  margin-top:16px;
+  padding-top:16px;
+  border-top:1px solid var(--border);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  flex-wrap:wrap;
+}
+
+.reports-pagination__info{
+  color:var(--muted);
+  font-size:13px;
+  font-weight:800;
+}
+
+.reports-pagination__actions{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  align-items:center;
+  justify-content:flex-end;
+}
+
+.reports-pagination .btn{
+  min-width:42px;
+}
+
+.reports-pagination .is-active-page{
+  border-color:rgba(57,255,106,.35);
+  background:rgba(57,255,106,.14);
+}
+
+.reports-pagination .is-disabled{
+  opacity:.45;
+  pointer-events:none;
+}
+
+@media (max-width:860px){
+  .reports-pagination{
+    align-items:flex-start;
+    flex-direction:column;
+  }
+
+  .reports-pagination__actions{
+    width:100%;
+    justify-content:flex-start;
+  }
+}
+
+/* =====================================================
+   AUDIT REPORT TOOLBAR FIX
+   Audit has one extra filter: Action.
+   Keeps all report tabs aligned on desktop/laptop.
+===================================================== */
+
+@media (min-width: 861px){
+  .reports-toolbar--users,
+  .reports-toolbar--security,
+  .reports-toolbar--game,
+  .reports-toolbar--financial{
+    grid-template-columns:150px 160px minmax(260px, 1fr) auto;
+    gap:12px;
+    align-items:end;
+  }
+
+  .reports-toolbar--audit{
+    grid-template-columns:150px 160px 150px minmax(220px, 1fr) auto;
+    gap:10px;
+    align-items:end;
+  }
+
+  .reports-toolbar--users .actions,
+  .reports-toolbar--security .actions,
+  .reports-toolbar--audit .actions,
+  .reports-toolbar--game .actions,
+  .reports-toolbar--financial .actions{
+    grid-column:auto;
+    display:flex;
+    justify-content:flex-end;
+    align-items:end;
+    gap:8px;
+    flex-wrap:nowrap;
+  }
+
+  .reports-toolbar--users .actions .btn,
+  .reports-toolbar--security .actions .btn,
+  .reports-toolbar--audit .actions .btn,
+  .reports-toolbar--game .actions .btn,
+  .reports-toolbar--financial .actions .btn{
+    white-space:nowrap;
+  }
+}
+
+@media (max-width: 1180px) and (min-width: 861px){
+  .reports-toolbar--users,
+  .reports-toolbar--security,
+  .reports-toolbar--game,
+  .reports-toolbar--financial{
+    grid-template-columns:135px 145px minmax(220px, 1fr) auto;
+  }
+
+  .reports-toolbar--audit{
+    grid-template-columns:135px 145px 130px minmax(180px, 1fr) auto;
+  }
+
+  .reports-toolbar .actions .btn{
+    padding-left:10px;
+    padding-right:10px;
+  }
+}
+
+/* =====================================================
+   LOGIA ADMIN BRAND MARK
+===================================================== */
+
+.logo__mark.logo__mark--image{
+  display:block;
+  width:42px;
+  height:42px;
+  border-radius:14px;
+  object-fit:contain;
+  padding:4px;
+  background:
+    radial-gradient(circle at 50% 20%, rgba(245,196,81,.18), transparent 42%),
+    linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.04));
+  border:1px solid rgba(255,255,255,.14);
+  box-shadow:
+    0 8px 18px rgba(0,0,0,.18),
+    inset 0 1px 0 rgba(255,255,255,.12);
+}
+
+body[data-appearance="light"] .logo__mark.logo__mark--image{
+  background:
+    radial-gradient(circle at 50% 20%, rgba(245,196,81,.22), transparent 42%),
+    rgba(255,255,255,.78);
+  border-color:rgba(18,35,63,.14);
+}
+
+/* =====================================================
+   LOGIA ADMIN BRAND MARK
+===================================================== */
+
+.logo__mark.logo__mark--image{
+  display:block;
+  width:42px;
+  height:42px;
+  border-radius:14px;
+  object-fit:contain;
+  padding:4px;
+  background:
+    radial-gradient(circle at 50% 20%, rgba(245,196,81,.18), transparent 42%),
+    linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.04));
+  border:1px solid rgba(255,255,255,.14);
+  box-shadow:
+    0 8px 18px rgba(0,0,0,.18),
+    inset 0 1px 0 rgba(255,255,255,.12);
+}
+
+body[data-appearance="light"] .logo__mark.logo__mark--image{
+  background:
+    radial-gradient(circle at 50% 20%, rgba(245,196,81,.22), transparent 42%),
+    rgba(255,255,255,.78);
+  border-color:rgba(18,35,63,.14);
+}

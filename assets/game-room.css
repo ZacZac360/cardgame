@@ -275,6 +275,11 @@ body[data-appearance="light"] .game-room-shell{
   border-color:rgba(255,123,132,.26);
 }
 
+.ui-btn--guide{
+  background:linear-gradient(180deg, rgba(245,196,81,.18), rgba(245,196,81,.08));
+  border-color:rgba(245,196,81,.26);
+}
+
 .table-shell{
   position:relative;
   min-height:480px;
@@ -2415,6 +2420,583 @@ body[data-appearance="light"] .ranked-queue-status{
 
   .ranked-stats{
     grid-template-columns:1fr 1fr;
+  }
+}
+
+/* =====================================================
+   RESPONSIVE STANDARDIZATION PASS - GAME ROOM
+   Keeps desktop board stable, compresses mobile.
+===================================================== */
+
+/* Room shell should behave like the rest of the app */
+.game-room-shell{
+  width:min(1520px, calc(100% - 36px));
+  max-width:1520px;
+  margin-left:auto;
+  margin-right:auto;
+  min-width:0;
+}
+
+.game-table-wrap,
+.game-room-top,
+.table-shell,
+.hand-dock{
+  max-width:100%;
+}
+
+.table-shell,
+.play-surface,
+.table-area,
+.board-center,
+.hand-area,
+.hand-fan{
+  min-width:0;
+}
+
+/* Desktop / full laptop */
+@media (min-width:1367px){
+  .game-room-shell{
+    --table-side:150px;
+    --hand-card-width:94px;
+    --hand-card-height:132px;
+  }
+
+  .table-shell{
+    min-height:480px;
+  }
+}
+
+/* Common laptop screens: slightly compressed but same layout */
+@media (max-width:1366px) and (min-width:981px){
+  .game-room-shell{
+    --table-side:132px;
+    --hand-card-width:86px;
+    --hand-card-height:122px;
+  }
+
+  .game-room-shell{
+    width:calc(100% - 28px);
+  }
+
+  .game-room-top{
+    padding:14px;
+  }
+
+  .game-room-title{
+    font-size:24px;
+  }
+
+  .game-room-sub{
+    font-size:13px;
+  }
+
+  .game-table-wrap{
+    padding:10px;
+    border-radius:24px;
+  }
+
+  .table-shell{
+    min-height:430px;
+    grid-template-columns:var(--table-side) minmax(0, 1fr) var(--table-side);
+    grid-template-rows:80px minmax(0, 1fr);
+    gap:8px;
+  }
+
+  .play-surface{
+    min-height:330px;
+    border-radius:26px;
+  }
+
+  .board-center{
+    width:min(100%, 560px);
+  }
+
+  .active-card{
+    width:124px;
+    height:172px;
+  }
+
+  .active-card__value{
+    font-size:48px;
+  }
+
+  .deck-stack{
+    width:70px;
+    height:98px;
+  }
+
+  .center-sideinfo{
+    min-width:142px;
+    max-width:160px;
+  }
+
+  .center-sideinfo__value{
+    font-size:17px;
+  }
+
+  .seat-left .seat-box,
+  .seat-right .seat-box{
+    max-width:132px;
+  }
+
+  .seat-name{
+    font-size:13px;
+  }
+
+  .seat-sub{
+    font-size:10px;
+  }
+
+  .floating-panel{
+    width:280px;
+  }
+
+  .hand-card{
+    margin-left:-28px;
+  }
+}
+
+/* Tablet / small laptop: board stacks but remains playable */
+@media (max-width:980px){
+  .game-room-shell{
+    width:calc(100% - 20px);
+    --table-side:120px;
+    --hand-card-width:82px;
+    --hand-card-height:116px;
+  }
+
+  .game-room-top{
+    padding:12px;
+    border-radius:20px;
+  }
+
+  .game-room-title{
+    font-size:22px;
+  }
+
+  .game-room-top__actions{
+    width:100%;
+    justify-content:flex-start;
+  }
+
+  .game-table-wrap{
+    padding:10px;
+    border-radius:22px;
+  }
+
+  .top-strip{
+    grid-template-columns:1fr;
+    justify-items:start;
+  }
+
+  .status-strip{
+    width:100%;
+    justify-content:flex-start;
+    flex-wrap:nowrap;
+    overflow-x:auto;
+    padding-bottom:2px;
+  }
+
+  .status-chip{
+    min-height:32px;
+    padding:6px 9px;
+  }
+
+  .table-shell{
+    min-height:auto;
+    grid-template-columns:1fr 1fr;
+    grid-template-rows:auto auto auto;
+    gap:8px;
+  }
+
+  .seat-top{
+    grid-column:1 / 3;
+    grid-row:1;
+  }
+
+  .play-surface{
+    grid-column:1 / 3;
+    grid-row:2;
+    min-height:320px;
+    border-radius:24px;
+  }
+
+  .seat-left{
+    grid-column:1;
+    grid-row:3;
+    align-items:stretch;
+  }
+
+  .seat-right{
+    grid-column:2;
+    grid-row:3;
+    align-items:stretch;
+    justify-content:stretch;
+  }
+
+  .seat-left .seat-box,
+  .seat-right .seat-box{
+    max-width:none;
+  }
+
+  .seat-box{
+    padding:9px;
+  }
+
+  .seat-top .seat-box{
+    max-width:100%;
+  }
+
+  .floating-panel{
+    position:relative;
+    top:auto;
+    left:auto;
+    right:auto;
+    width:100%;
+    max-height:none;
+  }
+
+  .tools-panel,
+  .log-panel{
+    top:auto;
+    left:auto;
+    right:auto;
+  }
+
+  .log-panel{
+    max-height:260px;
+  }
+
+  .hand-dock{
+    padding:9px;
+    border-radius:18px;
+  }
+
+  .hand-dock__top{
+    grid-template-columns:1fr;
+    gap:8px;
+  }
+
+  .human-summary{
+    justify-content:flex-start;
+  }
+
+  .hand-actions{
+    justify-content:flex-start;
+    flex-wrap:wrap;
+  }
+
+  .hand-area{
+    min-height:150px;
+  }
+
+  .hand-fan{
+    justify-content:flex-start;
+    padding-left:28px;
+    padding-right:28px;
+  }
+
+  .hand-card{
+    margin-left:-22px;
+    transform:none !important;
+  }
+
+  .hand-card:hover{
+    transform:translateY(-8px) scale(1.04) !important;
+  }
+
+  .hand-card.selected-card{
+    transform:translateY(-14px) scale(1.08) !important;
+  }
+
+  .wild-chooser{
+    min-width:0;
+    width:calc(100% - 20px);
+  }
+}
+
+/* Mobile: compressed game layout */
+@media (max-width:720px){
+  .game-room-shell{
+    width:calc(100% - 16px);
+    --hand-card-width:76px;
+    --hand-card-height:108px;
+  }
+
+  .game-room-top{
+    flex-direction:column;
+    gap:10px;
+  }
+
+  .game-room-title{
+    font-size:20px;
+  }
+
+  .game-room-sub{
+    font-size:12px;
+  }
+
+  .game-room-top__actions .btn{
+    flex:1 1 130px;
+  }
+
+  .game-table-wrap{
+    padding:8px;
+  }
+
+  .top-strip__brand h1{
+    font-size:15px;
+  }
+
+  .top-strip__actions{
+    width:100%;
+    flex-wrap:wrap;
+  }
+
+  .top-strip__actions .ui-btn{
+    flex:1 1 100px;
+  }
+
+  .play-surface{
+    min-height:280px;
+    border-radius:22px;
+  }
+
+  .table-area{
+    padding:10px;
+  }
+
+  .board-center{
+    min-height:220px;
+    gap:8px;
+  }
+
+  .center-meta{
+    justify-content:flex-start;
+    overflow-x:auto;
+    flex-wrap:nowrap;
+    padding-bottom:2px;
+  }
+
+  .meta-pill{
+    flex:0 0 auto;
+  }
+
+  .center-play{
+    flex-wrap:wrap;
+    gap:8px;
+  }
+
+  .deck-stack{
+    width:64px;
+    height:90px;
+    border-radius:14px;
+  }
+
+  .active-card{
+    width:104px;
+    height:146px;
+    border-radius:16px;
+  }
+
+  .active-card__value{
+    font-size:38px;
+  }
+
+  .active-card__name{
+    font-size:12px;
+  }
+
+  .center-sideinfo{
+    width:100%;
+    max-width:none;
+    min-width:0;
+    grid-template-columns:1fr 1fr;
+  }
+
+  .center-sideinfo__card{
+    padding:9px;
+    border-radius:14px;
+  }
+
+  .center-sideinfo__value{
+    font-size:15px;
+  }
+
+  .seat-head{
+    flex-direction:column;
+  }
+
+  .seat-badges{
+    flex-wrap:wrap;
+  }
+
+  .seat-fan{
+    min-height:26px;
+  }
+
+  .ai-cardback{
+    width:15px;
+    height:26px;
+    border-radius:6px;
+  }
+
+  .hand-title-wrap h2{
+    font-size:16px;
+  }
+
+  .summary-pill{
+    font-size:9px;
+    padding:4px 7px;
+  }
+
+  .hand-actions{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    width:100%;
+  }
+
+  .hand-actions .ui-btn{
+    width:100%;
+  }
+
+  .hand-area{
+    min-height:142px;
+    overflow-x:auto;
+    overflow-y:visible;
+    padding-top:10px;
+  }
+
+  .hand-fan{
+    min-height:132px;
+    padding:12px 28px 10px;
+  }
+
+  .hand-card{
+    margin-left:-16px;
+    padding:6px;
+    border-radius:13px;
+  }
+
+  .hand-card__kind{
+    font-size:8px;
+    padding:3px 5px;
+  }
+
+  .hand-card__value{
+    font-size:18px;
+  }
+
+  .hand-card__name{
+    font-size:10px;
+  }
+
+  .hand-card__meta,
+  .hand-card__status{
+    font-size:8px;
+  }
+
+  .solo-coach,
+  .hand-tutorial-coach{
+    width:100%;
+    max-width:none;
+    grid-template-columns:1fr;
+    flex:1 1 100%;
+  }
+
+  .solo-coach__portrait{
+    min-height:0;
+    display:flex;
+    justify-content:flex-start;
+    gap:10px;
+  }
+
+  .solo-coach__bubble::before{
+    display:none;
+  }
+
+  .hand-tutorial-row{
+    flex-direction:column;
+    align-items:stretch;
+    padding:8px 0;
+  }
+}
+
+/* Very tight phones */
+@media (max-width:480px){
+  .game-room-shell{
+    width:calc(100% - 12px);
+    --hand-card-width:70px;
+    --hand-card-height:102px;
+  }
+
+  .game-room-top,
+  .game-table-wrap,
+  .hand-dock,
+  .floating-panel{
+    border-radius:18px;
+  }
+
+  .play-surface{
+    min-height:250px;
+  }
+
+  .table-shell{
+    gap:6px;
+  }
+
+  .active-card{
+    width:92px;
+    height:132px;
+  }
+
+  .active-card__value{
+    font-size:32px;
+  }
+
+  .deck-stack{
+    width:58px;
+    height:82px;
+  }
+
+  .center-sideinfo{
+    grid-template-columns:1fr;
+  }
+
+  .seat-left,
+  .seat-right{
+    grid-column:1 / 3;
+  }
+
+  .seat-left{
+    grid-row:3;
+  }
+
+  .seat-right{
+    grid-row:4;
+  }
+
+  .hand-card{
+    margin-left:-12px;
+  }
+
+  .results-modal{
+    padding:10px;
+  }
+
+  .results-modal__dialog{
+    border-radius:20px;
+  }
+
+  .results-modal__head,
+  .results-modal__body,
+  .results-modal__actions{
+    padding-left:14px;
+    padding-right:14px;
+  }
+
+  .results-modal__title{
+    font-size:22px;
   }
 }
 

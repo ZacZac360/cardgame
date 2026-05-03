@@ -59,8 +59,71 @@ if (bio && counter) {
 
   // ESC closes
   document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") closeModal();
+    if (e.key === "Escape") {
+      closeModal();
+      closeGuide();
+    }
   });
+
+    // -------------------------
+  // Global guide modal
+  // -------------------------
+  const guideModal = $("#globalGuideModal");
+  const guideOpenBtns = $$("[data-guide-open]");
+  const guideCloseBtns = $$("[data-guide-close]");
+  const guideTabs = $$("[data-guide-tab]");
+  const guidePanes = $$("[data-guide-pane]");
+
+  function setGuideTab(which = "getting-started") {
+    const target = which || "getting-started";
+
+    guideTabs.forEach((tab) => {
+      tab.classList.toggle("is-active", tab.dataset.guideTab === target);
+    });
+
+    guidePanes.forEach((pane) => {
+      pane.classList.toggle("is-active", pane.dataset.guidePane === target);
+    });
+  }
+
+  function openGuide(which = "getting-started") {
+    if (!guideModal) return;
+
+    setGuideTab(which);
+    guideModal.classList.add("is-open");
+    guideModal.setAttribute("aria-hidden", "false");
+    document.body.style.overflow = "hidden";
+  }
+
+  function closeGuide() {
+    if (!guideModal) return;
+
+    guideModal.classList.remove("is-open");
+    guideModal.setAttribute("aria-hidden", "true");
+    document.body.style.overflow = "";
+  }
+
+  guideOpenBtns.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      openGuide(btn.dataset.guideOpen || "getting-started");
+    });
+  });
+
+  guideCloseBtns.forEach((btn) => {
+    btn.addEventListener("click", closeGuide);
+  });
+
+  guideTabs.forEach((tab) => {
+    tab.addEventListener("click", () => {
+      setGuideTab(tab.dataset.guideTab || "getting-started");
+    });
+  });
+
+  if (guideModal) {
+    guideModal.addEventListener("click", (e) => {
+      if (e.target === guideModal) closeGuide();
+    });
+  }
 
   // -------------------------
   // FAQ accordion

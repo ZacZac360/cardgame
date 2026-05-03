@@ -112,6 +112,16 @@ if ($action === 'guest') {
   $_SESSION['user_id'] = $uid;
   load_user_into_session($mysqli, $uid);
 
+  $cu = current_user();
+
+  if ($cu && user_has_role($cu, 'admin')) {
+    unset($_SESSION['user_id'], $_SESSION['user']);
+    session_regenerate_id(true);
+
+    flash_set('err', 'Admin accounts must use the admin login page.');
+    redirect($bp . '/admin/login.php');
+  }
+
   flash_set('msg', "Playing as guest: {$guestName}");
   redirect($bp . "/dashboard.php");
 }
@@ -383,13 +393,17 @@ if ($action === 'login') {
 
 
 
-  $cu=current_user();
+  $cu = current_user();
 
-  if ($cu && (user_has_role($cu,'admin') || user_has_role($cu,'moderator'))) {
-    redirect($bp."/admin/index.php");
+  if ($cu && (user_has_role($cu, 'admin') || user_has_role($cu, 'moderator'))) {
+    unset($_SESSION['user_id'], $_SESSION['user'], $_SESSION['auth_session_id'], $_SESSION['refresh_token']);
+    session_regenerate_id(true);
+
+    flash_set('err', 'Admin accounts must use the admin login page.');
+    redirect($bp . "/admin/login.php");
   }
 
-  redirect($bp."/dashboard.php");
+  redirect($bp . "/dashboard.php");
 }
 
 

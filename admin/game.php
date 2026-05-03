@@ -51,19 +51,21 @@ function admin_game_set_setting(mysqli $mysqli, string $key, string $value): voi
 }
 
 $entryFees = admin_game_get_setting($mysqli, 'ranked_entry_fees', [
-  'Bronze' => 200,
-  'Silver' => 500,
-  'Gold' => 1000,
-  'Platinum' => 2500,
-  'Diamond' => 5000,
+  'Bronze' => 100,
+  'Silver' => 300,
+  'Gold' => 700,
 ]);
 
 $expMultipliers = admin_game_get_setting($mysqli, 'ranked_exp_base_multipliers', [
   'Bronze' => 1.00,
-  'Silver' => 1.06,
-  'Gold' => 1.12,
-  'Platinum' => 1.18,
-  'Diamond' => 1.25,
+  'Silver' => 1.25,
+  'Gold' => 1.50,
+]);
+
+$leagueRequirements = admin_game_get_setting($mysqli, 'ranked_league_requirements', [
+  'Bronze' => ['wins' => 0],
+  'Silver' => ['wins' => 3],
+  'Gold' => ['wins' => 7],
 ]);
 
 $streakBonus = (float)admin_game_get_setting($mysqli, 'ranked_streak_bonus', '0.03');
@@ -76,19 +78,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
   if ($action === 'save_ranked') {
     $nextFees = [
-      'Bronze' => max(0, (int)($_POST['fee_bronze'] ?? 200)),
-      'Silver' => max(0, (int)($_POST['fee_silver'] ?? 500)),
-      'Gold' => max(0, (int)($_POST['fee_gold'] ?? 1000)),
-      'Platinum' => max(0, (int)($_POST['fee_platinum'] ?? 2500)),
-      'Diamond' => max(0, (int)($_POST['fee_diamond'] ?? 5000)),
+      'Bronze' => max(0, (int)($_POST['fee_bronze'] ?? 100)),
+      'Silver' => max(0, (int)($_POST['fee_silver'] ?? 300)),
+      'Gold' => max(0, (int)($_POST['fee_gold'] ?? 700)),
     ];
 
     $nextMultipliers = [
       'Bronze' => max(1.0, (float)($_POST['mult_bronze'] ?? 1.00)),
-      'Silver' => max(1.0, (float)($_POST['mult_silver'] ?? 1.06)),
-      'Gold' => max(1.0, (float)($_POST['mult_gold'] ?? 1.12)),
-      'Platinum' => max(1.0, (float)($_POST['mult_platinum'] ?? 1.18)),
-      'Diamond' => max(1.0, (float)($_POST['mult_diamond'] ?? 1.25)),
+      'Silver' => max(1.0, (float)($_POST['mult_silver'] ?? 1.25)),
+      'Gold' => max(1.0, (float)($_POST['mult_gold'] ?? 1.50)),
+    ];
+
+    $nextRequirements = [
+      'Bronze' => ['wins' => max(0, (int)($_POST['req_bronze_wins'] ?? 0))],
+      'Silver' => ['wins' => max(0, (int)($_POST['req_silver_wins'] ?? 3))],
+      'Gold' => ['wins' => max(0, (int)($_POST['req_gold_wins'] ?? 7))],
     ];
 
     $nextStreakBonus = max(0, (float)($_POST['streak_bonus'] ?? 0.03));
@@ -96,10 +100,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     admin_game_set_setting($mysqli, 'ranked_entry_fees', json_encode($nextFees, JSON_UNESCAPED_SLASHES));
     admin_game_set_setting($mysqli, 'ranked_exp_base_multipliers', json_encode($nextMultipliers, JSON_UNESCAPED_SLASHES));
+    admin_game_set_setting($mysqli, 'ranked_league_requirements', json_encode($nextRequirements, JSON_UNESCAPED_SLASHES));
     admin_game_set_setting($mysqli, 'ranked_streak_bonus', (string)$nextStreakBonus);
     admin_game_set_setting($mysqli, 'ranked_streak_bonus_cap', (string)$nextStreakCap);
 
-    flash_set('msg', 'Ranked settings updated.');
+    flash_set('msg', 'Ranked league settings updated.');
     header("Location: {$bp}/admin/game.php");
     exit;
   }
@@ -141,6 +146,11 @@ if ($res) {
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>Logia Admin — Game</title>
+
+  <link rel="icon" type="image/x-icon" href="<?= h($bp) ?>/assets/brand/favicon.ico"/>
+  <link rel="shortcut icon" type="image/x-icon" href="<?= h($bp) ?>/assets/brand/favicon.ico"/>
+  <link rel="apple-touch-icon" href="<?= h($bp) ?>/assets/brand/logo.png"/>
+
   <link rel="stylesheet" href="<?= h($bp) ?>/assets/style.css"/>
   <link rel="stylesheet" href="<?= h($bp) ?>/assets/hub.css"/>
   <link rel="stylesheet" href="<?= h($bp) ?>/assets/adminstyle.css"/>
@@ -150,7 +160,11 @@ if ($res) {
 <header class="topnav">
   <div class="topnav__inner">
     <a class="logo" href="<?= h($bp) ?>/admin/index.php">
-      <span class="logo__mark">CG</span>
+      <img
+        src="<?= h($bp) ?>/assets/brand/favicon.ico"
+        alt="Logia"
+        class="logo__mark logo__mark--image"
+      >
       <span class="logo__text">Logia Administration</span>
     </a>
 
@@ -238,27 +252,32 @@ if ($res) {
 
             <div class="admin-form-row">
               <label>Bronze Entry Fee</label>
-              <input type="number" name="fee_bronze" value="<?= h((string)($entryFees['Bronze'] ?? 200)) ?>" min="0">
+              <input type="number" name="fee_bronze" value="<?= h((string)($entryFees['Bronze'] ?? 100)) ?>" min="0">
             </div>
 
             <div class="admin-form-row">
               <label>Silver Entry Fee</label>
-              <input type="number" name="fee_silver" value="<?= h((string)($entryFees['Silver'] ?? 500)) ?>" min="0">
+              <input type="number" name="fee_silver" value="<?= h((string)($entryFees['Silver'] ?? 300)) ?>" min="0">
             </div>
 
             <div class="admin-form-row">
               <label>Gold Entry Fee</label>
-              <input type="number" name="fee_gold" value="<?= h((string)($entryFees['Gold'] ?? 1000)) ?>" min="0">
+              <input type="number" name="fee_gold" value="<?= h((string)($entryFees['Gold'] ?? 700)) ?>" min="0">
             </div>
 
             <div class="admin-form-row">
-              <label>Platinum Entry Fee</label>
-              <input type="number" name="fee_platinum" value="<?= h((string)($entryFees['Platinum'] ?? 2500)) ?>" min="0">
+              <label>Bronze Required Wins</label>
+              <input type="number" name="req_bronze_wins" value="<?= h((string)($leagueRequirements['Bronze']['wins'] ?? 0)) ?>" min="0">
             </div>
 
             <div class="admin-form-row">
-              <label>Diamond Entry Fee</label>
-              <input type="number" name="fee_diamond" value="<?= h((string)($entryFees['Diamond'] ?? 5000)) ?>" min="0">
+              <label>Silver Required Wins</label>
+              <input type="number" name="req_silver_wins" value="<?= h((string)($leagueRequirements['Silver']['wins'] ?? 3)) ?>" min="0">
+            </div>
+
+            <div class="admin-form-row">
+              <label>Gold Required Wins</label>
+              <input type="number" name="req_gold_wins" value="<?= h((string)($leagueRequirements['Gold']['wins'] ?? 7)) ?>" min="0">
             </div>
 
             <div class="admin-form-row">
@@ -268,22 +287,12 @@ if ($res) {
 
             <div class="admin-form-row">
               <label>Silver EXP Multiplier</label>
-              <input type="number" step="0.01" name="mult_silver" value="<?= h((string)($expMultipliers['Silver'] ?? 1.06)) ?>" min="1">
+              <input type="number" step="0.01" name="mult_silver" value="<?= h((string)($expMultipliers['Silver'] ?? 1.25)) ?>" min="1">
             </div>
 
             <div class="admin-form-row">
               <label>Gold EXP Multiplier</label>
-              <input type="number" step="0.01" name="mult_gold" value="<?= h((string)($expMultipliers['Gold'] ?? 1.12)) ?>" min="1">
-            </div>
-
-            <div class="admin-form-row">
-              <label>Platinum EXP Multiplier</label>
-              <input type="number" step="0.01" name="mult_platinum" value="<?= h((string)($expMultipliers['Platinum'] ?? 1.18)) ?>" min="1">
-            </div>
-
-            <div class="admin-form-row">
-              <label>Diamond EXP Multiplier</label>
-              <input type="number" step="0.01" name="mult_diamond" value="<?= h((string)($expMultipliers['Diamond'] ?? 1.25)) ?>" min="1">
+              <input type="number" step="0.01" name="mult_gold" value="<?= h((string)($expMultipliers['Gold'] ?? 1.50)) ?>" min="1">
             </div>
 
             <div class="admin-form-row">

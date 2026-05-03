@@ -23,25 +23,15 @@ $next = $bp . "/choose.php";
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Logia — Home</title>
+  <title>Logia</title>
+
+  <link rel="icon" type="image/x-icon" href="<?= h($bp) ?>/assets/brand/favicon.ico"/>
+  <link rel="shortcut icon" type="image/x-icon" href="<?= h($bp) ?>/assets/brand/favicon.ico"/>
+  <link rel="apple-touch-icon" href="<?= h($bp) ?>/assets/brand/logo.png"/>
+
   <link rel="stylesheet" href="<?= h($bp) ?>/assets/style.css"/>
 </head>
 <body>
-
-  <!-- Top Nav -->
-  <header class="topnav" id="top">
-    <div class="topnav__inner">
-      <a class="logo" href="<?= h($bp) ?>/index.php#top" aria-label="Logia Home">
-        <span class="logo__mark">LG</span>
-        <span class="logo__text">Logia</span>
-      </a>
-
-      <div class="navactions">
-        <button class="btn btn-ghost" type="button" data-open-auth="login">Login</button>
-        <button class="btn btn-primary" type="button" data-open-auth="register">Register</button>
-      </div>
-    </div>
-  </header>
 
   <!-- Flash banners -->
   <div class="container">
@@ -71,55 +61,12 @@ $next = $bp . "/choose.php";
         </div>
       </div>
 
-      <div class="hero__panel" aria-hidden="true">
-        <div class="statpanel">
-          <div class="statpanel__top">
-            <span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span>
-            <span class="statpanel__title">Logia • Real Time Data</span>
-          </div>
-
-          <div class="statgrid">
-            <div class="stat">
-              <div class="stat__label">Mode Entry</div>
-              <div class="stat__value">Guest or Account</div>
-              <div class="stat__delta">jump in immediately</div>
-            </div>
-
-            <div class="stat">
-              <div class="stat__label">Match Type</div>
-              <div class="stat__value">Casual / Ranked</div>
-              <div class="stat__delta">choose your pace</div>
-            </div>
-
-            <div class="stat">
-              <div class="stat__label">Room Access</div>
-              <div class="stat__value">Public or Private</div>
-              <div class="stat__delta">join friends fast</div>
-            </div>
-
-            <div class="stat">
-              <div class="stat__label">Win Condition</div>
-              <div class="stat__value">Become Logia</div>
-              <div class="stat__delta good">outlast the table</div>
-            </div>
-          </div>
-
-          <div class="spark">
-            <div class="spark__head">
-              <span class="spark__title">Core elemental set</span>
-              <span class="spark__hint">fire • water • lightning • earth • wind • wood</span>
-            </div>
-            <div class="spark__bars" aria-hidden="true">
-              <span style="--h:72%"></span>
-              <span style="--h:58%"></span>
-              <span style="--h:80%"></span>
-              <span style="--h:66%"></span>
-              <span style="--h:61%"></span>
-              <span style="--h:76%"></span>
-              <span style="--h:70%"></span>
-            </div>
-          </div>
-        </div>
+            <div class="hero__logo-panel" aria-hidden="true">
+        <img
+          src="<?= h($bp) ?>/assets/brand/logo.png"
+          alt="Logia"
+          class="landing-hero-logo landing-hero-logo--panel"
+        >
       </div>
     </section>
 

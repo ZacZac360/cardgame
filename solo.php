@@ -114,6 +114,48 @@ async function launchSolo(levelKey) {
 
       <div class="stack-12">
 
+        <div class="card onboarding-card">
+          <div class="onboarding-card__head">
+            <div>
+              <div class="onboarding-card__eyebrow">TRAINING GUIDE</div>
+              <div class="onboarding-card__title">Learn the game in order.</div>
+              <div class="onboarding-card__text">
+                Solo Training is the onboarding path. Each level introduces one rule, then lets you try it yourself.
+              </div>
+            </div>
+
+            <button class="btn btn-ghost" type="button" data-guide-open="game-rules">
+              View Rules
+            </button>
+          </div>
+
+          <div class="onboarding-checklist">
+            <div class="onboarding-check">
+              <div class="onboarding-check__copy">
+                <strong>Training 1 — Same Element</strong>
+                <span>Play a card with the same element as the active card.</span>
+              </div>
+              <div class="onboarding-check__status">Basics</div>
+            </div>
+
+            <div class="onboarding-check">
+              <div class="onboarding-check__copy">
+                <strong>Training 2 — Stronger Element</strong>
+                <span>Use the element cycle to beat the active card.</span>
+              </div>
+              <div class="onboarding-check__status">Counter</div>
+            </div>
+
+            <div class="onboarding-check">
+              <div class="onboarding-check__copy">
+                <strong>Training 3 — Special Cards</strong>
+                <span>Learn how +2 and +4 change the flow of the match.</span>
+              </div>
+              <div class="onboarding-check__status">Specials</div>
+            </div>
+          </div>
+        </div>
+
         <section id="training" class="card panel-card--lg">
           <div class="panel-head-simple">
             <div>
@@ -125,6 +167,9 @@ async function launchSolo(levelKey) {
 
             <div class="card-soft link-card link-card--block">
               <div class="text-strong">Training 1 — Same Element</div>
+              <div class="panel-sub">
+                Learn the simplest valid move: same element goes on same element.
+              </div>
               <div class="hero-actions hub-mt-12">
                 <button class="btn btn-primary" type="button" onclick="launchSolo('training_1')">
                   Start Training 1
@@ -134,6 +179,9 @@ async function launchSolo(levelKey) {
 
             <div class="card-soft link-card link-card--block">
               <div class="text-strong">Training 2 — Stronger Element</div>
+              <div class="panel-sub">
+                Learn how to beat the table card using elemental advantage.
+              </div>
               <div class="hero-actions hub-mt-12">
                 <button class="btn btn-primary" type="button" onclick="launchSolo('training_2')">
                   Start Training 2
@@ -143,6 +191,9 @@ async function launchSolo(levelKey) {
 
             <div class="card-soft link-card link-card--block">
               <div class="text-strong">Training 3 — Special Cards</div>
+              <div class="panel-sub">
+                Learn how +2 and +4 cards create pressure and change the element.
+              </div>
               <div class="hero-actions hub-mt-12">
                 <button class="btn btn-primary" type="button" onclick="launchSolo('training_3')">
                   Start Training 3

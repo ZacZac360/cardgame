@@ -58,6 +58,11 @@ $healthRows = [
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>Logia Admin — Settings</title>
+
+  <link rel="icon" type="image/x-icon" href="<?= h($bp) ?>/assets/brand/favicon.ico"/>
+  <link rel="shortcut icon" type="image/x-icon" href="<?= h($bp) ?>/assets/brand/favicon.ico"/>
+  <link rel="apple-touch-icon" href="<?= h($bp) ?>/assets/brand/logo.png"/>
+
   <link rel="stylesheet" href="<?= h($bp) ?>/assets/style.css"/>
   <link rel="stylesheet" href="<?= h($bp) ?>/assets/hub.css"/>
   <link rel="stylesheet" href="<?= h($bp) ?>/assets/adminstyle.css"/>
@@ -66,7 +71,11 @@ $healthRows = [
 <header class="topnav">
   <div class="topnav__inner">
     <a class="logo" href="<?= h($bp) ?>/admin/index.php">
-      <span class="logo__mark">CG</span>
+      <img
+        src="<?= h($bp) ?>/assets/brand/favicon.ico"
+        alt="Logia"
+        class="logo__mark logo__mark--image"
+      >
       <span class="logo__text">Logia Administration</span>
     </a>
     <div class="navactions">

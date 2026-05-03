@@ -56,6 +56,9 @@ ui_header("Room " . $roomCode);
       </div>
 
       <div class="game-room-top__actions">
+        <button class="btn btn-ghost" type="button" data-guide-open="game-rules">
+          Guide
+        </button>
         <a class="btn btn-ghost" href="<?= h($bp) ?>/play.php">Back to Play</a>
       </div>
     </div>
@@ -185,6 +188,17 @@ ui_header("Room " . $roomCode);
             </div>
 
             <div id="actionMsg" class="inline-msg"></div>
+          </div>
+
+          <div class="tools-section tools-section--hint">
+            <div class="tools-section__label">How to Play</div>
+            <div class="hint-list">
+              <div>Play a card that matches the active element.</div>
+              <div>Or play an element that beats the active element.</div>
+              <div>Use +2 to pressure the next player.</div>
+              <div>Use +4 to choose the next active element.</div>
+              <div>If nothing works, press Pass.</div>
+            </div>
           </div>
 
           <div class="tools-section tools-section--hint">

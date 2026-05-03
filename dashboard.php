@@ -11,6 +11,11 @@ require_login();
 $u  = current_user();
 $bp = base_path();
 
+if ($u && user_has_role($u, 'admin')) {
+  header("Location: {$bp}/admin/index.php");
+  exit;
+}
+
 $is_guest  = ((int)($u['is_guest'] ?? 0) === 1);
 if ($is_guest) {
   header("Location: {$bp}/guest_dashboard.php");
@@ -127,6 +132,57 @@ ui_header("Dashboard");
       </div>
 
       <div class="stack-12">
+
+        <div class="card onboarding-card">
+          <div class="onboarding-card__head">
+            <div>
+              <div class="onboarding-card__eyebrow">START HERE</div>
+              <div class="onboarding-card__title">New to Logia?</div>
+              <div class="onboarding-card__text">
+                Follow this beginner path: learn the rules, play a casual match, then prepare your account for Ranked.
+              </div>
+            </div>
+
+            <button class="btn btn-ghost" type="button" data-guide-open="getting-started">
+              Open Guide
+            </button>
+          </div>
+
+          <div class="onboarding-checklist">
+            <div class="onboarding-check">
+              <div class="onboarding-check__copy">
+                <strong>1. Complete Solo Training</strong>
+                <span>Learn matching, stronger elements, and special cards before live matches.</span>
+              </div>
+              <div class="onboarding-check__status">Recommended</div>
+            </div>
+
+            <div class="onboarding-check">
+              <div class="onboarding-check__copy">
+                <strong>2. Play Casual</strong>
+                <span>Use Quick Match or Rooms to practice without ranked pressure.</span>
+              </div>
+              <div class="onboarding-check__status">Practice</div>
+            </div>
+
+            <div class="onboarding-check">
+              <div class="onboarding-check__copy">
+                <strong>3. Prepare Ranked</strong>
+                <span>Finish account checks, keep enough Zeny, then choose a ranked league.</span>
+              </div>
+              <div class="onboarding-check__status">
+                <?= $ranked_unlocked ? 'Unlocked' : 'Locked' ?>
+              </div>
+            </div>
+          </div>
+
+          <div class="onboarding-actions">
+            <a class="btn btn-primary" href="<?= h($bp) ?>/solo.php">Start Solo Training</a>
+            <a class="btn btn-ghost" href="<?= h($bp) ?>/play.php">Open Play Menu</a>
+            <a class="btn btn-ghost" href="<?= h($bp) ?>/profile.php?tab=security">Account Setup</a>
+          </div>
+        </div>
+
         <!-- Topics -->
         <div class="card panel-card">
           <div class="panel-head">

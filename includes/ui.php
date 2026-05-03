@@ -197,6 +197,10 @@ function ui_header(string $title = 'Dashboard', bool $is_hub = true): void {
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title><?= h($title) ?> — Logia</title>
 
+  <link rel="icon" type="image/x-icon" href="<?= h($bp) ?>/assets/brand/favicon.ico"/>
+  <link rel="shortcut icon" type="image/x-icon" href="<?= h($bp) ?>/assets/brand/favicon.ico"/>
+  <link rel="apple-touch-icon" href="<?= h($bp) ?>/assets/brand/logo.png"/>
+
   <link rel="stylesheet" href="<?= h($bp) ?>/assets/style.css"/>
   <link rel="stylesheet" href="<?= h($bp) ?>/assets/hub.css"/>
   <link rel="stylesheet" href="<?= h($bp) ?>/assets/userstyle.css"/>
@@ -222,9 +226,11 @@ function ui_header(string $title = 'Dashboard', bool $is_hub = true): void {
           class="topnav-profile__avatarimg"
         >
       <?php else: ?>
-        <div class="topnav-profile__avatarfallback">
-          <?= h(strtoupper(substr((string)$u['username'], 0, 1))) ?>
-        </div>
+        <img
+          src="<?= h($bp) ?>/assets/brand/logo.png"
+          alt="Logia"
+          class="topnav-profile__avatarimg topnav-profile__avatarimg--brand"
+        >
       <?php endif; ?>
 
       <div class="topnav-profile__meta">
@@ -261,6 +267,17 @@ function ui_header(string $title = 'Dashboard', bool $is_hub = true): void {
     </a>
 
     <div class="md-icons">
+
+      <div class="md-ico-wrap" title="Guide">
+        <button
+          class="md-ico md-ico--guide"
+          type="button"
+          data-guide-open="getting-started"
+          aria-label="Open guide"
+        >
+          ❔
+        </button>
+      </div>
 
           <div
           class="md-ico-wrap md-balance-wrap"
@@ -602,6 +619,168 @@ function ui_footer(): void {
   $bp = base_path();
   ?>
 </main>
+
+<div class="guide-modal" id="globalGuideModal" aria-hidden="true">
+  <div class="guide-modal__backdrop" data-guide-close></div>
+
+  <div class="guide-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="globalGuideTitle">
+    <button class="guide-modal__close" type="button" data-guide-close aria-label="Close guide">×</button>
+
+    <div class="guide-modal__head">
+      <div>
+        <div class="guide-modal__eyebrow">PLAYER ONBOARDING</div>
+        <h2 id="globalGuideTitle">Logia Guide</h2>
+        <p>
+          New here? This guide explains what each area does and what to do first.
+        </p>
+      </div>
+    </div>
+
+    <div class="guide-modal__layout">
+      <div class="guide-modal__tabs" role="tablist" aria-label="Guide sections">
+        <button class="guide-tab is-active" type="button" data-guide-tab="getting-started">Getting Started</button>
+        <button class="guide-tab" type="button" data-guide-tab="game-rules">Game Rules</button>
+        <button class="guide-tab" type="button" data-guide-tab="modes">Game Modes</button>
+        <button class="guide-tab" type="button" data-guide-tab="ranked">Ranked</button>
+        <button class="guide-tab" type="button" data-guide-tab="zeny">Zeny / Shop</button>
+        <button class="guide-tab" type="button" data-guide-tab="account">Account Setup</button>
+      </div>
+
+      <div class="guide-modal__content">
+        <section class="guide-pane is-active" data-guide-pane="getting-started">
+          <h3>What should I do first?</h3>
+          <p>
+            Start with Solo Mode first. It teaches the rules safely before you enter Casual or Ranked matches.
+          </p>
+
+          <div class="guide-steps">
+            <div class="guide-step">
+              <strong>1. Learn</strong>
+              <span>Go to Solo and clear the Training path.</span>
+            </div>
+            <div class="guide-step">
+              <strong>2. Practice</strong>
+              <span>Use Quick Match or Rooms to play casual matches.</span>
+            </div>
+            <div class="guide-step">
+              <strong>3. Prepare</strong>
+              <span>Set up your account, earn or buy Zeny, then unlock Ranked.</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="guide-pane" data-guide-pane="game-rules">
+          <h3>Basic rules</h3>
+          <p>
+            Logia is an elemental card game. On your turn, play a card that matches the active element, or play an element that beats it.
+          </p>
+
+          <div class="guide-rule-grid">
+            <div class="guide-rule-card">🔥 Fire beats Wood</div>
+            <div class="guide-rule-card">💧 Water beats Fire</div>
+            <div class="guide-rule-card">⚡ Lightning beats Water</div>
+            <div class="guide-rule-card">🪨 Earth beats Lightning</div>
+            <div class="guide-rule-card">🌪️ Wind beats Earth</div>
+            <div class="guide-rule-card">🌳 Wood beats Wind</div>
+          </div>
+
+          <p>
+            If you cannot play a valid card, use Pass. Special cards like +2 and +4 add pressure or change the active element.
+          </p>
+        </section>
+
+        <section class="guide-pane" data-guide-pane="modes">
+          <h3>Game modes</h3>
+
+          <div class="guide-card-list">
+            <div class="guide-info-card">
+              <strong>Solo</strong>
+              <span>Best for learning. Training levels explain the rules step by step.</span>
+            </div>
+            <div class="guide-info-card">
+              <strong>Quick Match</strong>
+              <span>Fast casual match. Best when you just want to play immediately.</span>
+            </div>
+            <div class="guide-info-card">
+              <strong>Rooms</strong>
+              <span>Create or join a custom lobby. Best for friend groups or demos.</span>
+            </div>
+            <div class="guide-info-card">
+              <strong>Ranked</strong>
+              <span>Competitive mode with leagues, entry fees, and better rewards.</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="guide-pane" data-guide-pane="ranked">
+          <h3>Ranked leagues</h3>
+          <p>
+            Ranked is the competitive path. You pick a league before queueing. Higher leagues cost more Zeny and may require more ranked wins.
+          </p>
+
+          <div class="guide-card-list">
+            <div class="guide-info-card">
+              <strong>Bronze</strong>
+              <span>Starter league. Lowest entry fee and easiest access.</span>
+            </div>
+            <div class="guide-info-card">
+              <strong>Silver</strong>
+              <span>Mid league. Requires more wins and a higher entry fee.</span>
+            </div>
+            <div class="guide-info-card">
+              <strong>Gold</strong>
+              <span>Higher-risk league. Bigger cost, better reward multiplier.</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="guide-pane" data-guide-pane="zeny">
+          <h3>Zeny and shop</h3>
+          <p>
+            Zeny is the game currency. It is used for ranked entry and shop-related features.
+          </p>
+
+          <div class="guide-steps">
+            <div class="guide-step">
+              <strong>Where to check it</strong>
+              <span>Your Zeny balance appears in the top navigation bar.</span>
+            </div>
+            <div class="guide-step">
+              <strong>Where to get it</strong>
+              <span>Open the Shop page and choose a top-up package.</span>
+            </div>
+            <div class="guide-step">
+              <strong>Why it matters</strong>
+              <span>Ranked leagues require enough Zeny before you can queue.</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="guide-pane" data-guide-pane="account">
+          <h3>Account setup</h3>
+          <p>
+            Some features require a registered and secured account. Guests can try basic play, but competitive and social features are limited.
+          </p>
+
+          <div class="guide-card-list">
+            <div class="guide-info-card">
+              <strong>Email verification</strong>
+              <span>Confirms the account belongs to you.</span>
+            </div>
+            <div class="guide-info-card">
+              <strong>2FA</strong>
+              <span>Adds another security layer before unlocking stronger features.</span>
+            </div>
+            <div class="guide-info-card">
+              <strong>Profile</strong>
+              <span>Shows your level, EXP, account status, and setup progress.</span>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+</div>
 
 <footer class="sitefooter">
   <div class="sitefooter__inner sitefooter__inner--hubshell">

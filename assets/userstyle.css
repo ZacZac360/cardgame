@@ -1841,3 +1841,462 @@ body[data-appearance="light"] .userhero--shop{
     grid-template-columns:1fr;
   }
 }
+
+/* =====================================================
+   RESPONSIVE STANDARDIZATION PASS - USER / SHOP / SOLO
+===================================================== */
+
+/* Desktop / laptop user pages */
+@media (min-width:1281px){
+  .userpage-grid{
+    grid-template-columns:260px minmax(0, 1fr) 320px;
+    gap:14px;
+  }
+
+  .shoppage-grid{
+    grid-template-columns:260px minmax(0, 1fr);
+    gap:14px;
+  }
+
+  .userpanel--side{
+    grid-column:auto;
+  }
+}
+
+/* Normal laptops */
+@media (max-width:1280px){
+  .userpage-grid{
+    grid-template-columns:240px minmax(0, 1fr);
+    gap:12px;
+  }
+
+  .shoppage-grid{
+    grid-template-columns:240px minmax(0, 1fr);
+    gap:12px;
+  }
+
+  .userpanel--side{
+    grid-column:1 / -1;
+  }
+
+  .userpanel--nav,
+  .userpanel--side{
+    top:78px;
+  }
+
+  .route-card{
+    min-height:220px;
+  }
+
+  .route-card h3{
+    font-size:26px;
+  }
+}
+
+/* Keep route/feature cards usable on laptops instead of stacking too early */
+@media (min-width:1101px){
+  .route-grid,
+  .feature-grid{
+    grid-template-columns:repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width:1100px){
+  .route-grid,
+  .feature-grid{
+    grid-template-columns:1fr;
+  }
+
+  .route-card{
+    min-height:0;
+  }
+}
+
+/* Tablet: side navigation becomes normal content */
+@media (max-width:1024px){
+  .userpage-grid,
+  .shoppage-grid{
+    grid-template-columns:1fr;
+  }
+
+  .userpanel--nav,
+  .userpanel--side{
+    position:static;
+  }
+
+  .usernav,
+  .usernav--better{
+    grid-template-columns:repeat(2, minmax(0, 1fr));
+  }
+
+  .shop-hero--wide,
+  .store-hero-grid{
+    grid-template-columns:1fr;
+  }
+
+  .shop-pane__head,
+  .info-block__head,
+  .profile-overview-head{
+    align-items:flex-start;
+    flex-direction:column;
+  }
+}
+
+/* Mobile compression */
+@media (max-width:860px){
+  .user-maincol,
+  .shop-shell--clean{
+    gap:10px;
+  }
+
+  .userpanel,
+  .info-block,
+  .feature-tile,
+  .route-card,
+  .shop-pane,
+  .store-banner,
+  .store-wallet,
+  .sample-card,
+  .shop-product-tile,
+  .profile-overview-card{
+    padding:12px;
+    border-radius:20px;
+  }
+
+  .userpanel__head{
+    flex-direction:column;
+    gap:8px;
+  }
+
+  .userpanel__title{
+    font-size:22px;
+  }
+
+  .usernav,
+  .usernav--better{
+    grid-template-columns:1fr;
+    gap:8px;
+  }
+
+  .usernav .hub-item,
+  .usernav__item{
+    padding:11px;
+    border-radius:15px;
+  }
+
+  .usernav .hub-ico,
+  .usernav__icon{
+    width:36px;
+    height:36px;
+    flex-basis:36px;
+    border-radius:12px;
+  }
+
+  .userhero{
+    min-height:0;
+  }
+
+  .route-card h3{
+    font-size:24px;
+  }
+
+  .route-card p{
+    max-width:none;
+  }
+
+  .route-card__meta span{
+    padding:7px 10px;
+    font-size:12px;
+  }
+
+  .split-grid,
+  .form-grid,
+  .profile-overview-grid{
+    grid-template-columns:1fr;
+  }
+
+  .stack-row,
+  .checklist__row{
+    align-items:flex-start;
+    flex-direction:column;
+    gap:8px;
+  }
+
+  .shop-tabs,
+  .shop-tabsbar,
+  .category-strip{
+    overflow-x:auto;
+    flex-wrap:nowrap;
+    padding-bottom:2px;
+  }
+
+  .shop-tab,
+  .shop-tabsbar__item,
+  .category-pill{
+    white-space:nowrap;
+  }
+
+  .shop-hero--wide{
+    padding:14px;
+    border-radius:22px;
+  }
+
+  .shop-pane__head h2,
+  .store-banner h3,
+  .shop-banner-card__content h3{
+    font-size:26px;
+  }
+
+  .shop-banner-card{
+    min-height:220px;
+    border-radius:20px;
+  }
+
+  .shop-banner-card__content{
+    padding:16px;
+  }
+
+  .shop-featured-strip,
+  .shop-shelf--wide,
+  .shop-rail--clean,
+  .store-samples{
+    grid-template-columns:1fr;
+    gap:10px;
+  }
+
+  .profile-hero-layout{
+    flex-direction:column;
+  }
+
+  .profile-hero-main{
+    align-items:flex-start;
+  }
+
+  .profile-avatar,
+  .profile-avatar-fallback{
+    width:60px;
+    height:60px;
+    border-radius:18px;
+    font-size:24px;
+  }
+
+  .profile-action-row .btn,
+  .profile-overview-actions .btn{
+    flex:1 1 140px;
+  }
+}
+
+/* Phone */
+@media (max-width:640px){
+  .userpanel__stack{
+    display:grid;
+    grid-template-columns:1fr;
+  }
+
+  .mini-stat{
+    padding:10px 12px;
+    border-radius:14px;
+  }
+
+  .route-card{
+    padding:14px;
+  }
+
+  .route-card .btn,
+  .feature-tile .btn,
+  .sample-card .btn,
+  .shop-product-tile .btn{
+    width:100%;
+  }
+
+  .shop-product-tile__art{
+    height:96px;
+  }
+
+  .shop-product-tile__foot{
+    align-items:flex-start;
+    flex-direction:column;
+  }
+
+  .profile-hero-main{
+    flex-direction:column;
+  }
+
+  .profile-meta-row,
+  .profile-badge-row{
+    gap:6px;
+  }
+}
+
+/* Very tight phones */
+@media (max-width:480px){
+  .userpanel,
+  .info-block,
+  .feature-tile,
+  .route-card,
+  .shop-pane,
+  .store-banner,
+  .store-wallet,
+  .sample-card,
+  .shop-product-tile{
+    padding:10px;
+    border-radius:18px;
+  }
+
+  .userpanel__title,
+  .route-card h3,
+  .shop-pane__head h2,
+  .store-banner h3,
+  .shop-banner-card__content h3{
+    font-size:22px;
+  }
+
+  .profile-avatar,
+  .profile-avatar-fallback{
+    width:54px;
+    height:54px;
+    border-radius:16px;
+  }
+}
+
+/* =====================================================
+   SHOP COMING SOON OVERLAYS
+   Only Credits/Zeny is active for now.
+===================================================== */
+
+.shop-pane--coming-soon{
+  position:relative;
+  overflow:hidden;
+}
+
+.shop-pane--coming-soon > *:not(.shop-coming-soon-overlay){
+  filter:blur(1.5px) saturate(.75) brightness(.72);
+  opacity:.58;
+  pointer-events:none;
+  user-select:none;
+}
+
+.shop-coming-soon-overlay{
+  position:absolute;
+  inset:0;
+  z-index:5;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+  background:
+    radial-gradient(circle at 50% 35%, rgba(57,255,106,.10), transparent 38%),
+    linear-gradient(180deg, rgba(5,8,24,.18), rgba(5,8,24,.58));
+  backdrop-filter:blur(2px);
+}
+
+.shop-coming-soon-card{
+  width:min(460px, 100%);
+  padding:20px;
+  border-radius:24px;
+  border:1px solid rgba(57,255,106,.26);
+  background:
+    radial-gradient(circle at 15% 0%, rgba(57,255,106,.14), transparent 42%),
+    radial-gradient(circle at 90% 15%, rgba(78,161,255,.14), transparent 45%),
+    rgba(8,12,28,.92);
+  box-shadow:0 24px 70px rgba(0,0,0,.42);
+  text-align:center;
+}
+
+.shop-coming-soon-card__eyebrow{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  padding:6px 10px;
+  border-radius:999px;
+  border:1px solid rgba(57,255,106,.24);
+  background:rgba(57,255,106,.10);
+  color:var(--softText);
+  font-size:11px;
+  font-weight:950;
+  letter-spacing:.10em;
+  margin-bottom:10px;
+}
+
+.shop-coming-soon-card h3{
+  margin:0 0 8px;
+  font-size:28px;
+  line-height:1.1;
+  font-weight:950;
+}
+
+.shop-coming-soon-card p{
+  margin:0 auto 14px;
+  max-width:38ch;
+  color:var(--muted);
+  font-size:14px;
+  line-height:1.45;
+}
+
+.shop-pane--coming-soon button[disabled]{
+  opacity:.7;
+  cursor:not-allowed;
+}
+
+body[data-appearance="light"] .shop-coming-soon-overlay{
+  background:
+    radial-gradient(circle at 50% 35%, rgba(25,217,124,.10), transparent 38%),
+    linear-gradient(180deg, rgba(220,235,255,.20), rgba(220,235,255,.62));
+}
+
+body[data-appearance="light"] .shop-coming-soon-card{
+  background:
+    radial-gradient(circle at 15% 0%, rgba(25,217,124,.14), transparent 42%),
+    radial-gradient(circle at 90% 15%, rgba(59,130,246,.14), transparent 45%),
+    rgba(244,248,255,.94);
+  box-shadow:0 24px 60px rgba(44,84,154,.18);
+}
+
+@media (max-width:860px){
+  .shop-coming-soon-overlay{
+    padding:14px;
+  }
+
+  .shop-coming-soon-card{
+    padding:16px;
+    border-radius:20px;
+  }
+
+  .shop-coming-soon-card h3{
+    font-size:24px;
+  }
+}
+
+/* =====================================================
+   SHOP CREDIT PACK IMAGES
+   Uses image when available, keeps gradient fallback if not.
+===================================================== */
+
+.shop-product-tile__art--image{
+  padding:0;
+  overflow:hidden;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:
+    radial-gradient(circle at 30% 20%, rgba(57,255,106,.12), transparent 42%),
+    rgba(255,255,255,.04);
+}
+
+.shop-product-tile__art--image img{
+  width:100%;
+  height:100%;
+  display:block;
+  object-fit:cover;
+}
+
+.shop-product-tile__art--image.shop-product-tile__art--contain img{
+  object-fit:contain;
+  padding:10px;
+}
+
+body[data-appearance="light"] .shop-product-tile__art--image{
+  background:
+    radial-gradient(circle at 30% 20%, rgba(25,217,124,.12), transparent 42%),
+    rgba(255,255,255,.72);
+}

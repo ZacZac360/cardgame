@@ -194,6 +194,39 @@ ui_header("Play");
           </div>
         </div>
 
+        <div class="card onboarding-card">
+          <div class="onboarding-card__head">
+            <div>
+              <div class="onboarding-card__eyebrow">MODE GUIDE</div>
+              <div class="onboarding-card__title">Which mode should I pick?</div>
+              <div class="onboarding-card__text">
+                If this is your first time, start with Solo. If you already know the rules, use Quick Match or Rooms. Ranked is for competitive league play.
+              </div>
+            </div>
+
+            <button class="btn btn-ghost" type="button" data-guide-open="modes">
+              Explain Modes
+            </button>
+          </div>
+
+          <div class="mode-help-grid">
+            <div class="mode-help-card">
+              <strong>🧪 Solo</strong>
+              <span>Best first step. Teaches the game before you fight real matches.</span>
+            </div>
+
+            <div class="mode-help-card">
+              <strong>⚡ Quick Match</strong>
+              <span>Fast casual table. Good for practice and normal gameplay.</span>
+            </div>
+
+            <div class="mode-help-card">
+              <strong>🏅 Ranked</strong>
+              <span>Competitive queue with leagues, Zeny entry fees, and rewards.</span>
+            </div>
+          </div>
+        </div>
+
         <section class="play-mode-grid">
           <article class="play-mode-card play-mode-card--quick <?= $quickArt ? 'has-art' : '' ?>"<?= $quickArt ? ' data-mode-art="' . h($quickArt) . '"' : '' ?>>
             <div class="play-mode-card__backdrop"></div>
@@ -287,11 +320,9 @@ ui_header("Play");
           <div class="card-soft play-note-card">
             <div class="text-strong">🏅 Ranked</div>
             <div class="panel-sub">
-              <?= $rankedReady
-                ? 'Your account is ready for competitive queue.'
-                : ($rankedUnlocked
-                    ? 'Ranked is unlocked. You only need ' . (int)$req['entry_fee'] . ' Zeny to queue.'
-                    : 'Missing items will point you to the right page.') ?>
+              <?= $rankedUnlocked
+                ? 'Ranked is unlocked. Choose Bronze, Silver, or Gold before entering queue.'
+                : 'Missing items will point you to the right page.' ?>
             </div>
           </div>
         </div>

@@ -95,6 +95,32 @@ function is_shop_tab(string $tab, string $activeTab): string {
   return $tab === $activeTab ? ' is-active' : '';
 }
 
+function shop_asset_url(string $bp, string $folder, string $slug): ?string {
+  $safeFolder = trim($folder, '/');
+  $safeSlug = preg_replace('/[^a-zA-Z0-9_-]/', '', $slug);
+
+  if ($safeFolder === '' || $safeSlug === '') {
+    return null;
+  }
+
+  $candidates = [
+    "/assets/shop/{$safeFolder}/{$safeSlug}.png",
+    "/assets/shop/{$safeFolder}/{$safeSlug}.jpg",
+    "/assets/shop/{$safeFolder}/{$safeSlug}.jpeg",
+    "/assets/shop/{$safeFolder}/{$safeSlug}.webp",
+  ];
+
+  foreach ($candidates as $rel) {
+    $abs = __DIR__ . $rel;
+
+    if (is_file($abs)) {
+      return rtrim($bp, '/') . $rel;
+    }
+  }
+
+  return null;
+}
+
 ui_header("Shop");
 ?>
 
@@ -155,13 +181,13 @@ ui_header("Shop");
           <a href="<?= h($bp) ?>/shop.php?tab=bundles" class="shop-tabsbar__item<?= h(is_shop_tab('bundles', $activeTab)) ?>" data-tab-link="bundles">Bundles</a>
         </nav>
 
-        <section class="shop-pane" data-tab-pane="featured" <?= $activeTab !== 'featured' ? 'hidden' : '' ?>>
+        <section class="shop-pane shop-pane--coming-soon" data-tab-pane="featured" <?= $activeTab !== 'featured' ? 'hidden' : '' ?>>
           <div class="shop-pane__head">
             <div>
               <h2>Featured</h2>
               <p>Current storefront highlights.</p>
             </div>
-            <button class="btn btn-ghost" type="button" data-switch-tab="cosmetics">View all</button>
+            <button class="btn btn-ghost" type="button" disabled>View all</button>
           </div>
 
           <div class="shop-showcase">
@@ -186,10 +212,21 @@ ui_header("Shop");
                   <h3><?= h($item['name']) ?></h3>
                   <div class="shop-product-tile__foot">
                     <strong><?= h($item['price']) ?></strong>
-                    <button class="btn btn-ghost" type="button">View</button>
+                    <button class="btn btn-ghost" type="button" disabled>Coming Soon</button>
                   </div>
                 </article>
               <?php endforeach; ?>
+            </div>
+          </div>
+          <div class="shop-coming-soon-overlay" aria-hidden="true">
+            <div class="shop-coming-soon-card">
+              <div class="shop-coming-soon-card__eyebrow">COMING SOON</div>
+              <h3>Featured Storefront</h3>
+              <p>
+                Featured cosmetics and limited highlights are prepared for a future update.
+                For now, only Zeny top-ups are available.
+              </p>
+              <button class="btn btn-primary" type="button" data-switch-tab="credits">Go to Credits</button>
             </div>
           </div>
         </section>
@@ -222,7 +259,16 @@ ui_header("Shop");
                 $totalCredits = $baseCredits + $bonusCredits;
               ?>
               <article class="shop-product-tile">
-                <div class="shop-product-tile__art"></div>
+                <?php $packImage = shop_asset_url($bp, 'credits', (string)$pack['code']); ?>
+
+                <?php if ($packImage): ?>
+                  <div class="shop-product-tile__art shop-product-tile__art--image shop-product-tile__art--contain">
+                    <img src="<?= h($packImage) ?>" alt="<?= h($pack['name']) ?>">
+                  </div>
+                <?php else: ?>
+                  <div class="shop-product-tile__art"></div>
+                <?php endif; ?>
+
                 <span class="pill"><?= h($pack['tag']) ?></span>
                 <h3><?= h($pack['name']) ?></h3>
 
@@ -243,7 +289,7 @@ ui_header("Shop");
           </div>
         </section>
 
-        <section class="shop-pane" data-tab-pane="cosmetics" <?= $activeTab !== 'cosmetics' ? 'hidden' : '' ?>>
+        <section class="shop-pane shop-pane--coming-soon" data-tab-pane="cosmetics" <?= $activeTab !== 'cosmetics' ? 'hidden' : '' ?>>
           <div class="shop-pane__head">
             <div>
               <h2>Cosmetics</h2>
@@ -268,14 +314,25 @@ ui_header("Shop");
                 <h3><?= h($item['name']) ?></h3>
                 <div class="shop-product-tile__foot">
                   <strong><?= h($item['price']) ?></strong>
-                  <button class="btn btn-ghost" type="button">View</button>
+                  <button class="btn btn-ghost" type="button" disabled>Coming Soon</button>
                 </div>
               </article>
             <?php endforeach; ?>
           </div>
+          <div class="shop-coming-soon-overlay" aria-hidden="true">
+            <div class="shop-coming-soon-card">
+              <div class="shop-coming-soon-card__eyebrow">COMING SOON</div>
+              <h3>Cosmetics Store</h3>
+              <p>
+                Frames, card backs, boards, icons, and profile accents will be unlocked later.
+                Credits remain available for testing and demo payments.
+              </p>
+              <button class="btn btn-primary" type="button" data-switch-tab="credits">Go to Credits</button>
+            </div>
+          </div>
         </section>
 
-        <section class="shop-pane" data-tab-pane="daily" <?= $activeTab !== 'daily' ? 'hidden' : '' ?>>
+        <section class="shop-pane shop-pane--coming-soon" data-tab-pane="daily" <?= $activeTab !== 'daily' ? 'hidden' : '' ?>>
           <div class="shop-pane__head">
             <div>
               <h2>Daily Rotation</h2>
@@ -292,14 +349,24 @@ ui_header("Shop");
                 <p class="shop-copy-muted">Available today only.</p>
                 <div class="shop-product-tile__foot">
                   <strong><?= h($item['price']) ?></strong>
-                  <button class="btn btn-ghost" type="button">Claim</button>
+                  <button class="btn btn-ghost" type="button" disabled>Coming Soon</button>
                 </div>
               </article>
             <?php endforeach; ?>
           </div>
+          <div class="shop-coming-soon-overlay" aria-hidden="true">
+            <div class="shop-coming-soon-card">
+              <div class="shop-coming-soon-card__eyebrow">COMING SOON</div>
+              <h3>Daily Rotation</h3>
+              <p>
+                Daily shop rotation is not open yet. This section is shown as a planned feature.
+              </p>
+              <button class="btn btn-primary" type="button" data-switch-tab="credits">Go to Credits</button>
+            </div>
+          </div>
         </section>
 
-        <section class="shop-pane" data-tab-pane="bundles" <?= $activeTab !== 'bundles' ? 'hidden' : '' ?>>
+        <section class="shop-pane shop-pane--coming-soon" data-tab-pane="bundles" <?= $activeTab !== 'bundles' ? 'hidden' : '' ?>>
           <div class="shop-pane__head">
             <div>
               <h2>Bundles</h2>
@@ -317,10 +384,21 @@ ui_header("Shop");
                   <h3><?= h($item['name']) ?></h3>
                   <div class="shop-product-tile__foot">
                     <strong><?= h($item['price']) ?></strong>
-                    <button class="btn btn-ghost" type="button">View</button>
+                    <button class="btn btn-ghost" type="button" disabled>Coming Soon</button>
                   </div>
                 </article>
               <?php endforeach; ?>
+            </div>
+          </div>
+
+          <div class="shop-coming-soon-overlay" aria-hidden="true">
+            <div class="shop-coming-soon-card">
+              <div class="shop-coming-soon-card__eyebrow">COMING SOON</div>
+              <h3>Bundles</h3>
+              <p>
+                Bundle offers are planned for future store updates. Only Zeny top-ups are active right now.
+              </p>
+              <button class="btn btn-primary" type="button" data-switch-tab="credits">Go to Credits</button>
             </div>
           </div>
         </section>
