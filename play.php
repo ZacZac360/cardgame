@@ -5,6 +5,7 @@ session_start();
 require_once __DIR__ . "/includes/db.php";
 require_once __DIR__ . "/includes/helpers.php";
 require_once __DIR__ . "/includes/auth.php";
+require_once __DIR__ . "/includes/game_helpers.php";
 require_once __DIR__ . "/includes/ui.php";
 
 require_login();
@@ -19,6 +20,9 @@ $username = $u['username'] ?? $u['display_name'] ?? 'Player';
 $req = ranked_requirements($mysqli, $u);
 $rankedUnlocked = (!$is_guest && !empty($req['ranked_unlocked']));
 $rankedReady = (!$is_guest && !empty($req['ranked_ok']));
+$rankedLeagueCards = (!$is_guest && $rankedUnlocked)
+  ? ranked_leagues_for_user($mysqli, (int)$u['id'])
+  : [];
 
 $rankedChecks = [
   [
@@ -226,41 +230,26 @@ ui_header("Play");
             <div class="play-mode-card__backdrop"></div>
             <div class="play-mode-card__content">
               <div class="play-mode-card__top">
-                <span class="pill <?= $rankedReady ? 'pill-good' : 'pill-warn' ?>">
-                  <?= $rankedReady ? 'Competitive' : ($rankedUnlocked ? 'Need Zeny' : 'Locked') ?>
+                <span class="pill <?= $rankedUnlocked ? 'pill-good' : 'pill-warn' ?>">
+                  <?= $rankedUnlocked ? 'Choose League' : 'Locked' ?>
                 </span>
               </div>
 
               <div class="play-mode-card__bottom">
                 <h2>Ranked</h2>
-                <p>
-                  <?= $rankedReady
-                    ? 'Competitive queue is ready.'
-                    : ($rankedUnlocked
-                        ? 'Ranked is unlocked, but you need ' . (int)$req['entry_fee'] . ' Zeny to enter right now.'
-                        : 'High-stakes play with access requirements.') ?>
-                </p>
-                <?php if ($rankedReady): ?>
+                  <p>
+                    <?= $rankedUnlocked
+                      ? 'Choose Bronze, Silver, or Gold before entering the competitive queue.'
+                      : 'High-stakes play with access requirements.' ?>
+                  </p>
 
                   <button
-                    class="btn btn-primary btn-lg"
+                    class="btn <?= $rankedUnlocked ? 'btn-primary' : 'btn-ghost' ?> btn-lg"
                     type="button"
-                    id="rankedQueueDirectBtn"
+                    id="<?= $rankedUnlocked ? 'rankedQueueDirectBtn' : 'rankedQueueBtn' ?>"
                   >
-                    Queue Ranked
+                    <?= $rankedUnlocked ? 'Choose League' : 'View Requirements' ?>
                   </button>
-
-                <?php else: ?>
-
-                  <button
-                    class="btn btn-ghost btn-lg"
-                    type="button"
-                    id="rankedQueueBtn"
-                  >
-                    View Requirements
-                  </button>
-
-                <?php endif; ?>
               </div>
             </div>
           </article>
@@ -576,58 +565,117 @@ ui_header("Play");
 
   <div class="play-modal" id="rankedModal" aria-hidden="true">
     <div class="play-modal__backdrop" data-close-modal></div>
-    <div class="play-modal__dialog card" role="dialog" aria-modal="true" aria-labelledby="rankedTitle">
+    <div class="play-modal__dialog card play-modal__dialog--wide" role="dialog" aria-modal="true" aria-labelledby="rankedTitle">
       <button class="play-modal__close" type="button" data-close-modal aria-label="Close">×</button>
       <div class="play-modal__body">
         <div class="play-modal__eyebrow">COMPETITIVE ENTRY</div>
-        <h3 id="rankedTitle">Ranked Queue</h3>
-        <p class="play-modal__lead">
-          Queue for competitive play once your account has completed the required access checks.
-        </p>
-
-        <div class="play-modal__grid play-modal__grid--three">
-          <div class="play-mini-card">
-            <span>Current rank</span>
-            <strong>Unranked</strong>
+        <div class="play-modal__header-row">
+          <div>
+            <h3 id="rankedTitle">Ranked Leagues</h3>
+            <p class="play-modal__lead">
+              Pick a league before entering ranked. Higher leagues cost more, require more wins, and give better rewards.
+            </p>
           </div>
-          <div class="play-mini-card">
-            <span>Next rank</span>
-            <strong>Bronze I</strong>
-          </div>
-          <div class="play-mini-card">
-            <span>Entry stake</span>
-            <strong><?= (int)$req['entry_fee'] ?> Zeny</strong>
+          <div class="play-modal__header-pills">
+            <span class="pill">Bronze</span>
+            <span class="pill">Silver</span>
+            <span class="pill">Gold</span>
           </div>
         </div>
 
-        <div class="play-check-list play-check-list--modal">
-          <?php foreach ($rankedChecks as $check): ?>
-            <div class="play-check-row play-check-row--modal">
-              <div class="play-check-row__copy">
-                <span><?= h($check['label']) ?></span>
-                <?php if (!$check['ok']): ?>
-                  <small><?= h($check['hint']) ?></small>
-                <?php else: ?>
-                  <small>Requirement complete.</small>
-                <?php endif; ?>
-              </div>
+        <?php if ($rankedUnlocked && $rankedLeagueCards): ?>
+          <div class="ranked-league-grid">
+            <?php foreach ($rankedLeagueCards as $league): ?>
+              <?php
+                $leagueKey = (string)$league['key'];
+                $leagueTier = (string)$league['tier'];
+                $eligible = !empty($league['eligible']);
+                $reasons = $league['reasons'] ?? [];
+              ?>
+              <article class="ranked-league-card ranked-league-card--<?= h($leagueKey) ?> <?= $eligible ? 'is-available' : 'is-locked' ?>" data-league-card="<?= h($leagueKey) ?>">
+                <div class="ranked-league-card__top">
+                  <div>
+                    <div class="ranked-league-card__eyebrow"><?= h($leagueTier) ?> League</div>
+                    <h4><?= h($leagueTier) ?></h4>
+                  </div>
+                  <span class="pill <?= $eligible ? 'pill-good' : 'pill-warn' ?>">
+                    <?= $eligible ? 'Available' : 'Locked' ?>
+                  </span>
+                </div>
 
-              <div class="play-check-row__status">
-                <span><?= $check['ok'] ? "✅" : "❌" ?></span>
-                <?php if (!$check['ok']): ?>
-                  <a class="btn btn-ghost btn-sm" href="<?= h($check['href']) ?>"><?= h($check['action']) ?></a>
-                <?php endif; ?>
-              </div>
+                <div class="ranked-league-card__stats">
+                  <div>
+                    <span>Entry Fee</span>
+                    <strong><?= (int)$league['entry_fee'] ?> Zeny</strong>
+                  </div>
+                  <div>
+                    <span>Required Wins</span>
+                    <strong><?= (int)$league['required_wins'] ?></strong>
+                  </div>
+                  <div>
+                    <span>EXP Multiplier</span>
+                    <strong><?= number_format((float)$league['exp_multiplier'], 2) ?>x</strong>
+                  </div>
+                </div>
+
+                <div class="ranked-league-card__reasons">
+                  <?php foreach ($reasons as $reason): ?>
+                    <span><?= h((string)$reason) ?></span>
+                  <?php endforeach; ?>
+                </div>
+
+                <button
+                  class="btn <?= $eligible ? 'btn-primary' : 'btn-ghost' ?> ranked-league-card__button"
+                  type="button"
+                  data-ranked-league="<?= h($leagueKey) ?>"
+                  data-ranked-tier="<?= h($leagueTier) ?>"
+                  data-ranked-fee="<?= (int)$league['entry_fee'] ?>"
+                  <?= $eligible ? '' : 'disabled' ?>
+                >
+                  <?= $eligible ? 'Select ' . h($leagueTier) : 'Locked' ?>
+                </button>
+              </article>
+            <?php endforeach; ?>
+          </div>
+
+          <div class="ranked-league-confirm card-soft" id="rankedLeagueConfirm" hidden>
+            <div>
+              <strong id="rankedLeagueConfirmTitle">Enter Ranked?</strong>
+              <span id="rankedLeagueConfirmText">Choose a league first.</span>
             </div>
-          <?php endforeach; ?>
-        </div>
+            <div class="ranked-league-confirm__actions">
+              <button class="btn btn-primary" type="button" id="rankedLeagueConfirmBtn">Enter Queue</button>
+              <button class="btn btn-ghost" type="button" id="rankedLeagueClearBtn">Change</button>
+            </div>
+          </div>
+        <?php else: ?>
+          <div class="play-check-list play-check-list--modal">
+            <?php foreach ($rankedChecks as $check): ?>
+              <div class="play-check-row play-check-row--modal">
+                <div class="play-check-row__copy">
+                  <span><?= h($check['label']) ?></span>
+                  <?php if (!$check['ok']): ?>
+                    <small><?= h($check['hint']) ?></small>
+                  <?php else: ?>
+                    <small>Requirement complete.</small>
+                  <?php endif; ?>
+                </div>
 
-        <?php if (!$rankedReady): ?>
+                <div class="play-check-row__status">
+                  <span><?= $check['ok'] ? "✅" : "❌" ?></span>
+                  <?php if (!$check['ok']): ?>
+                    <a class="btn btn-ghost btn-sm" href="<?= h($check['href']) ?>"><?= h($check['action']) ?></a>
+                  <?php endif; ?>
+                </div>
+              </div>
+            <?php endforeach; ?>
+          </div>
+
           <div class="play-requirement-help card-soft">
             <strong><?= $rankedUnlocked ? 'Ranked is unlocked' : 'How to unlock Ranked' ?></strong>
             <span>
               <?= $rankedUnlocked
-                ? 'You already unlocked Ranked. You just need ' . (int)$req['entry_fee'] . ' Zeny to enter a match right now.'
+                ? 'You already unlocked Ranked, but no ranked league data was loaded.'
                 : 'Finish the missing checks below and reach ' . (int)$req['unlock_threshold'] . ' Zeny to unlock Ranked.' ?>
             </span>
             <div class="play-requirement-help__actions">
@@ -639,9 +687,6 @@ ui_header("Play");
         <?php endif; ?>
 
         <div class="play-modal__actions">
-          <button class="btn <?= $rankedReady ? 'btn-primary' : 'btn-ghost' ?>" type="button" id="rankedQueueStartBtn">
-            <?= $rankedReady ? 'Queue Ranked' : 'Ranked Locked' ?>
-          </button>
           <button class="btn btn-ghost" type="button" data-close-modal>Close</button>
         </div>
         <div class="play-inline-msg" id="rankedQueueMsg"></div>
@@ -667,7 +712,12 @@ ui_header("Play");
   const quickMatchBtn = document.getElementById('quickMatchBtn');
   const quickMatchStartBtn = document.getElementById('quickMatchStartBtn');
   const rankedQueueBtn = document.getElementById('rankedQueueBtn');
-  const rankedQueueStartBtn = document.getElementById('rankedQueueStartBtn');
+  const rankedLeagueButtons = Array.from(document.querySelectorAll('.ranked-league-card__button'));
+  const rankedLeagueConfirm = document.getElementById('rankedLeagueConfirm');
+  const rankedLeagueConfirmTitle = document.getElementById('rankedLeagueConfirmTitle');
+  const rankedLeagueConfirmText = document.getElementById('rankedLeagueConfirmText');
+  const rankedLeagueConfirmBtn = document.getElementById('rankedLeagueConfirmBtn');
+  const rankedLeagueClearBtn = document.getElementById('rankedLeagueClearBtn');
   const roomsOverlayBtn = document.getElementById('roomsOverlayBtn');
 
   const roomNameEl = document.getElementById('room_name');
@@ -688,6 +738,7 @@ ui_header("Play");
   const quickMatchModal = document.getElementById('quickMatchModal');
   const roomsModal = document.getElementById('roomsModal');
   const rankedModal = document.getElementById('rankedModal');
+  let selectedRankedLeague = null;
   const tabButtons = Array.from(document.querySelectorAll('[data-play-tab]'));
   const tabPanes = Array.from(document.querySelectorAll('[data-play-pane]'));
   const roomJoinButtons = Array.from(document.querySelectorAll('.play-room-join-btn'));
@@ -899,14 +950,14 @@ ui_header("Play");
     });
   }
 
-  async function enterRankedQueue(buttonEl, msgEl) {
+  async function enterRankedQueue(buttonEl, msgEl, leagueKey) {
     if (!rankedUnlocked) {
       setMsg(msgEl, 'Ranked is still locked for this account.', true);
       return;
     }
 
-    if (!rankedReady) {
-      setMsg(msgEl, `You need at least ${rankedEntryFee} Zeny to enter ranked right now.`, true);
+    if (!leagueKey) {
+      setMsg(msgEl, 'Choose a ranked league first.', true);
       return;
     }
 
@@ -920,7 +971,9 @@ ui_header("Play");
           'Content-Type': 'application/json'
         },
         credentials: 'same-origin',
-        body: JSON.stringify({})
+        body: JSON.stringify({
+          league: leagueKey
+        })
       });
 
       const data = await res.json();
@@ -945,14 +998,46 @@ ui_header("Play");
   const rankedQueueDirectBtn = document.getElementById('rankedQueueDirectBtn');
 
   if (rankedQueueDirectBtn) {
-    rankedQueueDirectBtn.addEventListener('click', async () => {
-      await enterRankedQueue(rankedQueueDirectBtn, null);
+    rankedQueueDirectBtn.addEventListener('click', () => {
+      setMsg(rankedQueueMsgEl, '');
+      openModal(rankedModal);
     });
   }
 
-  if (rankedQueueStartBtn) {
-    rankedQueueStartBtn.addEventListener('click', async () => {
-      await enterRankedQueue(rankedQueueStartBtn, rankedQueueMsgEl);
+  rankedLeagueButtons.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      selectedRankedLeague = btn.dataset.rankedLeague || '';
+      const tier = btn.dataset.rankedTier || 'Ranked';
+      const fee = Number(btn.dataset.rankedFee || 0);
+
+      document.querySelectorAll('.ranked-league-card').forEach((card) => {
+        card.classList.toggle('is-selected', card.dataset.leagueCard === selectedRankedLeague);
+      });
+
+      if (rankedLeagueConfirm) rankedLeagueConfirm.hidden = false;
+      if (rankedLeagueConfirmTitle) rankedLeagueConfirmTitle.textContent = `Enter ${tier} League?`;
+      if (rankedLeagueConfirmText) rankedLeagueConfirmText.textContent = `Entry fee: ${fee.toLocaleString()} Zeny. This will be deducted when you enter the queue.`;
+
+      setMsg(rankedQueueMsgEl, '');
+    });
+  });
+
+  if (rankedLeagueClearBtn) {
+    rankedLeagueClearBtn.addEventListener('click', () => {
+      selectedRankedLeague = null;
+
+      document.querySelectorAll('.ranked-league-card').forEach((card) => {
+        card.classList.remove('is-selected');
+      });
+
+      if (rankedLeagueConfirm) rankedLeagueConfirm.hidden = true;
+      setMsg(rankedQueueMsgEl, '');
+    });
+  }
+
+  if (rankedLeagueConfirmBtn) {
+    rankedLeagueConfirmBtn.addEventListener('click', async () => {
+      await enterRankedQueue(rankedLeagueConfirmBtn, rankedQueueMsgEl, selectedRankedLeague);
     });
   }
 })();

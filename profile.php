@@ -285,14 +285,6 @@ ui_header("Profile");
 
                 <label class="card-soft profile-choice-card">
                   <span class="profile-choice-card__top">
-                    <input type="radio" name="appearance_mode" value="dark" <?= $appearanceMode === 'dark' ? 'checked' : '' ?>>
-                    <strong>Dark</strong>
-                  </span>
-                  <span class="profile-choice-card__meta">Darker surfaces, same blue/green identity.</span>
-                </label>
-
-                <label class="card-soft profile-choice-card">
-                  <span class="profile-choice-card__top">
                     <input type="radio" name="appearance_mode" value="light" <?= $appearanceMode === 'light' ? 'checked' : '' ?>>
                     <strong>Light</strong>
                   </span>

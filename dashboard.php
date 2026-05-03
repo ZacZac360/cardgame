@@ -112,7 +112,6 @@ ui_header("Dashboard");
 
           <div class="hero-actions">
             <a class="btn btn-primary btn-lg" href="<?= h($bp) ?>/play.php">Play</a>
-            <a class="btn btn-ghost btn-lg" href="<?= h($bp) ?>/events.php">View Events</a>
             <a class="btn btn-ghost btn-lg" href="<?= h($bp) ?>/room.php">Rooms</a>
             <?php if (!$is_guest): ?>
               <a class="btn btn-ghost btn-lg" href="<?= h($bp) ?>/shop.php">Shop</a>

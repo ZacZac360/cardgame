@@ -1332,3 +1332,196 @@ body[data-appearance="light"] .md-balance{
   border-color:var(--border);
   background:var(--panelLite, rgba(255,255,255,.6));
 }
+
+/* =====================================================
+   RANKED LEAGUE SELECT MODAL
+===================================================== */
+
+.ranked-league-grid{
+  display:grid;
+  grid-template-columns:repeat(3, minmax(0, 1fr));
+  gap:12px;
+  margin-top:16px;
+}
+
+.ranked-league-card{
+  position:relative;
+  overflow:hidden;
+  padding:14px;
+  border-radius:22px;
+  border:1px solid var(--border);
+  background:
+    radial-gradient(circle at 80% 0%, rgba(139,92,255,.16), transparent 34%),
+    rgba(255,255,255,.04);
+  box-shadow:var(--shadowSoft);
+  display:grid;
+  gap:12px;
+}
+
+.ranked-league-card::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  opacity:.8;
+}
+
+.ranked-league-card--bronze::before{
+  background:radial-gradient(circle at 100% 0%, rgba(205,127,50,.22), transparent 36%);
+}
+
+.ranked-league-card--silver::before{
+  background:radial-gradient(circle at 100% 0%, rgba(192,208,224,.22), transparent 36%);
+}
+
+.ranked-league-card--gold::before{
+  background:radial-gradient(circle at 100% 0%, rgba(255,216,94,.24), transparent 36%);
+}
+
+.ranked-league-card > *{
+  position:relative;
+  z-index:1;
+}
+
+.ranked-league-card.is-locked{
+  opacity:.68;
+}
+
+.ranked-league-card.is-selected{
+  border-color:rgba(57,255,106,.48);
+  box-shadow:
+    0 0 0 2px rgba(57,255,106,.12),
+    var(--shadowSoft);
+}
+
+.ranked-league-card__top{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:10px;
+}
+
+.ranked-league-card__eyebrow{
+  color:var(--muted);
+  font-size:11px;
+  font-weight:950;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+}
+
+.ranked-league-card h4{
+  margin:4px 0 0;
+  font-size:24px;
+  line-height:1;
+  font-weight:950;
+}
+
+.ranked-league-card__stats{
+  display:grid;
+  gap:8px;
+}
+
+.ranked-league-card__stats div{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  padding:9px 10px;
+  border-radius:14px;
+  border:1px solid var(--border);
+  background:rgba(255,255,255,.04);
+}
+
+.ranked-league-card__stats span{
+  color:var(--muted);
+  font-size:12px;
+}
+
+.ranked-league-card__stats strong{
+  font-size:13px;
+  font-weight:950;
+}
+
+.ranked-league-card__reasons{
+  min-height:38px;
+  display:grid;
+  gap:4px;
+  color:var(--muted);
+  font-size:12px;
+  line-height:1.35;
+}
+
+.ranked-league-card__button{
+  width:100%;
+  justify-content:center;
+}
+
+.ranked-league-confirm{
+  margin-top:14px;
+  padding:14px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+}
+
+.ranked-league-confirm[hidden]{
+  display:none !important;
+}
+
+.ranked-league-confirm span{
+  display:block;
+  color:var(--muted);
+  font-size:13px;
+  margin-top:4px;
+}
+
+.ranked-league-confirm__actions{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  justify-content:flex-end;
+}
+
+@media (max-width: 980px){
+  .ranked-league-grid{
+    grid-template-columns:1fr;
+  }
+
+  .ranked-league-confirm{
+    align-items:flex-start;
+    flex-direction:column;
+  }
+
+  .ranked-league-confirm__actions{
+    width:100%;
+    justify-content:flex-start;
+  }
+}
+
+body[data-appearance="light"] .ranked-league-card{
+  background:
+    radial-gradient(circle at 80% 0%, rgba(75,141,255,.12), transparent 34%),
+    var(--panelLite);
+  border-color:var(--border);
+  box-shadow:var(--shadowSoft);
+}
+
+body[data-appearance="light"] .ranked-league-card__stats div{
+  background:rgba(255,255,255,.62);
+  border-color:rgba(18,35,63,.10);
+}
+
+body[data-appearance="light"] .ranked-league-card.is-selected{
+  border-color:rgba(75,141,255,.44);
+  box-shadow:
+    0 0 0 2px rgba(75,141,255,.14),
+    var(--shadowSoft);
+}
+
+body[data-appearance="light"] .ranked-league-confirm{
+  background:
+    radial-gradient(circle at 18% 0%, rgba(75,141,255,.10), transparent 34%),
+    var(--panelLite);
+  border-color:var(--border);
+}

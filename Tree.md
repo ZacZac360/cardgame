@@ -1,5 +1,3 @@
-C:\xampp\htdocs\cardgame>tree /f
-Folder PATH listing for volume System
 Volume serial number is 3E7B-6DED
 C:.
 │  .gitattributes
@@ -14,6 +12,7 @@ C:.
 │  forgot_password_action.php
 │  friends.php
 │  guest_dashboard.php
+│  image.png
 │  index.php
 │  logout.php
 │  notifications.php
@@ -30,6 +29,7 @@ C:.
 │
 ├─admin
 │      auth_action.php
+│      game.php
 │      index.php
 │      login.php
 │      pending-users.php
@@ -96,6 +96,15 @@ C:.
 │      └─fire
 ├─config
 │      paymongo.php
+│
+├─db
+│      admin.png
+│      auth.png
+│      economy.png
+│      game.png
+│      social;.png
+│      User Training Metrics-2026-04-28-054009.png
+│      User Training Metrics-2026-04-28-054143.png
 │
 ├─includes
 │      admin_ui.php
