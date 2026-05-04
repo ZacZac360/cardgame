@@ -120,9 +120,12 @@ $curlErr  = curl_error($ch);
 curl_close($ch);
 
 if ($response === false || $httpCode < 200 || $httpCode >= 300) {
+  error_log("BREVO OTP ERROR HTTP={$httpCode} CURL={$curlErr} RESPONSE={$response}");
+
   $_SESSION['flash_error'] = $response === false
     ? ('Mail service failed: ' . $curlErr)
-    : 'Mail service error.';
+    : ('Mail service error. HTTP ' . $httpCode . ': ' . $response);
+
   header('Location: ' . $redirect);
   exit;
 }

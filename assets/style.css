@@ -2282,3 +2282,221 @@ body:not(.hub) .footright .sep{
     padding-top:16px;
   }
 }
+
+/* =====================================================
+   DEPLOYMENT RESPONSIVE PATCH - GLOBAL BASE
+   Append at bottom of assets/style.css
+===================================================== */
+
+html{
+  -webkit-text-size-adjust:100%;
+}
+
+body{
+  width:100%;
+  max-width:100vw;
+  overflow-x:hidden;
+}
+
+img,
+svg,
+video,
+canvas{
+  max-width:100%;
+  height:auto;
+}
+
+button,
+input,
+select,
+textarea{
+  max-width:100%;
+}
+
+.container,
+.topnav__inner,
+.sitefooter__inner,
+.app-shell,
+.app-topbar__inner,
+.app-footer__inner{
+  min-width:0;
+}
+
+.card,
+.card-soft,
+.glass-top,
+.hero__panel,
+.modal__panel,
+.banner{
+  min-width:0;
+}
+
+.btn{
+  min-width:0;
+  white-space:normal;
+  line-height:1.15;
+}
+
+.section{
+  min-width:0;
+}
+
+.section__head{
+  min-width:0;
+}
+
+.section__head > *{
+  min-width:0;
+}
+
+.topnav{
+  width:100%;
+}
+
+.topnav__inner{
+  width:min(var(--max), calc(100% - 28px));
+  padding-left:0;
+  padding-right:0;
+}
+
+.navactions,
+.navlinks{
+  min-width:0;
+  flex-wrap:wrap;
+}
+
+.logo{
+  min-width:0;
+}
+
+.logo__text{
+  min-width:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
+.hero{
+  min-width:0;
+}
+
+.hero > *{
+  min-width:0;
+}
+
+.hero h1{
+  font-size:clamp(32px, 4vw, 46px);
+}
+
+.grid4,
+.steps,
+.preview,
+.modes,
+.twocol,
+.statgrid{
+  min-width:0;
+}
+
+.grid4 > *,
+.steps > *,
+.preview > *,
+.modes > *,
+.twocol > *,
+.statgrid > *{
+  min-width:0;
+}
+
+.chat-pop{
+  width:min(380px, calc(100vw - 24px));
+  right:12px;
+  bottom:12px;
+}
+
+@media (max-width:980px){
+  .container{
+    width:calc(100% - 24px);
+    padding-left:0;
+    padding-right:0;
+  }
+
+  .topnav__inner{
+    width:calc(100% - 24px);
+    align-items:flex-start;
+    flex-direction:column;
+  }
+
+  .navlinks,
+  .navactions{
+    width:100%;
+    justify-content:flex-start;
+  }
+
+  .hero{
+    padding-top:22px;
+    gap:14px;
+  }
+
+  .section{
+    padding:20px 0;
+  }
+
+  .modal__panel{
+    width:calc(100vw - 24px);
+    max-height:calc(100vh - 28px);
+    margin:14px auto 0;
+    overflow:auto;
+  }
+}
+
+@media (max-width:640px){
+  .container,
+  .topnav__inner,
+  .sitefooter__inner{
+    width:calc(100% - 18px);
+  }
+
+  .topnav__inner{
+    padding-top:10px;
+    padding-bottom:10px;
+    gap:10px;
+  }
+
+  .logo__mark{
+    width:34px;
+    height:34px;
+    border-radius:12px;
+  }
+
+  .hero h1{
+    font-size:30px;
+  }
+
+  .lead{
+    font-size:14px;
+  }
+
+  .btn{
+    padding:9px 11px;
+    border-radius:12px;
+    font-size:13px;
+  }
+
+  .formrow .btn,
+  .cta .btn{
+    flex:1 1 150px;
+  }
+
+  .sitefooter__inner{
+    flex-direction:column;
+    align-items:flex-start;
+  }
+
+  .chat-pop{
+    left:10px;
+    right:10px;
+    bottom:10px;
+    width:auto;
+    height:min(540px, calc(100vh - 24px));
+    max-height:calc(100vh - 24px);
+  }
+}

@@ -268,12 +268,26 @@ ui_header("Notifications");
                 $icon = notif_icon((string)$n['type']);
                 $when = !empty($n['created_at']) ? date("M d • g:i A", strtotime((string)$n['created_at'])) : '';
                 $link = trim((string)($n['link_url'] ?? ''));
+                $notifType = (string)($n['type'] ?? '');
+
+                $openableTypes = [
+                  'admin_approval',
+                  'security_alert',
+                  'friend_request',
+                  'friend_accept',
+                  'message',
+                  'ranked_unlock',
+                ];
+
+                $canOpenNotif = ($link !== '' && in_array($notifType, $openableTypes, true));
+
                 $href = $bp . "/notifications.php?read=" . (int)$n['id']
                       . "&tab=" . rawurlencode($tab)
                       . "&page=" . (int)$page;
 
-                if ($link !== '') {
-                  $href .= "&next=" . rawurlencode($link);}
+                if ($canOpenNotif) {
+                  $href .= "&next=" . rawurlencode($link);
+                }
 
                 $isUnread = ((int)($n['is_read'] ?? 0) === 0);
               ?>
@@ -305,7 +319,7 @@ ui_header("Notifications");
                     </div>
 
                     <div class="notif-row__actions notif-row__actions--inline">
-                      <?php if ($link !== ''): ?>
+                      <?php if ($canOpenNotif): ?>
                         <a class="btn btn-primary" href="<?= h($href) ?>">Open</a>
                       <?php endif; ?>
 
@@ -350,37 +364,6 @@ ui_header("Notifications");
             </div>
           </div>
         <?php endif; ?>
-        <?php if ($totalPages > 1): ?>
-        <div class="notif-pagination">
-          <div class="notif-pagination__info">
-            Showing page <b><?= (int)$page ?></b> of <b><?= (int)$totalPages ?></b>
-          </div>
-
-          <div class="notif-pagination__actions">
-            <?php if ($page > 1): ?>
-              <a class="btn btn-ghost" href="<?= h($bp) ?>/notifications.php?tab=<?= h($tab) ?>&page=<?= (int)($page - 1) ?>">Previous</a>
-            <?php endif; ?>
-
-            <?php
-            $start = max(1, $page - 2);
-            $end   = min($totalPages, $page + 2);
-
-            for ($i = $start; $i <= $end; $i++):
-            ?>
-              <a
-                class="pill notif-page-link<?= $i === $page ? ' is-active' : '' ?>"
-                href="<?= h($bp) ?>/notifications.php?tab=<?= h($tab) ?>&page=<?= (int)$i ?>"
-              >
-                <?= (int)$i ?>
-              </a>
-            <?php endfor; ?>
-
-            <?php if ($page < $totalPages): ?>
-              <a class="btn btn-ghost" href="<?= h($bp) ?>/notifications.php?tab=<?= h($tab) ?>&page=<?= (int)($page + 1) ?>">Next</a>
-            <?php endif; ?>
-          </div>
-        </div>
-      <?php endif; ?>
       </div>
     </main>
 

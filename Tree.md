@@ -1,3 +1,4 @@
+Folder PATH listing for volume System
 Volume serial number is 3E7B-6DED
 C:.
 │  .gitattributes
@@ -14,6 +15,7 @@ C:.
 │  guest_dashboard.php
 │  image.png
 │  index.php
+│  logia-logo-assets.zip
 │  logout.php
 │  notifications.php
 │  play.php
@@ -92,8 +94,18 @@ C:.
 │  │  style.css
 │  │  userstyle.css
 │  │
-│  └─cards
-│      └─fire
+│  ├─brand
+│  │      favicon.ico
+│  │      logo.png
+│  │
+│  ├─cards
+│  │  └─fire
+│  └─shop
+│      └─credits
+│              arena_200.png
+│              duel_100.png
+│              starter_50.png
+│
 ├─config
 │      paymongo.php
 │
@@ -120,6 +132,13 @@ C:.
 │      profile_helpers.php
 │      ranked_helpers.php
 │      ui.php
+│
+├─logia-logo-assets
+│      favicon.ico
+│      logia-favicon-1024.png
+│      logia-favicon.png
+│      logia-logo-full-web.png
+│      logia-logo-full.png
 │
 ├─uploads
 │  └─avatars

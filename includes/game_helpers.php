@@ -827,21 +827,15 @@ define('LOGIA_STRONG_AGAINST', [
     $cardKind = (string)($card['kind'] ?? '');
 
     if ($pendingDraw > 0) {
-      if (!empty($rules['must_pass_on_draw_penalty'])) {
-        return false;
+      if ($activeKind === 'plus2') {
+        return $cardKind === 'plus2' && !empty($rules['allow_stack_plus2']);
       }
 
-      if ($activeKind === 'plus2' && $cardKind === 'plus2') {
-        return !empty($rules['allow_stack_plus2']);
+      if ($activeKind === 'plus4') {
+        return $cardKind === 'plus4' && !empty($rules['allow_stack_plus4']);
       }
 
-      if ($activeKind === 'plus4' && $cardKind === 'plus4') {
-        return !empty($rules['allow_stack_plus4']);
-      }
-
-      if (($cardKind === 'plus2' || $cardKind === 'plus4') && $activeKind !== $cardKind) {
-        return false;
-      }
+      return false;
     }
 
     if ($cardKind === 'plus4') {
@@ -1478,87 +1472,74 @@ define('LOGIA_STRONG_AGAINST', [
     return $best ?: LOGIA_ELEMENTS[array_rand(LOGIA_ELEMENTS)];
   }
 
-  function game_run_ai_until_human_or_end(mysqli $mysqli, array &$room): void {
-    $roomId = (int)$room['id'];
+function game_run_one_ai_turn(mysqli $mysqli, array &$room): void {
+  $roomId = (int)$room['id'];
 
-    if (($room['status'] ?? '') !== 'playing') return;
-    if ((int)($room['winner_seat'] ?? 0) > 0) return;
+  if (($room['status'] ?? '') !== 'playing') return;
+  if ((int)($room['winner_seat'] ?? 0) > 0) return;
 
-    $currentSeat = (int)($room['current_turn_seat'] ?? 0);
-    if ($currentSeat <= 0) return;
+  $currentSeat = (int)($room['current_turn_seat'] ?? 0);
+  if ($currentSeat <= 0) return;
 
-    $stmt = $mysqli->prepare("
-      SELECT player_type
-      FROM game_room_players
-      WHERE room_id = ? AND seat_no = ?
-      LIMIT 1
-    ");
-    $stmt->bind_param('ii', $roomId, $currentSeat);
-    $stmt->execute();
-    $row = $stmt->get_result()->fetch_assoc();
-    $stmt->close();
+  $stmt = $mysqli->prepare("
+    SELECT player_type
+    FROM game_room_players
+    WHERE room_id = ? AND seat_no = ?
+    LIMIT 1
+  ");
+  $stmt->bind_param('ii', $roomId, $currentSeat);
+  $stmt->execute();
+  $row = $stmt->get_result()->fetch_assoc();
+  $stmt->close();
 
-    if (($row['player_type'] ?? '') !== 'ai') {
-      return;
-    }
-
-    usleep(LOGIA_AI_TURN_DELAY_MS * 1000);
-
-    $room = game_get_room_by_id($mysqli, $roomId);
-    if (!$room) return;
-    if (($room['status'] ?? '') !== 'playing') return;
-    if ((int)($room['winner_seat'] ?? 0) > 0) return;
-
-    $currentSeat = (int)($room['current_turn_seat'] ?? 0);
-    if ($currentSeat <= 0) return;
-
-    $stmt = $mysqli->prepare("
-      SELECT player_type
-      FROM game_room_players
-      WHERE room_id = ? AND seat_no = ?
-      LIMIT 1
-    ");
-    $stmt->bind_param('ii', $roomId, $currentSeat);
-    $stmt->execute();
-    $row = $stmt->get_result()->fetch_assoc();
-    $stmt->close();
-
-    if (($row['player_type'] ?? '') !== 'ai') {
-      return;
-    }
-
-    $hand = game_get_hand($mysqli, $roomId, $currentSeat);
-    $activeCard = game_jdecode($room['active_card_json'] ?? null, null);
-    $pendingDraw = (int)($room['pending_draw'] ?? 0);
-    $playable = game_get_playable_cards($hand, $activeCard, $pendingDraw);
-
-    if (!$playable) {
-      game_apply_pass_action($mysqli, $room, $currentSeat);
-      $room = game_get_room_by_id($mysqli, $roomId);
-      return;
-    }
-
-    usort(
-      $playable,
-      fn($a, $b) => game_ai_card_score($a, $activeCard, $pendingDraw)
-        <=> game_ai_card_score($b, $activeCard, $pendingDraw)
-    );
-
-    $pick = $playable[0];
-    $chosenElement = null;
-
-    if (($pick['kind'] ?? '') === 'plus4') {
-      $handWithoutPick = array_values(array_filter(
-        $hand,
-        fn($card) => ($card['id'] ?? '') !== ($pick['id'] ?? '')
-      ));
-      $targetElement = game_get_effective_element($activeCard);
-      $chosenElement = game_ai_choose_element($handWithoutPick, $targetElement);
-    }
-
-    game_apply_play_action($mysqli, $room, $currentSeat, (string)$pick['id'], $chosenElement);
-    $room = game_get_room_by_id($mysqli, $roomId);
+  if (($row['player_type'] ?? '') !== 'ai') {
+    return;
   }
+
+  $hand = game_get_hand($mysqli, $roomId, $currentSeat);
+  $activeCard = game_jdecode($room['active_card_json'] ?? null, null);
+  $pendingDraw = (int)($room['pending_draw'] ?? 0);
+  $playable = game_get_playable_cards($hand, $activeCard, $pendingDraw);
+
+  if (!$playable) {
+    game_apply_pass_action($mysqli, $room, $currentSeat);
+    $room = game_get_room_by_id($mysqli, $roomId);
+    return;
+  }
+
+  usort(
+    $playable,
+    fn($a, $b) => game_ai_card_score($a, $activeCard, $pendingDraw)
+      <=> game_ai_card_score($b, $activeCard, $pendingDraw)
+  );
+
+  $pick = $playable[0];
+  $chosenElement = null;
+
+  if (($pick['kind'] ?? '') === 'plus4') {
+    $handWithoutPick = array_values(array_filter(
+      $hand,
+      fn($card) => ($card['id'] ?? '') !== ($pick['id'] ?? '')
+    ));
+
+    $targetElement = game_get_effective_element($activeCard);
+    $chosenElement = game_ai_choose_element($handWithoutPick, $targetElement);
+  }
+
+  game_apply_play_action($mysqli, $room, $currentSeat, (string)$pick['id'], $chosenElement);
+  $room = game_get_room_by_id($mysqli, $roomId);
+}
+
+/*
+  Backward-compatible wrapper.
+
+  Old name kept so old endpoint code does not fatal.
+  But it now advances only ONE AI turn and does NOT sleep.
+  The browser controls pacing through ai_tick.php.
+*/
+function game_run_ai_until_human_or_end(mysqli $mysqli, array &$room): void {
+  game_run_one_ai_turn($mysqli, $room);
+}
 
   /* =========================================================
      ROOM PAYLOAD

@@ -2300,3 +2300,455 @@ body[data-appearance="light"] .shop-product-tile__art--image{
     radial-gradient(circle at 30% 20%, rgba(25,217,124,.12), transparent 42%),
     rgba(255,255,255,.72);
 }
+
+/* =====================================================
+   DEPLOYMENT RESPONSIVE PATCH - USER / SHOP / PLAY
+   Append at bottom of assets/userstyle.css
+===================================================== */
+
+.userpage-grid,
+.shoppage-grid,
+.play-mode-layout,
+.route-grid,
+.feature-grid,
+.split-grid,
+.store-hero-grid,
+.store-samples,
+.shop-hero--wide,
+.shop-featured-strip,
+.shop-shelf--wide,
+.shop-rail--clean,
+.play-mode-grid,
+.profile-overview-grid{
+  min-width:0;
+}
+
+.userpage-grid > *,
+.shoppage-grid > *,
+.play-mode-layout > *,
+.route-grid > *,
+.feature-grid > *,
+.split-grid > *,
+.store-hero-grid > *,
+.store-samples > *,
+.shop-hero--wide > *,
+.shop-featured-strip > *,
+.shop-shelf--wide > *,
+.shop-rail--clean > *,
+.play-mode-grid > *,
+.profile-overview-grid > *{
+  min-width:0;
+}
+
+.userpanel,
+.shop-pane,
+.shop-banner-card,
+.shop-product-tile,
+.sample-card,
+.route-card,
+.feature-tile,
+.info-block,
+.play-mode-card,
+.play-side-panel,
+.profile-section-card,
+.profile-hero-card{
+  min-width:0;
+}
+
+.userpanel__title,
+.route-card h3,
+.shop-pane__head h2,
+.shop-product-tile h3,
+.shop-banner-card__content h3,
+.play-mode-head__copy h1,
+.play-mode-card__bottom h2,
+.profile-name{
+  overflow-wrap:anywhere;
+}
+
+/* Desktop/laptop standardization */
+@media (max-width:1500px){
+  .userpage-grid{
+    grid-template-columns:240px minmax(0, 1fr) 300px;
+    gap:12px;
+  }
+
+  .shoppage-grid{
+    grid-template-columns:240px minmax(0, 1fr);
+    gap:12px;
+  }
+
+  .play-mode-layout{
+    gap:12px;
+  }
+
+  .play-mode-head__copy h1{
+    font-size:clamp(30px, 3vw, 42px);
+  }
+
+  .play-mode-card{
+    min-height:clamp(360px, 54vh, 520px);
+    border-radius:26px;
+  }
+
+  .play-mode-card__content{
+    padding:18px;
+  }
+
+  .play-mode-card__bottom h2{
+    font-size:clamp(38px, 3.5vw, 54px);
+  }
+
+  .play-mode-card__bottom p{
+    font-size:15px;
+  }
+
+  .play-mode-card .btn{
+    min-width:150px;
+  }
+
+  .shop-pane{
+    padding:18px;
+  }
+
+  .shop-pane__head h2{
+    font-size:clamp(24px, 2.4vw, 28px);
+  }
+
+  .shop-product-tile__foot{
+    align-items:flex-start;
+    flex-direction:column;
+  }
+
+  .shop-product-tile__foot .btn{
+    width:100%;
+  }
+}
+
+/* Keep 3 play cards on normal laptops but make them sane */
+@media (max-width:1380px){
+  .play-mode-grid{
+    grid-template-columns:repeat(3, minmax(0, 1fr));
+    gap:14px;
+  }
+
+  .play-mode-card{
+    min-height:390px;
+  }
+
+  .play-mode-card__bottom h2{
+    font-size:38px;
+  }
+
+  .play-mode-card__bottom p{
+    font-size:14px;
+    max-width:28ch;
+  }
+}
+
+/* Medium laptops/tablets */
+@media (max-width:1180px){
+  .userpage-grid,
+  .shoppage-grid,
+  .play-mode-layout{
+    grid-template-columns:220px minmax(0, 1fr);
+  }
+
+  .userpanel--side,
+  .play-mode-side{
+    grid-column:1 / -1;
+  }
+
+  .userpanel--side,
+  .play-mode-side .play-side-panel{
+    position:static;
+  }
+
+  .play-mode-grid{
+    grid-template-columns:1fr;
+  }
+
+  .play-mode-card{
+    min-height:300px;
+  }
+
+  .play-mode-card__bottom h2{
+    font-size:42px;
+  }
+
+  .shop-featured-strip,
+  .shop-shelf--wide,
+  .shop-rail--clean,
+  .store-samples{
+    grid-template-columns:repeat(2, minmax(0, 1fr));
+  }
+
+  .shop-hero--wide{
+    grid-template-columns:1fr;
+  }
+}
+
+/* Tablet/mobile one-column */
+@media (max-width:860px){
+  .userpage-grid,
+  .shoppage-grid,
+  .play-mode-layout{
+    grid-template-columns:1fr;
+    gap:10px;
+  }
+
+  .userpanel--nav,
+  .userpanel--side,
+  .play-mode-side .play-side-panel{
+    position:static;
+  }
+
+  .usernav{
+    grid-template-columns:repeat(2, minmax(0, 1fr));
+  }
+
+  .usernav .hub-item,
+  .usernav__item{
+    padding:11px;
+    gap:10px;
+  }
+
+  .usernav .hub-ico,
+  .usernav__icon{
+    width:36px;
+    height:36px;
+    flex-basis:36px;
+  }
+
+  .usernav .hub-item > span:last-child,
+  .usernav__text strong{
+    font-size:14px;
+  }
+
+  .play-mode-head{
+    align-items:flex-start;
+    flex-direction:column;
+  }
+
+  .play-mode-head__copy h1{
+    font-size:30px;
+  }
+
+  .play-mode-head__copy p{
+    font-size:14px;
+  }
+
+  .play-mode-card{
+    min-height:260px;
+    border-radius:22px;
+  }
+
+  .play-mode-card__bottom h2{
+    font-size:34px;
+  }
+
+  .play-mode-card .btn{
+    width:100%;
+    min-width:0;
+  }
+
+  .play-side-panel{
+    padding:12px;
+  }
+
+  .play-check-row{
+    align-items:flex-start;
+    flex-direction:column;
+  }
+
+  .shop-tabsbar{
+    overflow-x:auto;
+    flex-wrap:nowrap;
+    padding:6px;
+  }
+
+  .shop-tabsbar__item{
+    white-space:nowrap;
+    flex:0 0 auto;
+  }
+
+  .shop-pane{
+    padding:14px;
+    border-radius:20px;
+  }
+
+  .shop-pane__head{
+    align-items:flex-start;
+    flex-direction:column;
+  }
+
+  .shop-featured-strip,
+  .shop-shelf--wide,
+  .shop-rail--clean,
+  .store-samples{
+    grid-template-columns:1fr;
+  }
+
+  .shop-banner-card{
+    min-height:210px;
+  }
+
+  .shop-banner-card__content{
+    padding:16px;
+  }
+
+  .shop-banner-card__content h3{
+    font-size:28px;
+  }
+
+  .profile-hero-layout,
+  .profile-hero-main{
+    align-items:flex-start;
+    flex-direction:column;
+  }
+
+  .profile-action-row,
+  .profile-overview-actions{
+    width:100%;
+  }
+
+  .profile-action-row .btn,
+  .profile-overview-actions .btn{
+    flex:1 1 140px;
+  }
+}
+
+/* Small mobile */
+@media (max-width:560px){
+  .userpanel,
+  .shop-pane,
+  .play-side-panel,
+  .profile-section-card,
+  .profile-side-card{
+    padding:12px;
+    border-radius:18px;
+  }
+
+  .usernav{
+    grid-template-columns:1fr;
+  }
+
+  .userpanel__title{
+    font-size:21px;
+  }
+
+  .mini-stat,
+  .stack-row,
+  .checklist__row{
+    padding:10px 11px;
+  }
+
+  .stack-row,
+  .checklist__row{
+    align-items:flex-start;
+    flex-direction:column;
+  }
+
+  .play-mode-shell{
+    gap:10px;
+  }
+
+  .play-mode-card{
+    min-height:230px;
+  }
+
+  .play-mode-card__content{
+    padding:14px;
+  }
+
+  .play-mode-card__bottom{
+    gap:9px;
+  }
+
+  .play-mode-card__bottom h2{
+    font-size:30px;
+  }
+
+  .play-mode-card__bottom p{
+    font-size:13px;
+  }
+
+  .play-modal__dialog,
+  .play-modal__dialog--wide{
+    width:calc(100vw - 18px);
+    max-height:calc(100vh - 18px);
+    margin:9px auto;
+    border-radius:20px;
+  }
+
+  .play-modal__body{
+    padding:16px;
+  }
+
+  .play-modal__body h3{
+    font-size:23px;
+  }
+
+  .play-tabbar{
+    flex-wrap:nowrap;
+    overflow-x:auto;
+  }
+
+  .play-tabbar__item{
+    white-space:nowrap;
+    flex:0 0 auto;
+  }
+
+  .play-room-row{
+    padding:12px;
+  }
+
+  .shop-tabsbar{
+    margin-left:-2px;
+    margin-right:-2px;
+  }
+
+  .shop-tabsbar__item{
+    min-height:38px;
+    padding:0 12px;
+    font-size:13px;
+  }
+
+  .shop-pane__head h2{
+    font-size:24px;
+  }
+
+  .shop-product-tile,
+  .sample-card{
+    padding:12px;
+    border-radius:18px;
+  }
+
+  .shop-product-tile__art{
+    height:100px;
+  }
+
+  .shop-product-tile__foot strong{
+    font-size:18px;
+  }
+
+  .store-banner{
+    padding:16px;
+    min-height:190px;
+  }
+
+  .store-banner h3{
+    font-size:25px;
+  }
+
+  .profile-overview-grid{
+    grid-template-columns:1fr;
+  }
+
+  .profile-avatar,
+  .profile-avatar-fallback{
+    width:60px;
+    height:60px;
+    border-radius:18px;
+  }
+}

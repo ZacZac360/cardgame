@@ -481,7 +481,7 @@ function getSoloTutorialTargetCard(hand, room) {
 
   const activeCard = room.active_card || null;
   const pendingDraw = Number(room.pending_draw || 0);
-  const rawPlayable = hand.filter((card) => canPlayCard(card, activeCard, pendingDraw));
+  const rawPlayable = hand.filter((card) => canPlayCard(card, activeCard, pendingDraw, room.rules || {}));
 
   return pickSoloTutorialTargetFromRaw(rawPlayable, tutorial);
 }
@@ -656,25 +656,34 @@ function compareElements(challenger, defender) {
   return "neutral";
 }
 
-function canPlayCard(card, activeCard, pendingDraw) {
+function canPlayCard(card, activeCard, pendingDraw, rules = null) {
   if (!activeCard) return true;
 
-  if (activeCard.kind === "plus4" && pendingDraw > 0) {
-    return card.kind === "plus4";
+  const activeKind = String(activeCard.kind || "");
+  const cardKind = String(card.kind || "");
+  const allowStackPlus2 = !!rules?.allow_stack_plus2;
+  const allowStackPlus4 = !!rules?.allow_stack_plus4;
+
+  if (Number(pendingDraw || 0) > 0) {
+    if (activeKind === "plus2") {
+      return cardKind === "plus2" && allowStackPlus2;
+    }
+
+    if (activeKind === "plus4") {
+      return cardKind === "plus4" && allowStackPlus4;
+    }
+
+    return false;
   }
 
-  if (activeCard.kind === "plus2" && pendingDraw > 0) {
-    return card.kind === "plus2";
-  }
-
-  if (card.kind === "plus4") {
+  if (cardKind === "plus4") {
     return true;
   }
 
   const targetElement = getEffectiveElement(activeCard);
   const cardElement = card.element || null;
 
-  if (card.kind === "plus2" || card.kind === "normal") {
+  if (cardKind === "plus2" || cardKind === "normal") {
     if (cardElement && targetElement && cardElement === targetElement) {
       return true;
     }
@@ -688,7 +697,7 @@ function canPlayCard(card, activeCard, pendingDraw) {
 function getPlayableCards(hand, room) {
   const activeCard = room?.active_card || null;
   const pendingDraw = Number(room?.pending_draw || 0);
-  const rawPlayable = (hand || []).filter((card) => canPlayCard(card, activeCard, pendingDraw));
+  const rawPlayable = (hand || []).filter((card) => canPlayCard(card, activeCard, pendingDraw, room?.rules || {}));
 
   if (isSoloTrainingRoom() && latestState?.me && hand === latestState.me.hand) {
     const target = getSoloTutorialTargetCard(hand, room);
@@ -768,7 +777,7 @@ function cardIsPlayable(card) {
   if (!me) return false;
   if (room.current_turn_seat !== me.seat_no) return false;
 
-  const normallyPlayable = canPlayCard(card, room.active_card || null, Number(room.pending_draw || 0));
+  const normallyPlayable = canPlayCard(card, room.active_card || null, Number(room.pending_draw || 0), room.rules || {});
   if (!normallyPlayable) return false;
 
   if (isSoloTrainingRoom()) {

@@ -321,6 +321,17 @@ function ui_header(string $title = 'Dashboard', bool $is_hub = true): void {
                   $link = trim((string)($n['link_url'] ?? ''));
                   $notifType = (string)($n['type'] ?? '');
                   $isUnread = ((int)($n['is_read'] ?? 0) === 0);
+
+                  $openableTypes = [
+                    'admin_approval',
+                    'security_alert',
+                    'friend_request',
+                    'friend_accept',
+                    'message',
+                    'ranked_unlock',
+                  ];
+
+                  $canOpenNotif = ($link !== '' && in_array($notifType, $openableTypes, true));
                 ?>
                 <div
                   class="card-soft dd-card"
@@ -350,7 +361,7 @@ function ui_header(string $title = 'Dashboard', bool $is_hub = true): void {
                       </div>
 
                       <div class="dd-card__actions">
-                        <?php if ($link !== ''): ?>
+                        <?php if ($canOpenNotif): ?>
                           <button
                             type="button"
                             class="btn btn-ghost"
