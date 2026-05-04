@@ -183,6 +183,10 @@ ui_header("Room " . $roomCode);
                 Ranked = 1.5x multiplier.
               </div>
 
+              <div class="rules-note rules-note--locked" id="rulesLockedNote" hidden>
+                These room rules are locked for this mode. Training and ranked matches use fixed rules.
+              </div>
+
               <div class="host-buttons" style="margin-top:10px;">
                 <button id="saveRulesBtn" type="button" class="ui-btn">Save Rules</button>
               </div>

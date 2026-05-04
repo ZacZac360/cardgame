@@ -96,7 +96,8 @@ function renderStatus(status) {
     queueStatusEl.textContent = `Searching... ${Number(queue.queue_count || 1)}/4 players found. Position #${Number(queue.queue_position || 1)}.`;
 
     if (!queueStartedAt && queue.joined_at) {
-      queueStartedAt = new Date(String(queue.joined_at).replace(" ", "T"));
+      const parsed = new Date(String(queue.joined_at).replace(" ", "T"));
+      queueStartedAt = Number.isNaN(parsed.getTime()) ? new Date() : parsed;
     }
   } else {
     queueStatusEl.textContent = "Not queued.";
@@ -119,11 +120,22 @@ joinBtn?.addEventListener("click", async () => {
     joinBtn.disabled = true;
 
     const data = await postJson(`${BASE_PATH}/api/game/ranked_join.php`);
-    renderStatus(data.status);
-    setMsg("Queued. Looking for 4 players.");
+
+    if (data.redirect_url) {
+      window.location.href = data.redirect_url;
+      return;
+    }
+
+    const roomCode = data?.status?.match?.room_code || "";
+
+    if (roomCode) {
+      window.location.href = `${BASE_PATH}/room.php?code=${encodeURIComponent(roomCode)}`;
+      return;
+    }
+
+    window.location.href = `${BASE_PATH}/dashboard.php?queued=ranked`;
   } catch (err) {
     setMsg(err.message);
-  } finally {
     busy = false;
     await refreshStatus().catch(() => {});
   }

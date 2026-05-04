@@ -36,6 +36,7 @@ const hostControlsSectionEl = document.getElementById("hostControlsSection");
 
 const rulesEditorEl = document.getElementById("rulesEditor");
 const saveRulesBtn = document.getElementById("saveRulesBtn");
+const rulesLockedNoteEl = document.getElementById("rulesLockedNote");
 const ruleAllowAiFillEl = document.getElementById("ruleAllowAiFill");
 const ruleStartingHandSizeEl = document.getElementById("ruleStartingHandSize");
 const ruleAllowStackPlus2El = document.getElementById("ruleAllowStackPlus2");
@@ -54,6 +55,11 @@ let busy = false;
 let resultsModalShown = false;
 let trainingTransitionModalShown = false;
 let topnavSnapshot = null;
+
+let rulesFormDirty = false;
+let rulesFormFocused = false;
+let rulesSaveInProgress = false;
+let rulesSyncTimer = null;
 
 const SOLO_TUTORIAL_DIALOGUES = {
   training_1: {
@@ -420,6 +426,57 @@ function getCurrentRoomRules() {
   return latestState?.room?.rules || {};
 }
 
+function roomRulesAreEditable() {
+  const room = latestState?.room || {};
+  const rules = room.rules || {};
+
+  if (!room.is_host) return false;
+  if (room.status !== "waiting") return false;
+
+  const roomType = String(room.room_type || "");
+  const soloLevelKey = String(rules.solo_level_key || "");
+
+  if (roomType === "ranked") return false;
+
+  if (
+    roomType === "solo" &&
+    ["training_1", "training_2", "training_3"].includes(soloLevelKey)
+  ) {
+    return false;
+  }
+
+  return true;
+}
+
+function roomRulesAreVisibleForHost() {
+  const room = latestState?.room || {};
+  return !!room.is_host;
+}
+
+function markRulesFormDirty() {
+  rulesFormDirty = true;
+
+  if (rulesSyncTimer) {
+    clearTimeout(rulesSyncTimer);
+  }
+
+  rulesSyncTimer = setTimeout(() => {
+    if (!rulesFormFocused && !rulesSaveInProgress) {
+      rulesFormDirty = false;
+    }
+  }, 6000);
+}
+
+function clearRulesFormDirty() {
+  rulesFormDirty = false;
+  rulesFormFocused = false;
+
+  if (rulesSyncTimer) {
+    clearTimeout(rulesSyncTimer);
+    rulesSyncTimer = null;
+  }
+}
+
 function getSoloTutorialInfo() {
   const room = latestState?.room || {};
   const tutorial = latestState?.solo_tutorial || null;
@@ -562,7 +619,11 @@ function getSoloTutorialDynamicCopy() {
   };
 }
 
-function syncRulesFormFromState() {
+function syncRulesFormFromState(force = false) {
+  if (!force && (rulesFormDirty || rulesFormFocused || rulesSaveInProgress)) {
+    return;
+  }
+
   const rules = getCurrentRoomRules();
 
   if (ruleAllowAiFillEl) ruleAllowAiFillEl.checked = !!rules.allow_ai_fill;
@@ -583,6 +644,10 @@ function collectRulesFromForm() {
 }
 
 async function saveRoomSettings(nextMaxPlayers = null) {
+  if (!roomRulesAreEditable()) {
+    throw new Error("Room rules are locked for this mode.");
+  }
+
   const currentMaxPlayers = Number(latestState?.room?.max_players || 4);
   const payload = {
     room_code: ROOM_CODE,
@@ -747,7 +812,7 @@ async function postJson(url, payload = {}) {
   return data;
 }
 
-function applyState(data) {
+function applyState(data, options = {}) {
   latestState = data;
 
   const myHand = latestState?.me?.hand || [];
@@ -760,13 +825,13 @@ function applyState(data) {
     wildChooserEl.classList.add("hidden");
   }
 
-  syncRulesFormFromState();
+  syncRulesFormFromState(!!options.forceRulesSync);
   render();
   maybeShowTrainingTransitionModal();
   maybeHandleFinishedMatch();
 }
 
-async function fetchState() {
+async function fetchState(options = {}) {
   const url = `${BASE_PATH}/api/game/state.php?room_code=${encodeURIComponent(ROOM_CODE)}`;
   const res = await fetch(url, { cache: "no-store" });
   const data = await res.json();
@@ -775,7 +840,7 @@ async function fetchState() {
     throw new Error(data.msg || "Failed to fetch state.");
   }
 
-  applyState(data);
+  applyState(data, options);
 }
 
 function cardIsPlayable(card) {
@@ -1296,17 +1361,24 @@ function updatePanelsVisibility() {
   const room = latestState?.room;
   const isHost = !!room?.is_host;
   const isWaiting = room?.status === "waiting";
+  const canEditRules = roomRulesAreEditable();
+  const hostCanSeeRules = roomRulesAreVisibleForHost();
 
   if (hostControlsSectionEl) {
     hostControlsSectionEl.classList.toggle("hidden", !isHost);
   }
 
   if (rulesEditorEl) {
-    rulesEditorEl.classList.toggle("hidden", !isHost || !isWaiting);
+    rulesEditorEl.classList.toggle("hidden", !hostCanSeeRules);
+    rulesEditorEl.classList.toggle("is-locked", hostCanSeeRules && !canEditRules);
+  }
+
+  if (rulesLockedNoteEl) {
+    rulesLockedNoteEl.hidden = !hostCanSeeRules || canEditRules;
   }
 
   document.querySelectorAll(".mode-buttons").forEach((wrap) => {
-    wrap.classList.toggle("hidden", !isHost || !isWaiting);
+    wrap.classList.toggle("hidden", !canEditRules);
   });
 
   if (startGameBtn) {
@@ -1337,7 +1409,7 @@ function updateControls() {
     canPlaySelected &&
     pendingPlus4CardId === selectedCard.id
   );
-  const hostCanEditWaitingRoom = !!(room?.is_host && room?.status === "waiting");
+  const hostCanEditWaitingRoom = roomRulesAreEditable();
 
   if (refreshBtn) refreshBtn.disabled = busy;
   if (startGameBtn) startGameBtn.disabled = busy || !room?.is_host || room?.status !== "waiting";
@@ -1419,14 +1491,25 @@ document.querySelectorAll("[data-mode]").forEach((btn) => {
   btn.addEventListener("click", async () => {
     if (busy) return;
 
+    if (!roomRulesAreEditable()) {
+      addLocalMsg(actionMsgEl, "Room mode is locked for this match.");
+      updateControls();
+      return;
+    }
+
     try {
       setBusy(true);
+      rulesSaveInProgress = true;
+
       await saveRoomSettings(Number(btn.dataset.mode || 4));
+      clearRulesFormDirty();
+
       addLocalMsg(actionMsgEl, `Room mode set to ${btn.dataset.mode} players.`);
-      await fetchState();
+      await fetchState({ forceRulesSync: true });
     } catch (err) {
       addLocalMsg(actionMsgEl, err.message);
     } finally {
+      rulesSaveInProgress = false;
       setBusy(false);
       updateControls();
     }
@@ -1450,14 +1533,25 @@ if (refreshBtn) {
 
 if (saveRulesBtn) {
   saveRulesBtn.addEventListener("click", async () => {
+    if (!roomRulesAreEditable()) {
+      addLocalMsg(actionMsgEl, "Room rules are locked for this mode.");
+      updateControls();
+      return;
+    }
+
     try {
       setBusy(true);
+      rulesSaveInProgress = true;
+
       await saveRoomSettings();
+      clearRulesFormDirty();
+
       addLocalMsg(actionMsgEl, "Room rules saved.");
-      await fetchState();
+      await fetchState({ forceRulesSync: true });
     } catch (err) {
       addLocalMsg(actionMsgEl, err.message);
     } finally {
+      rulesSaveInProgress = false;
       setBusy(false);
       updateControls();
     }
@@ -1589,6 +1683,27 @@ if (destroyRoomBtn) {
   });
 }
 
+[
+  ruleAllowAiFillEl,
+  ruleStartingHandSizeEl,
+  ruleAllowStackPlus2El,
+  ruleAllowStackPlus4El,
+  ruleDrawUntilPlayableEl,
+].forEach((el) => {
+  if (!el) return;
+
+  el.addEventListener("input", markRulesFormDirty);
+  el.addEventListener("change", markRulesFormDirty);
+
+  el.addEventListener("focus", () => {
+    rulesFormFocused = true;
+  });
+
+  el.addEventListener("blur", () => {
+    rulesFormFocused = false;
+  });
+});
+
 if (wildChooserEl) {
   wildChooserEl.querySelectorAll("[data-wild-element]").forEach((btn) => {
     btn.addEventListener("click", async () => {
@@ -1694,7 +1809,7 @@ resultsModalShown = sessionStorage.getItem(`logia_results_shown_${ROOM_CODE}`) =
 ensureResultsModal();
 ensureTrainingTransitionModal();
 
-fetchState()
+fetchState({ forceRulesSync: true })
   .then(() => {
     updateControls();
     toolsPanelEl?.classList.remove("hidden");

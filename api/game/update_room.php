@@ -38,6 +38,29 @@ if ((string)$room['status'] !== 'waiting') {
   game_json_out(['ok' => false, 'msg' => 'Cannot change mode after game start.'], 409);
 }
 
+$roomType = (string)($room['room_type'] ?? '');
+$currentRules = [];
+
+if (!empty($room['rules_json'])) {
+  $decodedRules = json_decode((string)$room['rules_json'], true);
+  if (is_array($decodedRules)) {
+    $currentRules = $decodedRules;
+  }
+}
+
+$soloLevelKey = (string)($currentRules['solo_level_key'] ?? '');
+
+if ($roomType === 'ranked') {
+  game_json_out(['ok' => false, 'msg' => 'Ranked room rules are locked.'], 409);
+}
+
+if (
+  $roomType === 'solo' &&
+  in_array($soloLevelKey, ['training_1', 'training_2', 'training_3'], true)
+) {
+  game_json_out(['ok' => false, 'msg' => 'Training room rules are locked.'], 409);
+}
+
 $stmt = $mysqli->prepare("
   SELECT COUNT(*) AS c
   FROM game_room_players

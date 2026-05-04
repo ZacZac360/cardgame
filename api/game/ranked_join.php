@@ -20,9 +20,16 @@ $leagueKey = strtolower(trim((string)($payload['league'] ?? 'bronze')));
 try {
   $status = ranked_enter_queue($mysqli, $user, $leagueKey);
 
+  $bp = function_exists('base_path') ? base_path() : '';
+
+  $roomCode = (string)($status['match']['room_code'] ?? '');
+
   game_json_out([
     'ok' => true,
     'status' => $status,
+    'redirect_url' => $roomCode !== ''
+      ? $bp . '/room.php?code=' . rawurlencode($roomCode)
+      : $bp . '/dashboard.php?queued=ranked',
   ]);
 } catch (Throwable $e) {
   game_json_out([

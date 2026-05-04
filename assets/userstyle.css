@@ -2803,3 +2803,16 @@ body[data-appearance="light"] .shop-product-tile__art--image{
 .profile-side-stack > *{
   min-width:0;
 }
+
+/* =====================================================
+   MEGA PATCH - PROFILE ACCOUNT BUTTON SPACING
+===================================================== */
+
+.profile-form-card > .profile-two-col-grid + .profile-form-actions{
+  margin-top:20px;
+  padding-top:4px;
+}
+
+.profile-form-actions .btn{
+  min-height:44px;
+}
