@@ -12,60 +12,120 @@ $u  = current_user();
 $bp = base_path();
 
 $is_guest = ((int)($u['is_guest'] ?? 0) === 1);
+
 if (!$is_guest) {
   header("Location: {$bp}/dashboard.php");
   exit;
 }
 
-ui_header("Guest", true);
+$flashError = $_SESSION['flash_error'] ?? '';
+unset($_SESSION['flash_error']);
+
+ui_header("Guest Dashboard", true);
 ?>
 
-<section class="section" style="padding-top:0;">
-  <div class="container" style="max-width: 980px;">
-    <div class="card hub-hero" style="padding:24px;">
-      <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; position:relative; z-index:1;">
-        <span class="pill" style="border-color: rgba(255,205,102,.45); background: rgba(255,205,102,.10);">Guest</span>
-        <a class="btn btn-ghost" href="<?= h($bp) ?>/index.php">Sign In / Register</a>
+<section class="section section--flush-top guest-home">
+  <div class="guest-shell">
+
+    <?php if ($flashError): ?>
+      <div class="card-soft profile-alert profile-alert--bad guest-alert">
+        <?= h($flashError) ?>
+      </div>
+    <?php endif; ?>
+
+    <div class="card hub-hero guest-hero">
+      <div class="hero-top hero-top--start">
+        <div>
+          <span class="pill status-pill--warn">Guest Access</span>
+        </div>
+
+        <div class="guest-hero__actions">
+          <a class="btn btn-primary" href="<?= h($bp) ?>/guest_exit.php?to=register">
+            Create Account
+          </a>
+          <a class="btn btn-ghost" href="<?= h($bp) ?>/guest_exit.php?to=login">
+            Sign In
+          </a>
+          <a class="btn btn-ghost" href="<?= h($bp) ?>/logout.php">
+            Leave Guest
+          </a>
+        </div>
       </div>
 
-      <div style="position:relative; z-index:1; margin-top:10px;">
-        <h2 style="margin-bottom:8px;">Enter Match</h2>
-        <p class="lead" style="margin:0; max-width:52ch;">
-          Quick queue or private room.
+      <div class="hero-body guest-hero__body">
+        <h2>Play as Guest</h2>
+        <p class="lead hero-lead">
+          Guest mode lets you try Logia through casual play and private room entry.
+          Ranked, shop, profile, notifications, friends, and messages require a registered account.
         </p>
-      </div>
-    </div>
 
-    <div style="margin-top:14px; display:grid; grid-template-columns: 1fr 1fr; gap:14px;">
-      <div class="card" style="padding:18px;">
-        <div style="font-weight:950; font-size:20px; margin-bottom:10px;">Random Match</div>
-        <div style="color:var(--muted); margin-bottom:14px;">Casual queue</div>
-        <a class="btn btn-primary btn-lg" href="<?= h($bp) ?>/play.php?mode=guest-random">Find Match</a>
-      </div>
-
-      <div class="card" style="padding:18px;">
-        <div style="font-weight:950; font-size:20px; margin-bottom:10px;">Join Room</div>
-
-        <form method="get" action="<?= h($bp) ?>/room.php" style="display:grid; gap:10px;">
-          <input class="input" type="text" name="room_code" placeholder="Room ID" required>
-          <input class="input" type="text" name="room_password" placeholder="Password (if needed)">
-          <div style="display:flex; gap:8px; flex-wrap:wrap;">
-            <button class="btn btn-primary btn-lg" type="submit">Join</button>
-          </div>
-        </form>
-      </div>
-    </div>
-
-    <div style="margin-top:14px;">
-      <div class="card" style="padding:16px;">
-        <div style="display:flex; flex-wrap:wrap; gap:8px;">
-          <span class="pill">Guest</span>
-          <span class="pill" style="border-color: rgba(255,77,109,.40); background: rgba(255,77,109,.10);">Ranked Locked</span>
-          <span class="pill" style="border-color: rgba(255,77,109,.40); background: rgba(255,77,109,.10);">Shop Locked</span>
-          <span class="pill" style="border-color: rgba(255,77,109,.40); background: rgba(255,77,109,.10);">Profile Locked</span>
+        <div class="hero-meta">
+          <span class="pill">Casual Play</span>
+          <span class="pill">Private Room Entry</span>
+          <span class="pill status-pill--bad">Social Locked</span>
+          <span class="pill status-pill--bad">Ranked Locked</span>
         </div>
       </div>
     </div>
+
+    <div class="guest-grid">
+
+      <div class="card guest-action-card guest-action-card--primary">
+        <div class="guest-action-card__icon">⚡</div>
+        <div class="guest-action-card__body">
+          <div class="guest-action-card__eyebrow">Quick Start</div>
+          <h3>Random Match</h3>
+          <p>
+            Enter a casual match quickly. Best for testing the game without creating an account.
+          </p>
+        </div>
+
+        <a class="btn btn-primary btn-lg" href="<?= h($bp) ?>/guest_quick_match.php">
+          Find Match
+        </a>
+      </div>
+
+      <div class="card guest-action-card">
+        <div class="guest-action-card__icon">🚪</div>
+        <div class="guest-action-card__body">
+          <div class="guest-action-card__eyebrow">Private Entry</div>
+          <h3>Join Room</h3>
+          <p>
+            Join a private room using a room code from another player.
+          </p>
+        </div>
+
+        <form method="get" action="<?= h($bp) ?>/room.php" class="guest-room-form">
+          <input class="input" type="text" name="room_code" placeholder="Room Code" required>
+          <input class="input" type="text" name="room_password" placeholder="Password, if needed">
+          <button class="btn btn-primary btn-lg" type="submit">
+            Join Room
+          </button>
+        </form>
+      </div>
+
+      <div class="card guest-action-card guest-action-card--register">
+        <div class="guest-action-card__icon">🛡️</div>
+        <div class="guest-action-card__body">
+          <div class="guest-action-card__eyebrow">Full Access</div>
+          <h3>Create an Account</h3>
+          <p>
+            Register to unlock profile progress, Zeny, shop, notifications, friends, messages, and ranked access.
+          </p>
+        </div>
+
+        <div class="guest-register-actions">
+          <a class="btn btn-primary btn-lg" href="<?= h($bp) ?>/guest_exit.php?to=register">
+            Create Account
+          </a>
+          <a class="btn btn-ghost btn-lg" href="<?= h($bp) ?>/guest_exit.php?to=login">
+            Sign In
+          </a>
+        </div>
+      </div>
+
+    </div>
+
   </div>
 </section>
 

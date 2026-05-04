@@ -31,7 +31,7 @@ $next = $bp . "/choose.php";
 
   <link rel="stylesheet" href="<?= h($bp) ?>/assets/style.css"/>
 </head>
-<body>
+<body data-auth-open="<?= $err ? 'login' : '' ?>">
 
   <!-- Flash banners -->
   <div class="container">
@@ -46,7 +46,7 @@ $next = $bp . "/choose.php";
   <main class="container">
     <section class="hero">
       <div class="hero__copy">
-        <div class="chip">No. 1 on this specific localhost port!</div>
+        <div class="chip">Elemental card battles, casual rooms, and ranked progression.</div>
         <h1>Master the elements. Outplay the table. Become Logia.</h1>
         <p class="lead">
           Logia is a competitive online card game built around elemental matchups, room-based play,
@@ -226,6 +226,12 @@ $next = $bp . "/choose.php";
 
       <!-- LOGIN TAB -->
       <section class="tabpane is-active" data-pane="login">
+        <?php if ($err): ?>
+          <div class="auth-inline-error">
+            <?= h($err) ?>
+          </div>
+        <?php endif; ?>
+
         <form method="post" action="<?= h($bp) ?>/auth_action.php?next=<?= urlencode($next) ?>" autocomplete="off">
           <input type="hidden" name="action" value="login"/>
 
@@ -233,7 +239,10 @@ $next = $bp . "/choose.php";
           <input id="login_ident" name="identifier" autocomplete="username" required />
 
           <label for="login_pw">Password</label>
-          <input id="login_pw" name="password" type="password" autocomplete="current-password" required />
+          <div class="password-wrap">
+            <input id="login_pw" name="password" type="password" autocomplete="current-password" required />
+            <button class="password-toggle" type="button" data-toggle-password="#login_pw" aria-label="Show password">Show</button>
+          </div>
 
           <div style="margin-top:8px; margin-bottom:12px;">
             <a
@@ -269,7 +278,10 @@ $next = $bp . "/choose.php";
           <div class="twocol">
             <div>
               <label for="reg_password">Password</label>
-              <input id="reg_password" name="password" type="password" autocomplete="new-password" required />
+              <div class="password-wrap">
+                <input id="reg_password" name="password" type="password" autocomplete="new-password" required />
+                <button class="password-toggle" type="button" data-toggle-password="#reg_password" aria-label="Show password">Show</button>
+              </div>
 
               <div class="pw-meter" aria-hidden="true"><div id="pwBar"></div></div>
 
@@ -284,7 +296,10 @@ $next = $bp . "/choose.php";
 
             <div>
               <label for="reg_password2">Confirm Password</label>
-              <input id="reg_password2" name="password2" type="password" autocomplete="new-password" required />
+              <div class="password-wrap">
+                <input id="reg_password2" name="password2" type="password" autocomplete="new-password" required />
+                <button class="password-toggle" type="button" data-toggle-password="#reg_password2" aria-label="Show password">Show</button>
+              </div>
               <small class="hint" id="pwMatch"></small>
 
               <div class="tiny muted" style="margin-top:10px;">
@@ -302,5 +317,50 @@ $next = $bp . "/choose.php";
   </div>
 
   <script src="<?= h($bp) ?>/assets/main.js"></script>
+
+  <?php
+$authMode = strtolower(trim((string)($_GET['auth'] ?? '')));
+?>
+
+<?php if ($authMode === 'register' || $authMode === 'login'): ?>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const authMode = <?= json_encode($authMode) ?>;
+
+  const selectors = authMode === "register"
+    ? [
+        "[data-auth='register']",
+        "[data-auth-mode='register']",
+        "[data-tab='register']",
+        "[data-target='register']",
+        "#register-tab",
+        "#registerTab",
+        ".register-tab"
+      ]
+    : [
+        "[data-auth='login']",
+        "[data-auth-mode='login']",
+        "[data-tab='login']",
+        "[data-target='login']",
+        "#login-tab",
+        "#loginTab",
+        ".login-tab"
+      ];
+
+  for (const selector of selectors) {
+    const el = document.querySelector(selector);
+    if (el) {
+      el.click();
+      break;
+    }
+  }
+
+  const target = document.querySelector("#auth, .auth-panel, .login-card, .register-card");
+  if (target) {
+    target.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+});
+</script>
+<?php endif; ?>
 </body>
 </html>

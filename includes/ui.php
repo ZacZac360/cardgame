@@ -168,10 +168,10 @@ function ui_header(string $title = 'Dashboard', bool $is_hub = true): void {
     $u = $freshUser;
   }
 
-  $unread = count_unread_notifications($mysqli, $uid);
-
   $is_guest = ((int)($u['is_guest'] ?? 0) === 1);
   $role_label = $is_guest ? 'Guest' : 'Player';
+
+  $unread = $is_guest ? 0 : count_unread_notifications($mysqli, $uid);
 
   $level   = (int)($u['level'] ?? 1);
   $exp     = (int)($u['exp'] ?? 0);
@@ -183,7 +183,7 @@ function ui_header(string $title = 'Dashboard', bool $is_hub = true): void {
   $ranked_unlocked = (!$is_guest && !empty($req['ranked_unlocked']));
   $ranked_ok = (!$is_guest && !empty($req['ranked_ok']));
 
-  $dd_notes       = fetch_notifications($mysqli, $uid, 6);
+  $dd_notes       = $is_guest ? [] : fetch_notifications($mysqli, $uid, 6);
   $friend_requests = $is_guest ? [] : fetch_pending_friend_requests($mysqli, $uid, 6);
   $friend_unread   = $is_guest ? 0 : count_pending_friend_requests($mysqli, $uid);
   $mail_threads    = $is_guest ? [] : fetch_user_conversations($mysqli, $uid, 6);
@@ -216,7 +216,7 @@ function ui_header(string $title = 'Dashboard', bool $is_hub = true): void {
 <header class="topnav">
   <div class="topnav__inner topnav__inner--hub">
 
-    <a href="<?= h($bp) ?>/profile.php" title="Profile & Stats" class="topnav-profile">
+    <a href="<?= h($bp . ($is_guest ? '/guest_dashboard.php' : '/profile.php')) ?>" title="<?= $is_guest ? 'Guest Dashboard' : 'Profile & Stats' ?>" class="topnav-profile">
       <?php $navAvatar = trim((string)($u['avatar_path'] ?? '')); ?>
 
       <?php if ($navAvatar !== ''): ?>
@@ -279,17 +279,28 @@ function ui_header(string $title = 'Dashboard', bool $is_hub = true): void {
         </button>
       </div>
 
-          <div
-          class="md-ico-wrap md-balance-wrap"
-          title="Zeny Balance"
-        >
+      <div
+        class="md-ico-wrap md-balance-wrap"
+        title="<?= $is_guest ? 'Zeny is locked for guests' : 'Zeny Balance' ?>"
+      >
+        <?php if (!$is_guest): ?>
           <a
             href="<?= h($bp) ?>/shop.php?tab=credits"
             class="md-balance"
           >
-            <span> <?= number_format($zenyBalance) ?> Zeny</span>
+            <span><?= number_format($zenyBalance) ?> Zeny</span>
           </a>
+        <?php else: ?>
+          <a
+            href="<?= h($bp) ?>/index.php"
+            class="md-balance md-balance--locked"
+          >
+            <span>Guest Mode</span>
+          </a>
+        <?php endif; ?>
+      </div>
 
+      <?php if (!$is_guest): ?>
       <div class="md-ico-wrap" data-dd-wrap>
         <button class="md-ico" type="button" data-dd-btn="notif" title="Notifications">🔔</button>
         <?php if ($unread > 0): ?>
@@ -397,6 +408,11 @@ function ui_header(string $title = 'Dashboard', bool $is_hub = true): void {
           </div>
         </div>
       </div>
+      <?php else: ?>
+        <div class="md-ico-wrap" title="Notifications are locked for guests">
+          <div class="md-ico md-ico--disabled">🔔</div>
+        </div>
+      <?php endif; ?>
 
       <?php if (!$is_guest): ?>
         <div class="md-ico-wrap" data-dd-wrap>
@@ -800,14 +816,25 @@ function ui_footer(): void {
       <div class="footmuted">© <?= date('Y') ?> • Platform shell</div>
     </div>
 
+    <?php $footerUser = current_user(); ?>
+    <?php $footerIsGuest = ((int)($footerUser['is_guest'] ?? 0) === 1); ?>
+
     <div class="footmuted footmuted--links">
-      <a href="<?= h($bp) ?>/dashboard.php">Dashboard</a>
-      <span class="sep">•</span>
-      <a href="<?= h($bp) ?>/notifications.php">Notifications</a>
-      <span class="sep">•</span>
-      <a href="<?= h($bp) ?>/friends.php">Friends</a>
-      <span class="sep">•</span>
-      <a href="<?= h($bp) ?>/logout.php">Logout</a>
+      <?php if ($footerIsGuest): ?>
+        <a href="<?= h($bp) ?>/guest_dashboard.php">Guest Dashboard</a>
+        <span class="sep">•</span>
+        <a href="<?= h($bp) ?>/index.php">Sign In / Register</a>
+        <span class="sep">•</span>
+        <a href="<?= h($bp) ?>/logout.php">Leave Guest</a>
+      <?php else: ?>
+        <a href="<?= h($bp) ?>/dashboard.php">Dashboard</a>
+        <span class="sep">•</span>
+        <a href="<?= h($bp) ?>/notifications.php">Notifications</a>
+        <span class="sep">•</span>
+        <a href="<?= h($bp) ?>/friends.php">Friends</a>
+        <span class="sep">•</span>
+        <a href="<?= h($bp) ?>/logout.php">Logout</a>
+      <?php endif; ?>
     </div>
   </div>
 </footer>

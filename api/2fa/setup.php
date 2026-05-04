@@ -18,9 +18,17 @@ if (!is_logged_in()) {
 }
 
 $u = current_user();
+$bp = base_path();
+
 $userId = (int)($u['id'] ?? 0);
 $email  = trim((string)($u['email'] ?? ''));
 $name   = trim((string)($u['username'] ?? 'user' . $userId));
+
+if ((int)($u['is_guest'] ?? 0) === 1) {
+  $_SESSION['flash_error'] = "Guest accounts cannot set up two-factor authentication.";
+  header("Location: {$bp}/guest_dashboard.php");
+  exit;
+}
 
 if ($userId <= 0) {
   http_response_code(400);
@@ -70,8 +78,8 @@ $_SESSION['twofa_setup_user'] = $userId;
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Set Up 2FA</title>
-  <link rel="stylesheet" href="/cardgame/assets/style.css">
-  <link rel="stylesheet" href="/cardgame/assets/hub.css">
+  <link rel="stylesheet" href="<?= h($bp) ?>/assets/style.css">
+  <link rel="stylesheet" href="<?= h($bp) ?>/assets/hub.css">
 </head>
 <body>
   <section class="section">
@@ -83,7 +91,7 @@ $_SESSION['twofa_setup_user'] = $userId;
             Scan this QR code with Google Authenticator, then enter the 6-digit code.
           </div>
         </div>
-        <a class="btn btn-ghost" href="/cardgame/profile.php?tab=security">Back</a>
+        <a class="btn btn-ghost" href="<?= h($bp) ?>/profile.php?tab=security">Back</a>
       </div>
 
       <div style="margin-top:18px; display:grid; grid-template-columns: 280px minmax(0,1fr); gap:18px; align-items:start;">
@@ -104,7 +112,7 @@ $_SESSION['twofa_setup_user'] = $userId;
             </div>
           </div>
 
-          <form method="post" action="/cardgame/api/2fa/verify-setup.php" class="card-soft" style="padding:14px;">
+          <form method="post" action="<?= h($bp) ?>/api/2fa/verify-setup.php" class="card-soft" style="padding:14px;">
             <label style="display:block; font-size:12px; color:var(--muted); margin-bottom:8px;">Enter 6-digit code</label>
             <div style="display:flex; gap:8px; flex-wrap:wrap;">
               <input class="input" type="text" name="code" maxlength="6" inputmode="numeric" placeholder="123456" style="max-width:180px;">

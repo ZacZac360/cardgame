@@ -14,13 +14,21 @@ if (!is_logged_in()) {
 }
 
 $u = current_user();
+$bp = base_path();
+
 $userId = (int)($u['id'] ?? 0);
+
+if ((int)($u['is_guest'] ?? 0) === 1) {
+  $_SESSION['flash_error'] = "Guest accounts cannot set up two-factor authentication.";
+  header("Location: {$bp}/guest_dashboard.php");
+  exit;
+}
 
 $code = trim((string)($_POST['code'] ?? ''));
 
-if ($code === '') {
-  $_SESSION['flash_error'] = "Enter the 6-digit code.";
-  header("Location: /cardgame/api/2fa/setup.php");
+if (!$res) {
+  $_SESSION['flash_error'] = "2FA setup not found.";
+  header("Location: {$bp}/profile.php?tab=security");
   exit;
 }
 
@@ -49,7 +57,7 @@ $valid = $google2fa->verifyKey($secret, $code);
 
 if (!$valid) {
   $_SESSION['flash_error'] = "Invalid authentication code.";
-  header("Location: /cardgame/api/2fa/setup.php");
+  header("Location: {$bp}/api/2fa/setup.php");
   exit;
 }
 
@@ -67,5 +75,5 @@ $stmt->close();
 
 $_SESSION['flash_success'] = "Two-factor authentication enabled.";
 
-header("Location: /cardgame/profile.php?tab=security");
+header("Location: {$bp}/profile.php?tab=security");
 exit;

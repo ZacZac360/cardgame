@@ -1,6 +1,7 @@
 const shellEl = document.querySelector(".game-room-shell");
 const ROOM_CODE = shellEl?.dataset.roomCode || "";
 const BASE_PATH = shellEl?.dataset.basePath || "";
+const IS_GUEST = shellEl?.dataset.isGuest === "1";
 
 const seatTopEl = document.getElementById("seat-top");
 const seatLeftEl = document.getElementById("seat-left");
@@ -136,6 +137,16 @@ function escapeHtml(value) {
 
 function addLocalMsg(el, text) {
   if (el) el.textContent = text || "";
+}
+
+function roomBackUrl() {
+  return IS_GUEST
+    ? `${BASE_PATH}/guest_dashboard.php`
+    : `${BASE_PATH}/play.php`;
+}
+
+function goRoomBack() {
+  window.location.href = roomBackUrl();
 }
 
 function getTopnavSnapshot() {
@@ -323,14 +334,12 @@ function ensureResultsModal() {
   document.body.appendChild(modal);
 
   const close = () => modal.classList.add("hidden");
-  modal.querySelector("#resultsModalCloseBtn")?.addEventListener("click", () => {
-    window.location.href = `${BASE_PATH}/dashboard.php`;
-  });
+  modal.querySelector("#resultsModalCloseBtn")?.addEventListener("click", goRoomBack);
+
   const backBtn = modal.querySelector("#resultsBackBtn");
   if (backBtn) {
-    backBtn.addEventListener("click", () => {
-      window.location.href = `${BASE_PATH}/dashboard.php`;
-    });
+    backBtn.textContent = IS_GUEST ? "Back to Guest Dashboard" : "Back to Play";
+    backBtn.addEventListener("click", goRoomBack);
   }
 
   return modal;
@@ -1546,7 +1555,7 @@ if (leaveRoomBtn) {
       });
 
       addLocalMsg(actionMsgEl, data.msg || "Left room.");
-      window.location.href = data.redirect_url || `${BASE_PATH}/play.php`;
+      window.location.href = data.redirect_url || roomBackUrl();
     } catch (err) {
       addLocalMsg(actionMsgEl, err.message);
     } finally {
@@ -1569,7 +1578,7 @@ if (destroyRoomBtn) {
 
       addLocalMsg(actionMsgEl, data.msg || "Room destroyed.");
 
-      const redirectUrl = data.redirect_url || `${BASE_PATH}/play.php`;
+      const redirectUrl = data.redirect_url || roomBackUrl();
       window.location.href = redirectUrl;
     } catch (err) {
       addLocalMsg(actionMsgEl, err.message);

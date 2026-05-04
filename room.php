@@ -12,24 +12,28 @@ require_login();
 $u = current_user();
 $bp = base_path();
 
+$isGuest = ((int)($u['is_guest'] ?? 0) === 1);
+$roomBackUrl = $bp . ($isGuest ? '/guest_dashboard.php' : '/play.php');
+$roomBackLabel = $isGuest ? 'Back to Guest Dashboard' : 'Back to Play';
+
 $roomCode = strtoupper(trim((string)($_GET['code'] ?? '')));
 if ($roomCode === '') {
   $_SESSION['flash_error'] = 'Room code is required.';
-  header("Location: {$bp}/play.php");
+  header("Location: {$roomBackUrl}");
   exit;
 }
 
 $room = game_get_room_by_code($mysqli, $roomCode);
 if (!$room) {
   $_SESSION['flash_error'] = 'Room not found.';
-  header("Location: {$bp}/play.php");
+  header("Location: {$roomBackUrl}");
   exit;
 }
 
 $me = game_get_room_player_by_user($mysqli, (int)$room['id'], (int)$u['id']);
 if (!$me) {
   $_SESSION['flash_error'] = 'You are not part of that room.';
-  header("Location: {$bp}/play.php");
+  header("Location: {$roomBackUrl}");
   exit;
 }
 
@@ -41,7 +45,8 @@ ui_header("Room " . $roomCode);
 <section class="section section--flush-top">
   <div class="game-room-shell"
        data-room-code="<?= h($roomCode) ?>"
-       data-base-path="<?= h($bp) ?>">
+       data-base-path="<?= h($bp) ?>"
+       data-is-guest="<?= $isGuest ? '1' : '0' ?>">
 
     <div class="game-room-top card-soft">
       <div>
@@ -59,7 +64,9 @@ ui_header("Room " . $roomCode);
         <button class="btn btn-ghost" type="button" data-guide-open="game-rules">
           Guide
         </button>
-        <a class="btn btn-ghost" href="<?= h($bp) ?>/play.php">Back to Play</a>
+        <a class="btn btn-ghost" href="<?= h($roomBackUrl) ?>">
+          <?= h($roomBackLabel) ?>
+        </a>
       </div>
     </div>
 

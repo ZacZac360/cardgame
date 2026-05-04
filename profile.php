@@ -11,6 +11,14 @@ require_login();
 
 $u  = current_user();
 $bp = base_path();
+
+$is_guest = ((int)($u['is_guest'] ?? 0) === 1);
+if ($is_guest) {
+  $_SESSION['flash_error'] = "Guest accounts cannot access profile, account, or security settings. Create an account to unlock these options.";
+  header("Location: {$bp}/guest_dashboard.php");
+  exit;
+}
+
 $flashSuccess = $_SESSION['flash_success'] ?? '';
 $flashError   = $_SESSION['flash_error'] ?? '';
 unset($_SESSION['flash_success'], $_SESSION['flash_error']);
@@ -301,7 +309,6 @@ ui_header("Profile");
 
             <div class="profile-form-actions">
               <button class="btn btn-primary" type="submit">Apply</button>
-              <a class="btn btn-ghost" href="<?= h($bp) ?>/profile.php?tab=appearance">Reset</a>
             </div>
           </form>
         </section>
@@ -359,11 +366,14 @@ ui_header("Profile");
 
               <div class="profile-form-actions">
                 <?php if ($twofaEnabled): ?>
-                  <a class="btn btn-ghost" href="/cardgame/api/2fa/setup.php">Reconfigure</a>
-                  <a class="btn btn-ghost" href="/cardgame/api/2fa/backup-codes.php">Backup Codes</a>
-                  <a class="btn btn-ghost" href="/cardgame/api/2fa/disable.php" onclick="return confirm('Disable two-factor authentication?');">Disable 2FA</a>
+                  <a class="btn btn-ghost" href="<?= h($bp) ?>/api/2fa/setup.php">Reconfigure</a>
+                  <a class="btn btn-ghost" href="<?= h($bp) ?>/api/2fa/backup-codes.php">Backup Codes</a>
+
+                  <form method="post" action="<?= h($bp) ?>/api/2fa/disable.php" class="profile-inline-action-form" onsubmit="return confirm('Disable two-factor authentication?');">
+                    <button class="btn btn-ghost" type="submit">Disable 2FA</button>
+                  </form>
                 <?php else: ?>
-                  <a class="btn btn-ghost" href="/cardgame/api/2fa/setup.php">Set Up</a>
+                  <a class="btn btn-ghost" href="<?= h($bp) ?>/api/2fa/setup.php">Set Up</a>
                 <?php endif; ?>
               </div>
             </div>

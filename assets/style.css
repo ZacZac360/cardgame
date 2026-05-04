@@ -2500,3 +2500,55 @@ textarea{
     max-height:calc(100vh - 24px);
   }
 }
+
+/* =====================================================
+   BATCH 1 PATCH - AUTH MODAL UX
+   Keeps invalid login visible and adds password toggles.
+===================================================== */
+
+.auth-inline-error{
+  margin:0 0 12px;
+  padding:12px 14px;
+  border-radius:14px;
+  border:1px solid rgba(255,77,109,.35);
+  background:rgba(255,77,109,.10);
+  color:var(--text);
+  font-size:13px;
+  line-height:1.4;
+}
+
+.password-wrap{
+  display:grid;
+  grid-template-columns:minmax(0, 1fr) auto;
+  gap:8px;
+  align-items:center;
+}
+
+.password-wrap input{
+  min-width:0;
+}
+
+.password-toggle{
+  min-height:44px;
+  padding:0 12px;
+  border-radius:14px;
+  border:1px solid var(--border);
+  background:var(--surface);
+  color:var(--text);
+  font-weight:900;
+  cursor:pointer;
+}
+
+.password-toggle:hover{
+  background:var(--surfaceHover);
+}
+
+@media (max-width:520px){
+  .password-wrap{
+    grid-template-columns:1fr;
+  }
+
+  .password-toggle{
+    width:100%;
+  }
+}

@@ -2752,3 +2752,54 @@ body[data-appearance="light"] .shop-product-tile__art--image{
     border-radius:18px;
   }
 }
+
+/* =====================================================
+   BATCH 1 PATCH - PROFILE OVERFLOW / ACTION CLEANUP
+   Prevents long guest/user names and bios from bleeding out.
+===================================================== */
+
+.profile-name,
+.profile-stat-value,
+.profile-stat-value--break,
+.profile-bio-text,
+.profile-side-row span,
+.profile-side-row strong,
+.profile-copy-muted,
+.topnav-profile__name{
+  min-width:0;
+  max-width:100%;
+  overflow-wrap:anywhere;
+  word-break:break-word;
+}
+
+.profile-bio-text{
+  white-space:normal;
+}
+
+.profile-inline-action-form{
+  display:inline-flex;
+  margin:0;
+}
+
+.profile-inline-action-form .btn{
+  width:auto;
+}
+
+.profile-form-actions{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  align-items:center;
+  margin-top:12px;
+}
+
+.profile-form-card input,
+.profile-form-card textarea{
+  min-width:0;
+}
+
+.profile-overview-grid > *,
+.profile-stats-grid > *,
+.profile-side-stack > *{
+  min-width:0;
+}

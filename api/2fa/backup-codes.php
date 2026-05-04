@@ -8,7 +8,15 @@ require_once __DIR__ . '/../../includes/auth.php';
 require_login();
 
 $u = current_user();
+$bp = base_path();
+
 $userId = (int)$u['id'];
+
+if ((int)($u['is_guest'] ?? 0) === 1) {
+  $_SESSION['flash_error'] = "Guest accounts cannot manage backup codes.";
+  header("Location: {$bp}/guest_dashboard.php");
+  exit;
+}
 
 /* verify 2FA is enabled */
 
@@ -25,7 +33,7 @@ $stmt->close();
 
 if (!$res || (int)$res['is_enabled'] !== 1) {
   $_SESSION['flash_error'] = "Enable 2FA first.";
-  header("Location: /cardgame/profile.php?tab=security");
+  header("Location: {$bp}/profile.php?tab=security");
   exit;
 }
 
@@ -54,8 +62,8 @@ for ($i = 0; $i < 10; $i++) {
 <head>
 <meta charset="utf-8">
 <title>Backup Codes</title>
-<link rel="stylesheet" href="/cardgame/assets/style.css">
-<link rel="stylesheet" href="/cardgame/assets/hub.css">
+<link rel="stylesheet" href="<?= h($bp) ?>/assets/style.css">
+<link rel="stylesheet" href="<?= h($bp) ?>/assets/hub.css">
 </head>
 <body>
 
@@ -75,7 +83,7 @@ Save these codes somewhere safe. Each code can only be used once.
 </div>
 
 <div style="margin-top:16px;">
-<a class="btn btn-primary" href="/cardgame/profile.php?tab=security">Done</a>
+<a class="btn btn-primary" href="<?= h($bp) ?>/profile.php?tab=security">Done</a>
 </div>
 
 </div>

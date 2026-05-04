@@ -200,26 +200,26 @@ ui_header("Dashboard");
           </div>
 
           <div class="stack-10 hub-mt-12">
-            <a class="card-soft link-card" href="<?= h($bp) ?>/events.php">
+            <button class="card-soft link-card coming-soon-card" type="button" data-coming-soon="Tournament Live">
               <div class="text-strong">🏆 Tournament Live</div>
               <div class="panel-sub">
                 Join brackets, earn rewards, climb the event ladder.
               </div>
-            </a>
+            </button>
 
-            <a class="card-soft link-card" href="<?= h($bp) ?>/events.php">
+            <button class="card-soft link-card coming-soon-card" type="button" data-coming-soon="Patch Notes">
               <div class="text-strong">🧩 Patch Notes</div>
               <div class="panel-sub">
                 Balance tweaks + UI updates.
               </div>
-            </a>
+            </button>
 
-            <a class="card-soft link-card" href="<?= h($bp) ?>/events.php">
+            <button class="card-soft link-card coming-soon-card" type="button" data-coming-soon="Cosmetics Drop">
               <div class="text-strong">✨ Cosmetics Drop</div>
               <div class="panel-sub">
                 New mats, frames, and skins in the shop.
               </div>
-            </a>
+            </button>
           </div>
         </div>
       </div>
@@ -316,5 +316,24 @@ ui_header("Dashboard");
 
   </div>
 </section>
+
+<div class="coming-soon-modal" id="comingSoonModal" aria-hidden="true">
+  <div class="coming-soon-modal__backdrop" data-coming-soon-close></div>
+
+  <div class="coming-soon-modal__dialog" role="dialog" aria-modal="true" aria-label="Coming Soon">
+    <button class="coming-soon-modal__close" type="button" data-coming-soon-close aria-label="Close">×</button>
+
+    <div class="coming-soon-modal__eyebrow">Coming Soon</div>
+    <h2 id="comingSoonTitle">Feature Coming Soon</h2>
+    <p>
+      This section is already planned, but it is not available in the current deployed version yet.
+      For now, this button will stay as a preview instead of opening a missing page.
+    </p>
+
+    <div class="coming-soon-modal__actions">
+      <button class="btn btn-primary" type="button" data-coming-soon-close>Okay</button>
+    </div>
+  </div>
+</div>
 
 <?php ui_footer(); ?>

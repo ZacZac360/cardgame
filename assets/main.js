@@ -48,6 +48,11 @@ if (bio && counter) {
     document.body.style.overflow = "";
   }
 
+  const initialAuthOpen = document.body?.dataset?.authOpen || "";
+  if (initialAuthOpen) {
+    setTimeout(() => openModal(initialAuthOpen), 80);
+  }
+
   openBtns.forEach((b) =>
     b.addEventListener("click", () => openModal(b.dataset.openAuth))
   );
@@ -57,11 +62,26 @@ if (bio && counter) {
     t.addEventListener("click", () => setTab(t.dataset.tab))
   );
 
+    $$("[data-toggle-password]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const target = btn.getAttribute("data-toggle-password");
+      const input = target ? document.querySelector(target) : null;
+
+      if (!input) return;
+
+      const isPassword = input.type === "password";
+      input.type = isPassword ? "text" : "password";
+      btn.textContent = isPassword ? "Hide" : "Show";
+      btn.setAttribute("aria-label", isPassword ? "Hide password" : "Show password");
+    });
+  });
+
   // ESC closes
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape") {
       closeModal();
       closeGuide();
+      closeComingSoon();
     }
   });
 
@@ -122,6 +142,50 @@ if (bio && counter) {
   if (guideModal) {
     guideModal.addEventListener("click", (e) => {
       if (e.target === guideModal) closeGuide();
+    });
+  }
+
+    // -------------------------
+  // Coming soon modal
+  // -------------------------
+  const comingSoonModal = $("#comingSoonModal");
+  const comingSoonTitle = $("#comingSoonTitle");
+  const comingSoonBtns = $$("[data-coming-soon]");
+  const comingSoonCloseBtns = $$("[data-coming-soon-close]");
+
+  function openComingSoon(title = "Feature Coming Soon") {
+    if (!comingSoonModal) return;
+
+    if (comingSoonTitle) {
+      comingSoonTitle.textContent = title;
+    }
+
+    comingSoonModal.classList.add("is-open");
+    comingSoonModal.setAttribute("aria-hidden", "false");
+    document.body.style.overflow = "hidden";
+  }
+
+  function closeComingSoon() {
+    if (!comingSoonModal) return;
+
+    comingSoonModal.classList.remove("is-open");
+    comingSoonModal.setAttribute("aria-hidden", "true");
+    document.body.style.overflow = "";
+  }
+
+  comingSoonBtns.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      openComingSoon(btn.dataset.comingSoon || "Feature Coming Soon");
+    });
+  });
+
+  comingSoonCloseBtns.forEach((btn) => {
+    btn.addEventListener("click", closeComingSoon);
+  });
+
+  if (comingSoonModal) {
+    comingSoonModal.addEventListener("click", (e) => {
+      if (e.target === comingSoonModal) closeComingSoon();
     });
   }
 
