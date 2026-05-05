@@ -34,6 +34,55 @@ profile_handle_post($mysqli, $u, $bp, $tab);
 $profile = profile_load_state($mysqli, $u);
 extract($profile);
 
+$recentMatches = [];
+
+$stmt = $mysqli->prepare("
+  SELECT
+    id,
+    title,
+    body,
+    link_url,
+    created_at
+  FROM dashboard_notifications
+  WHERE user_id = ?
+    AND type = 'match_result'
+  ORDER BY created_at DESC
+  LIMIT 8
+");
+$stmt->bind_param("i", $u['id']);
+$stmt->execute();
+$res = $stmt->get_result();
+
+while ($row = $res->fetch_assoc()) {
+  $body = (string)($row['body'] ?? '');
+
+  $place = null;
+  if (preg_match('/Placed\\s+#(\\d+)/i', $body, $m)) {
+    $place = (int)$m[1];
+  }
+
+  $xp = null;
+  if (preg_match('/earned\\s+([\\d,]+)\\s+EXP/i', $body, $m)) {
+    $xp = (int)str_replace(',', '', $m[1]);
+  }
+
+  $mode = 'Match';
+  if (preg_match('/in a\\s+(.+?)\\s+match/i', $body, $m)) {
+    $mode = ucfirst(trim((string)$m[1])) . ' Match';
+  }
+
+  $recentMatches[] = [
+    'title' => (string)($row['title'] ?? 'Match Result'),
+    'body' => $body,
+    'place' => $place,
+    'xp' => $xp,
+    'mode' => $mode,
+    'link_url' => (string)($row['link_url'] ?? ''),
+    'created_at' => (string)($row['created_at'] ?? ''),
+  ];
+}
+$stmt->close();
+
 ui_header("Profile");
 ?>
 
@@ -495,8 +544,56 @@ ui_header("Profile");
 
           <div class="card-soft profile-bio-wrap">
             <div class="profile-bio-pad">
-              <div class="profile-form-title">Recent</div>
-              <div class="profile-bio-empty">—</div>
+              <div class="profile-form-title">Recent Match History</div>
+
+              <?php if (empty($recentMatches)): ?>
+                <div class="profile-bio-empty">No completed matches yet.</div>
+              <?php else: ?>
+                <div class="profile-match-list">
+                  <?php foreach ($recentMatches as $match): ?>
+                    <?php
+                      $matchHref = trim((string)$match['link_url']);
+                      if ($matchHref !== '') {
+                        $matchHref = $bp . '/' . ltrim($matchHref, '/');
+                      }
+
+                      $createdAt = trim((string)$match['created_at']);
+                      $createdLabel = $createdAt !== ''
+                        ? date("M d, Y • g:i A", strtotime($createdAt))
+                        : '';
+                    ?>
+
+                    <?php if ($matchHref !== ''): ?>
+                      <a class="profile-match-row" href="<?= h($matchHref) ?>">
+                    <?php else: ?>
+                      <div class="profile-match-row">
+                    <?php endif; ?>
+
+                        <div class="profile-match-place">
+                          <?= $match['place'] ? '#' . (int)$match['place'] : '—' ?>
+                        </div>
+
+                        <div class="profile-match-copy">
+                          <div class="profile-match-title">
+                            <?= h($match['mode']) ?>
+                          </div>
+                          <div class="profile-match-meta">
+                            <?= h($createdLabel) ?>
+                          </div>
+                        </div>
+
+                        <div class="profile-match-xp">
+                          <?= $match['xp'] !== null ? '+' . number_format((int)$match['xp']) . ' EXP' : '—' ?>
+                        </div>
+
+                    <?php if ($matchHref !== ''): ?>
+                      </a>
+                    <?php else: ?>
+                      </div>
+                    <?php endif; ?>
+                  <?php endforeach; ?>
+                </div>
+              <?php endif; ?>
             </div>
           </div>
         </section>

@@ -2816,3 +2816,1275 @@ body[data-appearance="light"] .shop-product-tile__art--image{
 .profile-form-actions .btn{
   min-height:44px;
 }
+
+/* =====================================================
+   LOGIA FINAL USER / PROFILE / SHOP / PLAY PATCH
+   Paste at bottom of assets/userstyle.css
+===================================================== */
+
+/* Global user page safety */
+.userpage-grid,
+.shoppage-grid,
+.play-mode-layout,
+.route-grid,
+.feature-grid,
+.split-grid,
+.store-hero-grid,
+.store-samples,
+.shop-hero--wide,
+.shop-featured-strip,
+.shop-shelf--wide,
+.shop-rail--clean,
+.play-mode-grid,
+.profile-overview-grid,
+.form-grid{
+  min-width:0;
+}
+
+.userpage-grid > *,
+.shoppage-grid > *,
+.play-mode-layout > *,
+.route-grid > *,
+.feature-grid > *,
+.split-grid > *,
+.store-hero-grid > *,
+.store-samples > *,
+.shop-hero--wide > *,
+.shop-featured-strip > *,
+.shop-shelf--wide > *,
+.shop-rail--clean > *,
+.play-mode-grid > *,
+.profile-overview-grid > *,
+.form-grid > *{
+  min-width:0;
+}
+
+.userpanel,
+.shop-pane,
+.shop-banner-card,
+.shop-product-tile,
+.sample-card,
+.route-card,
+.feature-tile,
+.info-block,
+.play-mode-card,
+.play-side-panel,
+.profile-section-card,
+.profile-hero-card,
+.profile-side-card,
+.profile-overview-card,
+.profile-stat-card{
+  min-width:0;
+}
+
+/* Text breaking */
+.userpanel__title,
+.route-card h3,
+.shop-pane__head h2,
+.shop-product-tile h3,
+.shop-banner-card__content h3,
+.play-mode-head__copy h1,
+.play-mode-card__bottom h2,
+.profile-name,
+.profile-section-title,
+.profile-stat-value,
+.profile-stat-value--break{
+  overflow-wrap:anywhere;
+}
+
+/* Profile form spacing fix: button no longer kisses the inputs */
+.profile-section-card form,
+.profile-overview-card form,
+.info-block form,
+.userpanel form{
+  display:grid;
+  gap:14px;
+}
+
+.profile-section-card .form-grid,
+.profile-overview-card .form-grid,
+.info-block .form-grid,
+.userpanel .form-grid{
+  gap:14px;
+}
+
+.profile-section-card label,
+.profile-overview-card label,
+.info-block label,
+.userpanel label{
+  margin-bottom:7px;
+}
+
+.profile-section-card input,
+.profile-section-card select,
+.profile-section-card textarea,
+.profile-overview-card input,
+.profile-overview-card select,
+.profile-overview-card textarea,
+.info-block input,
+.info-block select,
+.info-block textarea,
+.userpanel input,
+.userpanel select,
+.userpanel textarea{
+  min-height:46px;
+}
+
+.profile-section-card form > .btn,
+.profile-overview-card form > .btn,
+.info-block form > .btn,
+.userpanel form > .btn,
+.profile-section-card .form-grid + .btn,
+.profile-overview-card .form-grid + .btn,
+.info-block .form-grid + .btn,
+.userpanel .form-grid + .btn{
+  margin-top:4px;
+  width:fit-content;
+  min-width:150px;
+}
+
+/* Make profile action areas breathe */
+.profile-action-row,
+.profile-overview-actions,
+.profile-security-actions,
+.profile-form-actions{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  align-items:center;
+}
+
+/* Desktop/laptop layout correction */
+.userpage-grid{
+  grid-template-columns:250px minmax(0, 1fr) minmax(280px, 320px);
+  gap:14px;
+}
+
+.shoppage-grid{
+  grid-template-columns:250px minmax(0, 1fr);
+  gap:14px;
+}
+
+.play-mode-layout{
+  gap:14px;
+}
+
+/* Play cards: no more 620px monsters */
+.play-mode-card{
+  min-height:clamp(340px, 50vh, 500px);
+}
+
+.play-mode-card__bottom h2{
+  font-size:clamp(34px, 4vw, 52px);
+}
+
+.play-mode-card__bottom p{
+  font-size:clamp(14px, 1.3vw, 16px);
+}
+
+.play-mode-card .btn{
+  min-width:150px;
+}
+
+/* Shop cards: prevent skinny button crushing */
+.shop-product-tile__foot{
+  align-items:flex-start;
+}
+
+.shop-product-tile__foot .btn{
+  flex-shrink:0;
+}
+
+.shop-product-tile__art{
+  min-height:100px;
+}
+
+/* Better tab behavior */
+.shop-tabsbar,
+.play-tabbar,
+.category-strip,
+.shop-tabs{
+  min-width:0;
+}
+
+/* Laptop */
+@media (max-width:1380px){
+  .userpage-grid{
+    grid-template-columns:230px minmax(0, 1fr);
+  }
+
+  .userpanel--side{
+    grid-column:1 / -1;
+  }
+
+  .shoppage-grid,
+  .play-mode-layout{
+    grid-template-columns:230px minmax(0, 1fr);
+  }
+
+  .play-mode-side{
+    grid-column:1 / -1;
+  }
+
+  .play-mode-side .play-side-panel{
+    position:static;
+  }
+
+  .play-mode-grid{
+    grid-template-columns:repeat(3, minmax(0, 1fr));
+    gap:14px;
+  }
+
+  .play-mode-card{
+    min-height:380px;
+    border-radius:26px;
+  }
+
+  .play-mode-card__content{
+    padding:18px;
+  }
+
+  .play-mode-card__bottom h2{
+    font-size:38px;
+  }
+
+  .shop-featured-strip,
+  .shop-shelf--wide,
+  .shop-rail--clean{
+    grid-template-columns:repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* Smaller laptops/tablets */
+@media (max-width:1180px){
+  .userpage-grid,
+  .shoppage-grid,
+  .play-mode-layout{
+    grid-template-columns:220px minmax(0, 1fr);
+    gap:12px;
+  }
+
+  .play-mode-grid{
+    grid-template-columns:1fr;
+  }
+
+  .play-mode-card{
+    min-height:280px;
+  }
+
+  .play-mode-card__bottom h2{
+    font-size:40px;
+  }
+
+  .shop-hero--wide,
+  .store-hero-grid{
+    grid-template-columns:1fr;
+  }
+
+  .shop-featured-strip,
+  .shop-shelf--wide,
+  .shop-rail--clean,
+  .store-samples{
+    grid-template-columns:repeat(2, minmax(0, 1fr));
+  }
+
+  .shop-product-tile__foot{
+    flex-direction:column;
+  }
+
+  .shop-product-tile__foot .btn{
+    width:100%;
+  }
+
+  .route-grid,
+  .feature-grid{
+    grid-template-columns:1fr;
+  }
+}
+
+/* Tablet/mobile */
+@media (max-width:860px){
+  .userpage-grid,
+  .shoppage-grid,
+  .play-mode-layout{
+    grid-template-columns:1fr;
+    gap:10px;
+  }
+
+  .userpanel--nav,
+  .userpanel--side,
+  .play-mode-side .play-side-panel{
+    position:static;
+  }
+
+  .usernav{
+    grid-template-columns:repeat(2, minmax(0, 1fr));
+  }
+
+  .usernav .hub-item,
+  .usernav__item{
+    padding:11px;
+    gap:10px;
+  }
+
+  .usernav .hub-ico,
+  .usernav__icon{
+    width:36px;
+    height:36px;
+    flex-basis:36px;
+  }
+
+  .usernav .hub-item > span:last-child,
+  .usernav__text strong{
+    font-size:14px;
+  }
+
+  .profile-hero-layout,
+  .profile-hero-main,
+  .profile-section-head,
+  .profile-overview-head,
+  .shop-pane__head,
+  .play-mode-head{
+    align-items:flex-start;
+    flex-direction:column;
+  }
+
+  .profile-action-row,
+  .profile-overview-actions{
+    width:100%;
+  }
+
+  .profile-action-row .btn,
+  .profile-overview-actions .btn,
+  .profile-section-card form > .btn,
+  .profile-overview-card form > .btn,
+  .info-block form > .btn,
+  .userpanel form > .btn{
+    width:100%;
+  }
+
+  .profile-overview-grid,
+  .form-grid,
+  .split-grid{
+    grid-template-columns:1fr;
+  }
+
+  .play-mode-head__copy h1{
+    font-size:30px;
+  }
+
+  .play-mode-head__copy p{
+    font-size:14px;
+  }
+
+  .play-mode-card{
+    min-height:250px;
+    border-radius:22px;
+  }
+
+  .play-mode-card__bottom h2{
+    font-size:32px;
+  }
+
+  .play-mode-card .btn{
+    width:100%;
+    min-width:0;
+  }
+
+  .play-side-panel,
+  .shop-pane,
+  .userpanel,
+  .profile-section-card,
+  .profile-side-card{
+    padding:14px;
+    border-radius:20px;
+  }
+
+  .play-check-row,
+  .stack-row,
+  .checklist__row{
+    align-items:flex-start;
+    flex-direction:column;
+  }
+
+  .shop-tabsbar,
+  .play-tabbar,
+  .category-strip,
+  .shop-tabs{
+    overflow-x:auto;
+    flex-wrap:nowrap;
+    padding-bottom:4px;
+  }
+
+  .shop-tabsbar__item,
+  .play-tabbar__item,
+  .category-pill,
+  .shop-tab{
+    white-space:nowrap;
+    flex:0 0 auto;
+  }
+
+  .shop-featured-strip,
+  .shop-shelf--wide,
+  .shop-rail--clean,
+  .store-samples{
+    grid-template-columns:1fr;
+  }
+
+  .shop-banner-card{
+    min-height:210px;
+  }
+
+  .shop-banner-card__content{
+    padding:16px;
+  }
+
+  .shop-banner-card__content h3{
+    font-size:28px;
+  }
+}
+
+/* Small phones */
+@media (max-width:560px){
+  .userpanel,
+  .shop-pane,
+  .play-side-panel,
+  .profile-section-card,
+  .profile-side-card,
+  .profile-overview-card{
+    padding:12px;
+    border-radius:18px;
+  }
+
+  .usernav{
+    grid-template-columns:1fr;
+  }
+
+  .userpanel__title,
+  .profile-section-title{
+    font-size:21px;
+  }
+
+  .mini-stat,
+  .stack-row,
+  .checklist__row,
+  .profile-stat-card{
+    padding:10px 11px;
+  }
+
+  .profile-avatar,
+  .profile-avatar-fallback{
+    width:60px;
+    height:60px;
+    border-radius:18px;
+  }
+
+  .profile-name{
+    font-size:26px;
+  }
+
+  .play-mode-shell{
+    gap:10px;
+  }
+
+  .play-mode-card{
+    min-height:220px;
+  }
+
+  .play-mode-card__content{
+    padding:14px;
+  }
+
+  .play-mode-card__bottom{
+    gap:9px;
+  }
+
+  .play-mode-card__bottom h2{
+    font-size:28px;
+  }
+
+  .play-mode-card__bottom p{
+    font-size:13px;
+  }
+
+  .play-modal__dialog,
+  .play-modal__dialog--wide{
+    width:calc(100vw - 18px);
+    max-height:calc(100vh - 18px);
+    margin:9px auto;
+    border-radius:20px;
+  }
+
+  .play-modal__body{
+    padding:16px;
+  }
+
+  .play-modal__body h3{
+    font-size:23px;
+  }
+
+  .shop-tabsbar__item{
+    min-height:38px;
+    padding:0 12px;
+    font-size:13px;
+  }
+
+  .shop-pane__head h2{
+    font-size:24px;
+  }
+
+  .shop-product-tile,
+  .sample-card{
+    padding:12px;
+    border-radius:18px;
+  }
+
+  .shop-product-tile__art{
+    height:100px;
+  }
+
+  .shop-product-tile__foot strong{
+    font-size:18px;
+  }
+
+  .store-banner{
+    padding:16px;
+    min-height:190px;
+  }
+
+  .store-banner h3{
+    font-size:25px;
+  }
+}
+
+/* =====================================================
+   PROFILE COMPRESSION + APPEARANCE CARD FIX
+   Paste at bottom of assets/userstyle.css
+===================================================== */
+
+.profile-maincol{
+  gap:12px;
+}
+
+.profile-hero-card{
+  min-height:0;
+  padding:16px;
+  border-radius:24px;
+}
+
+.profile-hero-card.hub-hero{
+  min-height:150px;
+}
+
+.profile-hero-card .profile-hero-layout{
+  align-items:center;
+}
+
+.profile-avatar,
+.profile-avatar-fallback{
+  width:62px;
+  height:62px;
+  border-radius:18px;
+}
+
+.profile-name{
+  font-size:28px;
+  line-height:1.05;
+}
+
+.profile-badge-row,
+.profile-meta-row{
+  gap:7px;
+}
+
+.profile-action-row .btn{
+  min-height:40px;
+  padding:9px 12px;
+}
+
+.profile-section-card{
+  padding:16px;
+  border-radius:22px;
+}
+
+.profile-section-title{
+  font-size:26px;
+  line-height:1.08;
+}
+
+.profile-form-stack{
+  gap:12px;
+}
+
+.profile-form-card{
+  padding:16px;
+  border-radius:18px;
+}
+
+.profile-two-col-grid{
+  gap:14px;
+}
+
+/* Appearance tab: stop the radio + text from becoming stupid narrow */
+.profile-choice-grid{
+  grid-template-columns:repeat(2, minmax(220px, 1fr));
+  gap:12px;
+}
+
+.profile-choice-card{
+  padding:14px;
+  border-radius:18px;
+}
+
+.profile-choice-card__top{
+  display:grid;
+  grid-template-columns:42px minmax(0, 1fr);
+  align-items:center;
+  gap:12px;
+}
+
+.profile-choice-card__top input[type="radio"]{
+  width:42px;
+  height:42px;
+  min-height:42px;
+  margin:0;
+  justify-self:center;
+}
+
+.profile-choice-card__top strong{
+  display:block;
+  min-width:0;
+  white-space:normal;
+  overflow-wrap:normal;
+  word-break:normal;
+  line-height:1.1;
+}
+
+.profile-choice-card__meta{
+  display:block;
+  line-height:1.35;
+}
+
+/* Account/security forms: cleaner spacing */
+.profile-section-card form,
+.profile-form-card form{
+  display:grid;
+  gap:12px;
+}
+
+.profile-section-card .profile-form-actions,
+.profile-form-card .profile-form-actions{
+  margin-top:2px;
+}
+
+/* Stats tab */
+.profile-stats-grid{
+  margin-top:12px;
+  grid-template-columns:repeat(4, minmax(0, 1fr));
+  gap:12px;
+}
+
+.profile-stat-card{
+  padding:12px 14px;
+  border-radius:18px;
+}
+
+.profile-stat-label{
+  font-size:12px;
+}
+
+.profile-stat-number{
+  font-size:24px;
+  line-height:1;
+}
+
+.profile-match-list{
+  margin-top:12px;
+  display:grid;
+  gap:10px;
+}
+
+.profile-match-row{
+  padding:12px 14px;
+  border-radius:16px;
+  border:1px solid var(--border);
+  background:var(--surface);
+  display:grid;
+  grid-template-columns:auto minmax(0, 1fr) auto;
+  gap:12px;
+  align-items:center;
+}
+
+.profile-match-place{
+  min-width:46px;
+  height:34px;
+  padding:0 10px;
+  border-radius:999px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:950;
+  border:1px solid rgba(57,255,106,.28);
+  background:rgba(57,255,106,.10);
+}
+
+.profile-match-copy{
+  min-width:0;
+}
+
+.profile-match-title{
+  font-weight:950;
+  line-height:1.2;
+}
+
+.profile-match-meta{
+  margin-top:4px;
+  color:var(--muted);
+  font-size:12px;
+}
+
+.profile-match-xp{
+  font-weight:950;
+  white-space:nowrap;
+  color:var(--primary);
+}
+
+@media (max-width:1180px){
+  .profile-hero-card .profile-hero-layout{
+    align-items:flex-start;
+  }
+
+  .profile-action-row{
+    width:100%;
+  }
+}
+
+@media (max-width:860px){
+  .profile-hero-card{
+    padding:14px;
+  }
+
+  .profile-hero-card.hub-hero{
+    min-height:0;
+  }
+
+  .profile-name{
+    font-size:25px;
+  }
+
+  .profile-choice-grid{
+    grid-template-columns:1fr;
+  }
+
+  .profile-stats-grid{
+    grid-template-columns:repeat(2, minmax(0, 1fr));
+  }
+
+  .profile-match-row{
+    grid-template-columns:auto minmax(0, 1fr);
+  }
+
+  .profile-match-xp{
+    grid-column:2;
+    justify-self:start;
+  }
+}
+
+@media (max-width:560px){
+  .profile-hero-main{
+    align-items:flex-start;
+  }
+
+  .profile-avatar,
+  .profile-avatar-fallback{
+    width:54px;
+    height:54px;
+    border-radius:16px;
+  }
+
+  .profile-section-card,
+  .profile-form-card{
+    padding:12px;
+    border-radius:18px;
+  }
+
+  .profile-stats-grid{
+    grid-template-columns:1fr;
+  }
+
+  .profile-action-row .btn,
+  .profile-form-actions .btn{
+    width:100%;
+  }
+}
+
+/* =====================================================
+   PROFILE TEXT / TAB / OPTION SPACING FIX
+   Paste at VERY BOTTOM of assets/userstyle.css
+===================================================== */
+
+/* Top profile tabs: Avatar / Appearance / Security */
+.profile-action-row{
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap:12px;
+  flex-wrap:wrap;
+}
+
+.profile-action-row .btn{
+  min-width:118px;
+  min-height:44px;
+  padding:0 18px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  white-space:nowrap;
+  word-break:normal;
+  overflow-wrap:normal;
+  line-height:1;
+  text-align:center;
+}
+
+/* Prevent the tab words from looking compressed */
+.profile-action-row .btn,
+.profile-action-row .btn *,
+.profile-choice-card,
+.profile-choice-card *,
+.profile-form-actions .btn,
+.profile-form-actions .btn *{
+  letter-spacing:0;
+  word-spacing:normal;
+}
+
+/* Section headers should breathe */
+.profile-section-head{
+  gap:14px;
+  margin-bottom:16px;
+}
+
+.profile-section-title{
+  line-height:1.12;
+  letter-spacing:-0.02em;
+}
+
+/* Appearance option grid */
+.profile-choice-grid{
+  display:grid;
+  grid-template-columns:repeat(2, minmax(260px, 1fr));
+  gap:14px;
+}
+
+.profile-choice-card{
+  min-width:0;
+  padding:16px;
+  border-radius:18px;
+  display:grid;
+  gap:12px;
+  cursor:pointer;
+}
+
+/* Radio + label row */
+.profile-choice-card__top{
+  display:flex;
+  align-items:center;
+  justify-content:flex-start;
+  gap:14px;
+  min-width:0;
+  width:100%;
+  font-weight:950;
+}
+
+/* Fix oversized/default browser radio alignment */
+.profile-choice-card__top input[type="radio"]{
+  flex:0 0 42px;
+  width:42px;
+  height:42px;
+  min-width:42px;
+  min-height:42px;
+  margin:0;
+}
+
+/* This is the main fix for Default / Light text */
+.profile-choice-card__top strong{
+  display:block;
+  flex:1 1 auto;
+  min-width:0;
+  max-width:100%;
+  white-space:normal;
+  word-break:normal;
+  overflow-wrap:normal;
+  line-height:1.2;
+  font-size:14px;
+  text-align:left;
+}
+
+/* Description below the option */
+.profile-choice-card__meta{
+  display:block;
+  color:var(--muted);
+  font-size:13px;
+  line-height:1.45;
+  white-space:normal;
+  word-break:normal;
+  overflow-wrap:normal;
+}
+
+/* Forms/buttons inside profile should not smash into each other */
+.profile-form-actions{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  flex-wrap:wrap;
+}
+
+.profile-form-actions .btn{
+  min-width:120px;
+  min-height:44px;
+  padding:0 18px;
+  white-space:nowrap;
+  line-height:1;
+}
+
+/* Inline OTP forms in security tab */
+.profile-inline-form{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  flex-wrap:wrap;
+}
+
+.profile-inline-form input{
+  flex:1 1 180px;
+  min-width:160px;
+}
+
+.profile-inline-form .btn{
+  flex:0 0 auto;
+  min-width:110px;
+}
+
+/* Notes and pills spacing */
+.profile-meta-row,
+.profile-badge-row{
+  gap:8px;
+}
+
+.profile-meta-row .note,
+.profile-badge-row .pill{
+  white-space:normal;
+  line-height:1.2;
+}
+
+/* Desktop: keep hero tabs from getting squeezed */
+.profile-hero-layout{
+  gap:18px;
+}
+
+.profile-hero-main{
+  flex:1 1 420px;
+}
+
+.profile-action-row{
+  flex:0 0 auto;
+}
+
+/* Tablet/mobile */
+@media (max-width:860px){
+  .profile-hero-layout{
+    align-items:flex-start;
+    flex-direction:column;
+  }
+
+  .profile-action-row{
+    width:100%;
+    justify-content:flex-start;
+  }
+
+  .profile-action-row .btn{
+    flex:1 1 150px;
+  }
+
+  .profile-choice-grid{
+    grid-template-columns:1fr;
+  }
+
+  .profile-form-actions{
+    width:100%;
+  }
+
+  .profile-form-actions .btn{
+    flex:1 1 150px;
+  }
+}
+
+/* Small phones */
+@media (max-width:520px){
+  .profile-action-row{
+    display:grid;
+    grid-template-columns:1fr;
+    width:100%;
+  }
+
+  .profile-action-row .btn{
+    width:100%;
+    min-width:0;
+  }
+
+  .profile-choice-card__top{
+    gap:12px;
+  }
+
+  .profile-choice-card__top input[type="radio"]{
+    flex-basis:38px;
+    width:38px;
+    height:38px;
+    min-width:38px;
+    min-height:38px;
+  }
+
+  .profile-inline-form{
+    display:grid;
+    grid-template-columns:1fr;
+  }
+
+  .profile-inline-form input,
+  .profile-inline-form .btn{
+    width:100%;
+    min-width:0;
+  }
+}
+
+/* =====================================================
+   FINAL PROFILE SIDEBAR + APPEARANCE SELECTOR POLISH
+   Paste at VERY BOTTOM of assets/userstyle.css
+===================================================== */
+
+/* 1. Fix PROFILE label being too close to the first nav card */
+.userpanel--nav .userpanel__head,
+.userpanel--nav .hub-sidebar__title,
+.userpanel--nav .notif-sidebar__title{
+  margin-bottom:18px;
+}
+
+.userpanel--nav .userpanel__eyebrow,
+.userpanel--nav .hub-sidebar__title,
+.userpanel--nav .notif-sidebar__title{
+  display:block;
+  padding-left:2px;
+  margin-bottom:16px;
+  font-size:12px;
+  line-height:1.2;
+  letter-spacing:.10em;
+}
+
+.userpanel--nav .usernav,
+.userpanel--nav .usernav--better{
+  margin-top:4px;
+}
+
+/* Slightly cleaner profile side nav cards */
+.userpanel--nav .usernav .hub-item,
+.userpanel--nav .usernav__item{
+  min-height:64px;
+  padding:13px 14px;
+  gap:13px;
+}
+
+.userpanel--nav .usernav .hub-ico,
+.userpanel--nav .usernav__icon{
+  flex:0 0 42px;
+}
+
+
+/* 2. Replace appearance selector look */
+.profile-choice-grid{
+  grid-template-columns:repeat(2, minmax(0, 1fr)) !important;
+  gap:14px !important;
+}
+
+.profile-choice-card{
+  position:relative;
+  overflow:hidden;
+  min-height:112px;
+  padding:16px 16px 14px !important;
+  border-radius:20px !important;
+  border:1px solid rgba(255,255,255,.12);
+  background:
+    radial-gradient(circle at 12% 0%, rgba(98,181,255,.10), transparent 40%),
+    rgba(255,255,255,.035);
+  display:grid !important;
+  gap:10px !important;
+  cursor:pointer;
+  transition:
+    transform .16s ease,
+    border-color .16s ease,
+    background .16s ease,
+    box-shadow .16s ease;
+}
+
+.profile-choice-card:hover{
+  transform:translateY(-1px);
+  border-color:rgba(98,181,255,.30);
+  background:
+    radial-gradient(circle at 12% 0%, rgba(98,181,255,.14), transparent 40%),
+    rgba(255,255,255,.055);
+}
+
+.profile-choice-card:has(input[type="radio"]:checked){
+  border-color:rgba(57,255,106,.42);
+  background:
+    radial-gradient(circle at 12% 0%, rgba(57,255,106,.16), transparent 42%),
+    radial-gradient(circle at 90% 0%, rgba(98,181,255,.10), transparent 38%),
+    rgba(255,255,255,.06);
+  box-shadow:
+    0 0 0 1px rgba(57,255,106,.10) inset,
+    0 14px 34px rgba(0,0,0,.18);
+}
+
+/* Hide ugly default radio, replace with custom dot */
+.profile-choice-card__top input[type="radio"]{
+  position:absolute;
+  opacity:0;
+  pointer-events:none;
+}
+
+.profile-choice-card__top{
+  display:flex !important;
+  align-items:center !important;
+  justify-content:flex-start !important;
+  gap:12px !important;
+  min-width:0;
+  width:100%;
+}
+
+/* Custom selector circle */
+.profile-choice-card__top::before{
+  content:"";
+  flex:0 0 22px;
+  width:22px;
+  height:22px;
+  border-radius:999px;
+  border:2px solid rgba(238,243,255,.56);
+  background:rgba(0,0,0,.18);
+  box-shadow:0 0 0 4px rgba(255,255,255,.04);
+}
+
+.profile-choice-card:has(input[type="radio"]:checked) .profile-choice-card__top::before{
+  border-color:rgba(57,255,106,.92);
+  background:
+    radial-gradient(circle at center, rgba(57,255,106,.95) 0 38%, transparent 42%),
+    rgba(0,0,0,.18);
+  box-shadow:0 0 0 4px rgba(57,255,106,.12);
+}
+
+/* Main option text */
+.profile-choice-card__top strong{
+  display:block;
+  min-width:0;
+  font-size:16px;
+  line-height:1.15;
+  font-weight:950;
+  white-space:normal;
+  word-break:normal;
+  overflow-wrap:normal;
+  color:var(--text);
+}
+
+/* Description text */
+.profile-choice-card__meta{
+  padding-left:34px;
+  color:var(--muted);
+  font-size:13px;
+  line-height:1.45;
+  max-width:52ch;
+}
+
+/* Add selected pill on checked option */
+.profile-choice-card:has(input[type="radio"]:checked)::after{
+  content:"Selected";
+  position:absolute;
+  top:14px;
+  right:14px;
+  padding:5px 9px;
+  border-radius:999px;
+  border:1px solid rgba(57,255,106,.28);
+  background:rgba(57,255,106,.12);
+  color:var(--text);
+  font-size:11px;
+  font-weight:950;
+}
+
+/* Make the Apply area less lonely / better aligned */
+.profile-section-card:has(.profile-choice-grid) .profile-form-actions,
+.profile-section-card:has(.profile-choice-grid) form > .profile-form-actions{
+  margin-top:4px;
+}
+
+.profile-section-card:has(.profile-choice-grid) .btn,
+.profile-section-card:has(.profile-choice-grid) button[type="submit"]{
+  min-width:120px;
+}
+
+/* Light mode support */
+body[data-appearance="light"] .profile-choice-card{
+  border-color:var(--border);
+  background:
+    radial-gradient(circle at 12% 0%, rgba(75,141,255,.10), transparent 40%),
+    var(--panelLite);
+  box-shadow:var(--shadowSoft);
+}
+
+body[data-appearance="light"] .profile-choice-card:hover{
+  border-color:rgba(75,141,255,.24);
+  background:
+    radial-gradient(circle at 12% 0%, rgba(75,141,255,.14), transparent 40%),
+    var(--panelLiteStrong);
+}
+
+body[data-appearance="light"] .profile-choice-card:has(input[type="radio"]:checked){
+  border-color:rgba(30,207,122,.38);
+  background:
+    radial-gradient(circle at 12% 0%, rgba(30,207,122,.13), transparent 42%),
+    var(--panelLiteStrong);
+}
+
+body[data-appearance="light"] .profile-choice-card__top::before{
+  border-color:rgba(18,35,63,.36);
+  background:rgba(255,255,255,.70);
+  box-shadow:0 0 0 4px rgba(18,35,63,.05);
+}
+
+/* Mobile */
+@media (max-width:860px){
+  .profile-choice-grid{
+    grid-template-columns:1fr !important;
+  }
+
+  .profile-choice-card{
+    min-height:100px;
+  }
+
+  .profile-choice-card__meta{
+    padding-left:34px;
+  }
+}
+
+@media (max-width:520px){
+  .userpanel--nav .userpanel__eyebrow,
+  .userpanel--nav .hub-sidebar__title,
+  .userpanel--nav .notif-sidebar__title{
+    margin-bottom:12px;
+  }
+
+  .profile-choice-card{
+    padding:14px !important;
+  }
+
+  .profile-choice-card:has(input[type="radio"]:checked)::after{
+    position:static;
+    width:max-content;
+    margin-left:34px;
+  }
+}

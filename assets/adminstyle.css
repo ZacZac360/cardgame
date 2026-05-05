@@ -2342,3 +2342,409 @@ body[data-appearance="light"] .logo__mark.logo__mark--image{
     width:100%;
   }
 }
+
+/* =====================================================
+   LOGIA FINAL ADMIN RESPONSIVE PATCH
+   Paste at bottom of assets/adminstyle.css
+===================================================== */
+
+.admin-page,
+.admin-reports-page,
+.admin-settings-page,
+.admin-shell,
+.admin-main,
+.admin-right,
+.reports-top,
+.reports-main,
+.settings-top,
+.settings-main,
+.reports-summary,
+.reports-side,
+.settings-side,
+.admin-blocks,
+.admin-blocks--two,
+.admin-form-grid,
+.statgrid,
+.reports-toolbar,
+.queue-item,
+.queue-form{
+  min-width:0;
+}
+
+.admin-shell > *,
+.admin-main > *,
+.admin-right > *,
+.reports-top > *,
+.reports-main > *,
+.settings-top > *,
+.settings-main > *,
+.reports-summary > *,
+.reports-side > *,
+.settings-side > *,
+.admin-blocks > *,
+.admin-form-grid > *,
+.statgrid > *,
+.reports-toolbar > *{
+  min-width:0;
+}
+
+.admin-shell{
+  grid-template-columns:250px minmax(0, 1fr) minmax(280px, 320px);
+  gap:14px;
+}
+
+.app-shell,
+.app-topbar__inner,
+.app-footer__inner{
+  width:min(1520px, calc(100% - 28px));
+  max-width:1520px;
+  padding-left:0;
+  padding-right:0;
+}
+
+.admin-side,
+.admin-panel,
+.admin-hero,
+.reports-hero,
+.summary-card,
+.panel,
+.settings-hero,
+.metric-card,
+.activity-item,
+.queue-item,
+.note-row,
+.settings-readout-row{
+  min-width:0;
+}
+
+.admin-hero h1,
+.reports-hero h1,
+.settings-hero h1,
+.admin-panel h2,
+.panel-head h2,
+.panel-head h3,
+.summary-head h3{
+  overflow-wrap:anywhere;
+}
+
+.activity-item__meta,
+.queue-item__meta,
+.settings-readout-value,
+.stat__value,
+.metric-card__value{
+  overflow-wrap:anywhere;
+}
+
+.queue-form{
+  min-width:0;
+}
+
+.queue-item{
+  align-items:flex-start;
+}
+
+/* Forms */
+.admin-form-grid{
+  gap:14px;
+}
+
+.admin-form-row{
+  min-width:0;
+}
+
+.admin-form-row input,
+.admin-form-row textarea,
+.queue-form input,
+.users-filter-form input,
+.users-filter-form select,
+.reports-toolbar input,
+.reports-toolbar select{
+  min-height:46px;
+}
+
+.admin-form-actions,
+.queue-form__actions,
+.reports-toolbar .actions{
+  gap:10px;
+}
+
+/* Laptop */
+@media (max-width:1280px){
+  .admin-shell{
+    grid-template-columns:230px minmax(0, 1fr);
+    gap:12px;
+  }
+
+  .admin-right{
+    grid-column:1 / -1;
+  }
+
+  .reports-top,
+  .reports-main,
+  .settings-top,
+  .settings-main{
+    grid-template-columns:1fr;
+  }
+
+  .reports-summary,
+  .reports-side,
+  .settings-side{
+    grid-template-columns:repeat(2, minmax(0, 1fr));
+  }
+
+  .admin-hero h1,
+  .reports-hero h1,
+  .settings-hero h1{
+    font-size:36px;
+  }
+}
+
+/* Tablet */
+@media (max-width:1024px){
+  .app-topbar__inner{
+    align-items:flex-start;
+    flex-direction:column;
+  }
+
+  .brand,
+  .nav,
+  .actions{
+    width:100%;
+  }
+
+  .nav,
+  .actions{
+    justify-content:flex-start;
+  }
+
+  .admin-shell{
+    grid-template-columns:1fr;
+  }
+
+  .admin-side{
+    position:static;
+    order:0;
+  }
+
+  .admin-main{
+    order:1;
+  }
+
+  .admin-right{
+    order:2;
+  }
+
+  .admin-menu{
+    grid-template-columns:repeat(2, minmax(0, 1fr));
+  }
+
+  .admin-hero{
+    grid-template-columns:1fr;
+  }
+
+  .admin-blocks,
+  .admin-blocks--two,
+  .settings-main{
+    grid-template-columns:1fr;
+  }
+
+  .reports-toolbar{
+    grid-template-columns:repeat(2, minmax(0, 1fr));
+  }
+
+  .reports-toolbar .field-search,
+  .reports-toolbar .actions{
+    grid-column:1 / -1;
+  }
+
+  .reports-toolbar .actions{
+    justify-content:flex-start;
+  }
+
+  .queue-item{
+    flex-direction:column;
+  }
+
+  .queue-form{
+    width:100%;
+  }
+}
+
+/* Mobile */
+@media (max-width:760px){
+  .app-shell,
+  .app-topbar__inner,
+  .app-footer__inner{
+    width:calc(100% - 16px);
+  }
+
+  .admin-page,
+  .admin-reports-page,
+  .admin-settings-page{
+    padding-top:10px;
+    padding-bottom:18px;
+  }
+
+  .admin-shell,
+  .admin-main,
+  .admin-right,
+  .reports-summary,
+  .reports-side,
+  .settings-side{
+    gap:10px;
+  }
+
+  .admin-side,
+  .admin-panel,
+  .admin-hero,
+  .reports-hero,
+  .summary-card,
+  .panel,
+  .settings-hero{
+    padding:12px;
+    border-radius:20px;
+  }
+
+  .admin-menu,
+  .reports-summary,
+  .reports-side,
+  .settings-side,
+  .reports-toolbar,
+  .admin-form-grid,
+  .users-filter-form{
+    grid-template-columns:1fr;
+  }
+
+  .admin-hero h1,
+  .reports-hero h1,
+  .settings-hero h1{
+    font-size:29px;
+  }
+
+  .admin-panel__head,
+  .summary-head,
+  .panel-head,
+  .settings-readout-row,
+  .note-row{
+    align-items:flex-start;
+    flex-direction:column;
+  }
+
+  .reports-toolbar .field-search,
+  .reports-toolbar .actions{
+    grid-column:auto;
+  }
+
+  .reports-toolbar .actions,
+  .admin-form-actions,
+  .queue-form__actions{
+    width:100%;
+    justify-content:flex-start;
+  }
+
+  .reports-toolbar .actions .btn,
+  .admin-form-actions .btn,
+  .queue-form__actions .btn{
+    flex:1 1 150px;
+  }
+
+  .tabbar,
+  .nav{
+    overflow-x:auto;
+    flex-wrap:nowrap;
+    padding-bottom:2px;
+  }
+
+  .tabbar .tab,
+  .nav__link{
+    white-space:nowrap;
+    flex:0 0 auto;
+  }
+
+  .micro-table{
+    display:block;
+    overflow-x:auto;
+    white-space:nowrap;
+  }
+
+  .dropdown,
+  .dropdown--wide{
+    position:fixed;
+    top:74px;
+    left:8px;
+    right:8px;
+    width:auto;
+    max-width:none;
+  }
+
+  .dropdown__list{
+    max-height:calc(100vh - 180px);
+  }
+}
+
+/* Small phones */
+@media (max-width:520px){
+  .brand__name{
+    max-width:calc(100vw - 90px);
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+
+  .actions{
+    gap:7px;
+  }
+
+  .icon-btn{
+    width:38px;
+    height:38px;
+  }
+
+  .userchip{
+    width:100%;
+  }
+
+  .userchip__meta{
+    min-width:0;
+  }
+
+  .userchip__name,
+  .userchip__sub{
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+
+  .admin-hero h1,
+  .reports-hero h1,
+  .settings-hero h1{
+    font-size:25px;
+  }
+
+  .statgrid{
+    grid-template-columns:1fr;
+  }
+
+  .stat__value,
+  .metric-card__value,
+  .notif-summary__value{
+    font-size:24px;
+  }
+
+  .activity-item{
+    grid-template-columns:34px 1fr;
+    padding:10px;
+  }
+
+  .queue-actions,
+  .settings-actions,
+  .quick-actions{
+    width:100%;
+  }
+
+  .queue-actions .btn,
+  .settings-actions .btn,
+  .quick-actions .btn{
+    width:100%;
+  }
+}

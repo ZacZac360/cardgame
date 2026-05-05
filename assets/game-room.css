@@ -3539,19 +3539,23 @@ body[data-appearance="light"] .ranked-queue-status{
 }
 
 /* =====================================================
-   MEGA PATCH - ROOM TOOLS CUTOFF FIX
-   Makes host controls scroll instead of clipping off-screen.
+   MEGA PATCH - ROOM HOST CONTROLS SCROLL + LOCKED RULES
+   Fixes buttons getting cut off at the bottom.
 ===================================================== */
 
+.floating-panel.tools-panel,
 .tools-panel{
-  max-height:calc(100vh - 128px);
+  top:10px;
+  right:10px;
+  bottom:10px;
+  max-height:none;
   overflow-y:auto;
   overscroll-behavior:contain;
   padding-bottom:18px;
 }
 
 .tools-panel .host-buttons{
-  padding-bottom:6px;
+  padding-bottom:8px;
 }
 
 .tools-panel::-webkit-scrollbar{
@@ -3559,35 +3563,15 @@ body[data-appearance="light"] .ranked-queue-status{
 }
 
 .tools-panel::-webkit-scrollbar-thumb{
-  background:rgba(255,255,255,.14);
+  background:rgba(255,255,255,.16);
   border-radius:999px;
 }
-
-@media (max-width:980px){
-  .tools-panel{
-    max-height:none;
-    overflow:visible;
-  }
-}
-
-.rules-note--locked{
-  border-color:rgba(255,205,102,.28);
-  background:rgba(255,205,102,.10);
-  color:var(--text);
-}
-
-/* =====================================================
-   MEGA PATCH - LOCKED ROOM RULES STATE
-===================================================== */
 
 .rules-editor.is-locked{
   opacity:.72;
 }
 
-.rules-editor.is-locked .rule-row{
-  cursor:not-allowed;
-}
-
+.rules-editor.is-locked .rule-row,
 .rules-editor.is-locked input{
   cursor:not-allowed;
 }
@@ -3596,4 +3580,556 @@ body[data-appearance="light"] .ranked-queue-status{
   border-color:rgba(255,205,102,.28);
   background:rgba(255,205,102,.10);
   color:var(--text);
+}
+
+@media (max-width:980px){
+  .floating-panel.tools-panel,
+  .tools-panel{
+    position:relative;
+    top:auto;
+    right:auto;
+    bottom:auto;
+    max-height:none;
+    overflow:visible;
+  }
+}
+
+/* =====================================================
+   LOGIA FINAL GAME ROOM RESPONSIVE PATCH
+   Paste at bottom of assets/game-room.css
+===================================================== */
+
+/* Important:
+   Original media rules used :root for game-room variables.
+   These variables are actually scoped on .game-room-shell, so override there.
+*/
+.game-room-shell,
+.game-table-wrap,
+.table-shell,
+.play-surface,
+.table-area,
+.board-center,
+.hand-dock,
+.hand-area,
+.hand-fan,
+.top-strip,
+.status-strip,
+.center-play,
+.center-sideinfo{
+  min-width:0;
+}
+
+.game-room-shell{
+  width:100%;
+  max-width:100vw;
+  overflow-x:hidden;
+}
+
+.game-room-top{
+  min-width:0;
+}
+
+.game-room-top > *{
+  min-width:0;
+}
+
+.game-room-title{
+  font-size:clamp(21px, 2.6vw, 28px);
+  overflow-wrap:anywhere;
+}
+
+.game-room-sub{
+  overflow-wrap:anywhere;
+}
+
+.status-strip{
+  max-width:100%;
+}
+
+.status-chip,
+.meta-pill,
+.summary-pill,
+.seat-badge,
+.seat-count{
+  max-width:100%;
+}
+
+.status-chip__value,
+.center-statusbar__sub,
+.seat-name,
+.seat-sub{
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+.floating-panel{
+  max-width:100%;
+}
+
+.log-area{
+  max-height:min(390px, 48vh);
+}
+
+.hand-area{
+  overscroll-behavior-x:contain;
+}
+
+/* Normal laptop compression */
+@media (max-width:1400px){
+  .game-room-shell{
+    --table-side:132px;
+    --hand-card-width:88px;
+    --hand-card-height:126px;
+  }
+
+  .table-shell{
+    min-height:430px;
+  }
+
+  .play-surface{
+    min-height:335px;
+  }
+
+  .active-card{
+    width:124px;
+    height:172px;
+  }
+
+  .active-card__value{
+    font-size:50px;
+  }
+
+  .center-sideinfo{
+    min-width:140px;
+    max-width:160px;
+  }
+
+  .floating-panel{
+    width:280px;
+  }
+
+  .hand-card{
+    margin-left:-30px;
+  }
+}
+
+@media (max-width:1180px){
+  .game-room-shell{
+    --table-side:120px;
+    --hand-card-width:84px;
+    --hand-card-height:120px;
+  }
+
+  .game-table-wrap{
+    padding:10px;
+    border-radius:24px;
+  }
+
+  .table-shell{
+    grid-template-columns:120px minmax(0, 1fr) 120px;
+    gap:8px;
+  }
+
+  .seat-left .seat-box,
+  .seat-right .seat-box{
+    max-width:120px;
+  }
+
+  .seat-name{
+    font-size:12px;
+  }
+
+  .seat-sub,
+  .seat-count,
+  .seat-badge{
+    font-size:10px;
+  }
+
+  .center-play{
+    gap:10px;
+  }
+
+  .center-sideinfo{
+    min-width:120px;
+    max-width:140px;
+  }
+
+  .center-sideinfo__value{
+    font-size:17px;
+  }
+
+  .deck-stack{
+    width:68px;
+    height:96px;
+  }
+
+  .active-card{
+    width:112px;
+    height:156px;
+  }
+
+  .active-card__value{
+    font-size:42px;
+  }
+}
+
+/* Tablet */
+@media (max-width:980px){
+  .game-room-shell{
+    --hand-card-width:82px;
+    --hand-card-height:118px;
+  }
+
+  .game-room-top{
+    padding:12px;
+    border-radius:20px;
+  }
+
+  .game-room-top__actions{
+    width:100%;
+    justify-content:flex-start;
+  }
+
+  .top-strip{
+    grid-template-columns:1fr;
+    justify-items:start;
+  }
+
+  .status-strip{
+    width:100%;
+    justify-content:flex-start;
+    flex-wrap:nowrap;
+    overflow-x:auto;
+    padding-bottom:4px;
+  }
+
+  .table-shell{
+    grid-template-columns:1fr 1fr;
+    grid-template-rows:auto auto auto;
+    min-height:auto;
+  }
+
+  .seat-top{
+    grid-column:1 / 3;
+    grid-row:1;
+  }
+
+  .play-surface{
+    grid-column:1 / 3;
+    grid-row:2;
+    min-height:315px;
+  }
+
+  .seat-left{
+    grid-column:1;
+    grid-row:3;
+  }
+
+  .seat-right{
+    grid-column:2;
+    grid-row:3;
+  }
+
+  .seat-left .seat-box,
+  .seat-right .seat-box{
+    max-width:none;
+  }
+
+  .floating-panel{
+    position:relative;
+    top:auto;
+    left:auto;
+    right:auto;
+    width:100%;
+    max-height:none;
+  }
+
+  .log-panel{
+    max-height:none;
+  }
+
+  .log-area{
+    max-height:220px;
+  }
+
+  .hand-dock__top{
+    grid-template-columns:1fr;
+  }
+
+  .human-summary,
+  .hand-actions{
+    justify-content:flex-start;
+  }
+
+  .hand-card{
+    transform:none !important;
+    margin-left:-22px;
+  }
+
+  .hand-card:hover{
+    transform:translateY(-8px) scale(1.04) !important;
+  }
+
+  .hand-card.selected-card{
+    transform:translateY(-16px) scale(1.08) !important;
+  }
+}
+
+/* Mobile */
+@media (max-width:720px){
+  .game-room-shell{
+    --hand-card-width:78px;
+    --hand-card-height:112px;
+  }
+
+  .game-table-wrap{
+    padding:8px;
+    border-radius:20px;
+  }
+
+  .game-room-top{
+    flex-direction:column;
+  }
+
+  .top-strip__actions,
+  .game-room-top__actions{
+    width:100%;
+    flex-wrap:wrap;
+  }
+
+  .ui-btn{
+    flex:1 1 120px;
+  }
+
+  .play-surface{
+    min-height:280px;
+    border-radius:22px;
+  }
+
+  .table-area{
+    padding:10px;
+  }
+
+  .board-center{
+    min-height:210px;
+  }
+
+  .center-play{
+    flex-wrap:wrap;
+  }
+
+  .deck-tutorial-row{
+    width:100%;
+    justify-content:center;
+    flex-wrap:wrap;
+  }
+
+  .center-sideinfo{
+    width:100%;
+    max-width:none;
+    grid-template-columns:1fr 1fr;
+  }
+
+  .center-sideinfo__card{
+    padding:9px 10px;
+  }
+
+  .deck-stack{
+    width:64px;
+    height:90px;
+  }
+
+  .active-card{
+    width:104px;
+    height:146px;
+  }
+
+  .active-card__value{
+    font-size:38px;
+  }
+
+  .seat-head--top{
+    grid-template-columns:1fr;
+  }
+
+  .seat-top-main{
+    min-width:0;
+  }
+
+  .wild-chooser{
+    min-width:0;
+    width:calc(100% - 16px);
+    bottom:10px;
+  }
+
+  .wild-chooser__buttons{
+    display:grid;
+    grid-template-columns:repeat(2, minmax(0, 1fr));
+  }
+
+  .hand-area{
+    min-height:154px;
+    overflow-x:auto;
+    overflow-y:visible;
+    padding:8px 0;
+  }
+
+  .hand-fan{
+    justify-content:flex-start;
+    padding:14px 28px 12px;
+    min-height:145px;
+  }
+
+  .hand-card{
+    margin-left:-16px;
+    padding:7px;
+  }
+
+  .hand-actions{
+    width:100%;
+    display:grid;
+    grid-template-columns:1fr 1fr;
+  }
+
+  .results-modal{
+    padding:10px;
+  }
+
+  .results-summary{
+    grid-template-columns:1fr;
+  }
+}
+
+/* Small phones */
+@media (max-width:520px){
+  .game-room-shell{
+    --hand-card-width:72px;
+    --hand-card-height:104px;
+  }
+
+  .game-room-title{
+    font-size:21px;
+  }
+
+  .game-room-sub{
+    font-size:12px;
+  }
+
+  .status-chip{
+    min-height:30px;
+    padding:5px 8px;
+  }
+
+  .status-chip__label{
+    font-size:9px;
+  }
+
+  .status-chip__value{
+    font-size:11px;
+  }
+
+  .play-surface{
+    min-height:250px;
+  }
+
+  .center-meta{
+    justify-content:flex-start;
+    width:100%;
+  }
+
+  .center-sideinfo{
+    grid-template-columns:1fr;
+  }
+
+  .active-card{
+    width:92px;
+    height:130px;
+  }
+
+  .active-card__value{
+    font-size:32px;
+  }
+
+  .active-card__name{
+    font-size:11px;
+  }
+
+  .deck-stack{
+    width:58px;
+    height:82px;
+    border-radius:14px;
+  }
+
+  .seat-left,
+  .seat-right{
+    grid-column:1 / 3;
+  }
+
+  .seat-left{
+    grid-row:3;
+  }
+
+  .seat-right{
+    grid-row:4;
+  }
+
+  .seat-box{
+    padding:9px;
+  }
+
+  .seat-fan{
+    min-height:26px;
+  }
+
+  .ai-cardback{
+    width:14px;
+    height:25px;
+  }
+
+  .hand-dock{
+    padding:8px;
+    border-radius:16px;
+  }
+
+  .hand-fan{
+    padding-left:20px;
+    padding-right:20px;
+  }
+
+  .hand-card{
+    margin-left:-12px;
+    border-radius:12px;
+  }
+
+  .hand-card__value{
+    font-size:18px;
+  }
+
+  .hand-card__name{
+    font-size:10px;
+  }
+
+  .hand-card__meta,
+  .hand-card__status{
+    font-size:8px;
+  }
+
+  .results-modal__dialog{
+    border-radius:20px;
+  }
+
+  .results-modal__head,
+  .results-modal__body{
+    padding:14px;
+  }
+
+  .results-modal__actions{
+    padding:0 14px 14px;
+    flex-direction:column;
+  }
+
+  .results-modal__actions .btn,
+  .results-modal__actions .ui-btn{
+    width:100%;
+  }
 }

@@ -4,6 +4,7 @@ require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/auth.php';
 require_once __DIR__ . '/friends_helpers.php';
 require_once __DIR__ . '/messages_helpers.php';
+require_once __DIR__ . '/ranked_helpers.php';
 
 function notif_icon(string $type): string {
   return match ($type) {
@@ -842,7 +843,224 @@ function ui_footer(): void {
 <?php $u = current_user(); ?>
 <script>
 window.LOGIA_USER_ID = <?= (int)($u['id'] ?? 0) ?>;
+window.LOGIA_BASE_PATH = <?= json_encode($bp, JSON_UNESCAPED_SLASHES) ?>;
 </script>
+
+<?php
+  $globalIsGuest = ((int)($u['is_guest'] ?? 0) === 1);
+  $globalIsAdmin = $u && function_exists('user_has_role') && user_has_role($u, 'admin');
+?>
+
+<?php if (!$globalIsGuest && !$globalIsAdmin): ?>
+  <div class="ranked-floating-queue" id="globalRankedFloatingQueue" aria-live="polite">
+    <div class="ranked-floating-queue__top">
+      <div>
+        <div class="ranked-floating-queue__eyebrow">Ranked Queue</div>
+        <div class="ranked-floating-queue__title" id="globalRankedFloatingTitle">
+          Finding players...
+        </div>
+      </div>
+
+      <span class="pill status-pill--good" id="globalRankedFloatingTimer">00:00</span>
+    </div>
+
+    <div class="ranked-floating-queue__body">
+      <div id="globalRankedFloatingMeta">
+        Checking queue...
+      </div>
+    </div>
+
+    <div class="ranked-floating-queue__actions">
+      <a class="btn btn-primary" id="globalRankedFloatingEnterBtn" href="#" hidden>
+        Enter Match
+      </a>
+
+      <button class="btn btn-ghost" id="globalRankedFloatingCancelBtn" type="button" hidden>
+        Cancel Queue
+      </button>
+    </div>
+  </div>
+
+  <script>
+  (() => {
+    "use strict";
+
+    if (window.LOGIA_RANKED_QUEUE_WIDGET_LOADED) return;
+    window.LOGIA_RANKED_QUEUE_WIDGET_LOADED = true;
+
+    const basePath = window.LOGIA_BASE_PATH || "";
+    const card = document.getElementById("globalRankedFloatingQueue");
+    const title = document.getElementById("globalRankedFloatingTitle");
+    const timer = document.getElementById("globalRankedFloatingTimer");
+    const meta = document.getElementById("globalRankedFloatingMeta");
+    const cancelBtn = document.getElementById("globalRankedFloatingCancelBtn");
+    const enterBtn = document.getElementById("globalRankedFloatingEnterBtn");
+
+    if (!card || !title || !timer || !meta || !cancelBtn || !enterBtn) return;
+
+    let joinedAt = "";
+    let clockTimer = null;
+    let pollTimer = null;
+    let redirecting = false;
+
+    function parseMysqlDate(value) {
+      if (!value) return null;
+
+      const parsed = new Date(String(value).replace(" ", "T"));
+      return Number.isNaN(parsed.getTime()) ? null : parsed;
+    }
+
+    function formatElapsed(totalSeconds) {
+      const safe = Math.max(0, Number(totalSeconds || 0));
+      const minutes = Math.floor(safe / 60);
+      const seconds = safe % 60;
+
+      return String(minutes).padStart(2, "0") + ":" + String(seconds).padStart(2, "0");
+    }
+
+    function updateClock() {
+      const dt = parseMysqlDate(joinedAt);
+
+      if (!dt) {
+        timer.textContent = "00:00";
+        return;
+      }
+
+      timer.textContent = formatElapsed(Math.floor((Date.now() - dt.getTime()) / 1000));
+    }
+
+    function startClock() {
+      if (clockTimer) clearInterval(clockTimer);
+
+      updateClock();
+      clockTimer = setInterval(updateClock, 1000);
+    }
+
+    function hideQueue() {
+      card.classList.remove("is-visible");
+      cancelBtn.hidden = true;
+      cancelBtn.style.display = "none";
+
+      enterBtn.hidden = true;
+      enterBtn.style.display = "none";
+      joinedAt = "";
+
+      if (clockTimer) {
+        clearInterval(clockTimer);
+        clockTimer = null;
+      }
+
+      timer.textContent = "00:00";
+    }
+
+    function redirectToRoom(roomCode) {
+      if (!roomCode || redirecting) return;
+
+      redirecting = true;
+
+      const roomUrl = basePath + "/room.php?code=" + encodeURIComponent(roomCode);
+
+      card.classList.add("is-visible");
+      title.textContent = "Match found!";
+      meta.textContent = "Entering ranked room " + roomCode + "...";
+      cancelBtn.hidden = true;
+      cancelBtn.style.display = "none";
+
+      enterBtn.hidden = false;
+      enterBtn.style.display = "";
+      enterBtn.href = roomUrl;
+
+      setTimeout(() => {
+        window.location.href = roomUrl;
+      }, 700);
+    }
+
+    function showQueue(status) {
+      const queue = status?.queue || {};
+      const match = status?.match || {};
+
+      if (match.found && match.room_code) {
+        redirectToRoom(String(match.room_code));
+        return;
+      }
+
+      if (!queue.in_queue) {
+        hideQueue();
+        return;
+      }
+
+      joinedAt = String(queue.joined_at || joinedAt || "");
+
+      const count = Math.min(4, Math.max(1, Number(queue.queue_count || 1)));
+      const tier = queue.tier || queue.league || "Ranked";
+
+      card.classList.add("is-visible");
+      title.textContent = "Finding players...";
+      meta.textContent = tier + " queue · " + count + " / 4 players found";
+      cancelBtn.hidden = false;
+      cancelBtn.style.display = "";
+
+      enterBtn.hidden = true;
+      enterBtn.style.display = "none";
+
+      startClock();
+    }
+
+    async function pollRanked() {
+      if (redirecting) return;
+
+      try {
+        const res = await fetch(basePath + "/api/game/ranked_status.php", {
+          cache: "no-store",
+          headers: { "Accept": "application/json" }
+        });
+
+        const data = await res.json();
+
+        if (!data.ok) return;
+
+        showQueue(data.status || {});
+      } catch (err) {
+        console.error("Ranked queue poll failed", err);
+      }
+    }
+
+    cancelBtn.addEventListener("click", async () => {
+      cancelBtn.disabled = true;
+      cancelBtn.textContent = "Cancelling...";
+
+      try {
+        const res = await fetch(basePath + "/api/game/ranked_cancel.php", {
+          method: "POST",
+          headers: { "Accept": "application/json" }
+        });
+
+        const data = await res.json();
+
+        if (data.ok) {
+          showQueue(data.status || {});
+        } else {
+          alert(data.msg || "Could not cancel queue.");
+        }
+      } catch (err) {
+        console.error("Ranked cancel failed", err);
+        alert("Could not cancel queue.");
+      } finally {
+        cancelBtn.disabled = false;
+        cancelBtn.textContent = "Cancel Queue";
+      }
+    });
+
+    pollRanked();
+    pollTimer = setInterval(pollRanked, 2500);
+
+    window.addEventListener("beforeunload", () => {
+      if (pollTimer) clearInterval(pollTimer);
+      if (clockTimer) clearInterval(clockTimer);
+    });
+  })();
+  </script>
+<?php endif; ?>
 
 <script src="<?= h($bp) ?>/assets/main.js"></script>
 
