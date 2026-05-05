@@ -257,6 +257,6 @@ ui_header("Room " . $roomCode);
 </section>
 
 <script src="<?= h($bp) ?>/assets/cards.js"></script>
-<script src="<?= h($bp) ?>/assets/game-room.js"></script>
+<script defer src="<?= h($bp) ?>/assets/game-room.js?v=guest-leave-fix-20260505-1"></script>
 
 <?php ui_footer(); ?>

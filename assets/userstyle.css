@@ -4088,3 +4088,340 @@ body[data-appearance="light"] .profile-choice-card__top::before{
     margin-left:34px;
   }
 }
+
+/* =====================================================
+   FINAL FIX - PLAYER DASHBOARD / SOLO SIDEBAR OVERLAY
+   Fixes sidebar overlay on 861px–1180px widths and zoomed browsers
+   Paste at VERY BOTTOM of assets/userstyle.css
+===================================================== */
+
+/* Make sure user pages always behave like real grids */
+.userpage-grid,
+.shoppage-grid,
+.play-mode-layout{
+  display:grid;
+  align-items:start;
+  min-width:0;
+}
+
+.userpage-grid > *,
+.shoppage-grid > *,
+.play-mode-layout > *{
+  min-width:0;
+}
+
+/* Prevent sidebar panels from floating above main content weirdly */
+.userpanel--nav,
+.userpanel--side,
+.play-mode-side .play-side-panel{
+  z-index:1;
+}
+
+.user-maincol,
+.play-mode-main,
+.shop-shell--clean{
+  position:relative;
+  z-index:0;
+  min-width:0;
+}
+
+/* 
+   This is the actual important fix.
+   From 1180px downward, stop using side-by-side sidebar layout.
+   This catches laptops/tablets/browser zoom where 1024 rules were being overridden later.
+*/
+@media (max-width:1180px){
+  .userpage-grid,
+  .shoppage-grid,
+  .play-mode-layout{
+    grid-template-columns:1fr !important;
+    gap:12px !important;
+  }
+
+  .userpanel--nav,
+  .userpanel--side,
+  .play-mode-side .play-side-panel{
+    position:static !important;
+    top:auto !important;
+    grid-column:auto !important;
+    width:100% !important;
+    max-width:100% !important;
+    transform:none !important;
+  }
+
+  .user-maincol,
+  .play-mode-main{
+    grid-column:auto !important;
+    width:100% !important;
+    max-width:100% !important;
+  }
+
+  /* Turn side menu into compact tiles instead of a tall sticky overlay */
+  .usernav,
+  .usernav--better{
+    display:grid !important;
+    grid-template-columns:repeat(2, minmax(0, 1fr)) !important;
+    gap:10px !important;
+  }
+
+  .usernav .hub-item,
+  .usernav__item{
+    min-height:56px !important;
+    padding:11px 12px !important;
+  }
+}
+
+/* Smaller screens: one button per row */
+@media (max-width:620px){
+  .usernav,
+  .usernav--better{
+    grid-template-columns:1fr !important;
+  }
+}
+
+/* Extra safety: if browser zoom creates horizontal overflow, hide it */
+body.hub,
+body{
+  overflow-x:hidden;
+}
+
+/* =====================================================
+   FINAL PROFILE RATIO FIX
+   Fixes profile sidebar/right panel overlay on small laptops,
+   zoomed browsers, Opera sidebar, and weird viewport ratios.
+   Paste at VERY BOTTOM of assets/userstyle.css
+===================================================== */
+
+/* Profile/user pages need predictable columns */
+.userpage-grid{
+  display:grid !important;
+  align-items:start !important;
+  min-width:0 !important;
+}
+
+.userpage-grid > *,
+.user-maincol,
+.profile-maincol,
+.userpanel--nav,
+.userpanel--side{
+  min-width:0 !important;
+}
+
+/* Desktop: 3 columns only when there is actually enough room */
+@media (min-width:1381px){
+  .userpage-grid{
+    grid-template-columns:
+      minmax(220px, 250px)
+      minmax(0, 1fr)
+      minmax(280px, 320px) !important;
+    gap:14px !important;
+  }
+
+  .userpanel--nav{
+    grid-column:1 !important;
+    grid-row:1 !important;
+    position:sticky !important;
+    top:84px !important;
+    z-index:1 !important;
+  }
+
+  .user-maincol,
+  .profile-maincol{
+    grid-column:2 !important;
+    grid-row:1 !important;
+  }
+
+  .userpanel--side{
+    grid-column:3 !important;
+    grid-row:1 !important;
+    position:sticky !important;
+    top:84px !important;
+    z-index:1 !important;
+  }
+}
+
+/*
+   Critical range:
+   Small laptops / 125% zoom / Opera sidebar.
+   Keep left nav in column 1, but put profile content in column 2.
+   Put right-side panel below the profile content, NOT across both columns.
+*/
+@media (min-width:1025px) and (max-width:1380px){
+  .userpage-grid{
+    grid-template-columns:minmax(210px, 230px) minmax(0, 1fr) !important;
+    gap:12px !important;
+  }
+
+  .userpanel--nav{
+    grid-column:1 !important;
+    grid-row:1 / span 2 !important;
+    position:sticky !important;
+    top:84px !important;
+    max-height:calc(100vh - 104px) !important;
+    overflow:auto !important;
+    z-index:1 !important;
+  }
+
+  .user-maincol,
+  .profile-maincol{
+    grid-column:2 !important;
+    grid-row:1 !important;
+    width:100% !important;
+    max-width:100% !important;
+    position:relative !important;
+    z-index:0 !important;
+  }
+
+  .userpanel--side{
+    grid-column:2 !important;
+    grid-row:2 !important;
+    position:relative !important;
+    top:auto !important;
+    width:100% !important;
+    max-width:100% !important;
+    z-index:0 !important;
+  }
+
+  .profile-hero-card,
+  .profile-section-card,
+  .profile-overview-card,
+  .profile-side-card,
+  .userpanel{
+    padding:14px !important;
+    border-radius:22px !important;
+  }
+
+  .profile-name{
+    font-size:26px !important;
+  }
+
+  .profile-section-title{
+    font-size:24px !important;
+  }
+
+  .profile-action-row .btn{
+    min-width:108px !important;
+    padding:0 14px !important;
+  }
+
+  .profile-stats-grid{
+    grid-template-columns:repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+/* Tablet and below: stack everything; no sticky sidebars */
+@media (max-width:1024px){
+  .userpage-grid{
+    grid-template-columns:1fr !important;
+    gap:12px !important;
+  }
+
+  .userpanel--nav,
+  .userpanel--side,
+  .user-maincol,
+  .profile-maincol{
+    grid-column:auto !important;
+    grid-row:auto !important;
+    position:static !important;
+    top:auto !important;
+    width:100% !important;
+    max-width:100% !important;
+    max-height:none !important;
+    overflow:visible !important;
+    transform:none !important;
+  }
+
+  .usernav,
+  .usernav--better{
+    display:grid !important;
+    grid-template-columns:repeat(3, minmax(0, 1fr)) !important;
+    gap:10px !important;
+  }
+
+  .usernav .hub-item,
+  .usernav__item{
+    min-height:58px !important;
+    padding:10px 11px !important;
+  }
+
+  .usernav .hub-item > span:last-child,
+  .usernav__text strong{
+    min-width:0 !important;
+    overflow:hidden !important;
+    text-overflow:ellipsis !important;
+    white-space:nowrap !important;
+  }
+}
+
+/* Smaller tablets */
+@media (max-width:760px){
+  .usernav,
+  .usernav--better{
+    grid-template-columns:repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .profile-hero-layout,
+  .profile-hero-main,
+  .profile-section-head,
+  .profile-overview-head{
+    align-items:flex-start !important;
+    flex-direction:column !important;
+  }
+
+  .profile-action-row,
+  .profile-overview-actions,
+  .profile-form-actions{
+    width:100% !important;
+  }
+
+  .profile-action-row .btn,
+  .profile-overview-actions .btn,
+  .profile-form-actions .btn{
+    flex:1 1 140px !important;
+  }
+
+  .profile-stats-grid,
+  .profile-overview-grid,
+  .profile-two-col-grid,
+  .profile-choice-grid{
+    grid-template-columns:1fr !important;
+  }
+}
+
+/* Phones */
+@media (max-width:520px){
+  .usernav,
+  .usernav--better{
+    grid-template-columns:1fr !important;
+  }
+
+  .profile-hero-card,
+  .profile-section-card,
+  .profile-overview-card,
+  .profile-side-card,
+  .userpanel{
+    padding:12px !important;
+    border-radius:18px !important;
+  }
+
+  .profile-avatar,
+  .profile-avatar-fallback{
+    width:54px !important;
+    height:54px !important;
+    border-radius:16px !important;
+  }
+
+  .profile-name{
+    font-size:24px !important;
+  }
+
+  .profile-action-row{
+    display:grid !important;
+    grid-template-columns:1fr !important;
+  }
+
+  .profile-action-row .btn{
+    width:100% !important;
+    min-width:0 !important;
+  }
+}

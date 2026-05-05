@@ -480,35 +480,6 @@ ui_header("Profile");
                 <button class="btn btn-primary" type="submit">Save Changes</button>
               </div>
             </form>
-
-            <div class="card-soft profile-form-card">
-              <div class="profile-form-title">Sessions</div>
-              <div class="profile-form-stack profile-form-stack--tight">
-                <div class="profile-session-row">
-                  <div>
-                    <div class="profile-session-title">Current Session</div>
-                    <div class="profile-copy-muted">Browser</div>
-                  </div>
-                  <button class="btn btn-ghost" type="button">Keep</button>
-                </div>
-
-                <div class="profile-session-row">
-                  <div>
-                    <div class="profile-session-title">Other Sessions</div>
-                    <div class="profile-copy-muted">Available when connected</div>
-                  </div>
-                  <button class="btn btn-ghost" type="button">Log Out Others</button>
-                </div>
-              </div>
-            </div>
-
-            <div class="card-soft profile-form-card profile-danger-card">
-              <div class="profile-form-title">Danger Zone</div>
-              <div class="profile-form-actions">
-                <button class="btn btn-ghost" type="button">Deactivate</button>
-                <button class="btn btn-ghost" type="button">Delete Account</button>
-              </div>
-            </div>
           </div>
         </section>
 

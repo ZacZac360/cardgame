@@ -146,7 +146,10 @@ function addLocalMsg(el, text) {
 }
 
 function roomBackUrl() {
-  return IS_GUEST
+  const shellGuest = shellEl?.dataset.isGuest === "1";
+  const topbarLooksGuest = document.body.textContent.includes("Guest Mode");
+
+  return (shellGuest || topbarLooksGuest)
     ? `${BASE_PATH}/guest_dashboard.php`
     : `${BASE_PATH}/play.php`;
 }
@@ -1649,7 +1652,7 @@ if (leaveRoomBtn) {
       });
 
       addLocalMsg(actionMsgEl, data.msg || "Left room.");
-      window.location.href = data.redirect_url || roomBackUrl();
+      window.location.href = roomBackUrl();
     } catch (err) {
       addLocalMsg(actionMsgEl, err.message);
     } finally {
@@ -1672,8 +1675,7 @@ if (destroyRoomBtn) {
 
       addLocalMsg(actionMsgEl, data.msg || "Room destroyed.");
 
-      const redirectUrl = data.redirect_url || roomBackUrl();
-      window.location.href = redirectUrl;
+      goRoomBack();
     } catch (err) {
       addLocalMsg(actionMsgEl, err.message);
     } finally {

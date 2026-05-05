@@ -3678,3 +3678,195 @@ table{
     max-height:calc(100vh - 18px);
   }
 }
+
+/* =====================================================
+   FINAL DASHBOARD RATIO FIX
+   Fixes sticky sidebar overlaying Activity on smaller laptop / zoomed screens
+   Paste at VERY BOTTOM of assets/hub.css
+===================================================== */
+
+/* Dashboard should never let the left rail sit above full-width content */
+.hub-grid{
+  display:grid;
+  align-items:start;
+  min-width:0;
+}
+
+.hub-grid > *,
+.hub-left,
+.hub-right,
+.page-main{
+  min-width:0;
+}
+
+/* Desktop: reduce the right activity rail from the old 420px monster */
+@media (min-width:1281px){
+  .hub-grid{
+    grid-template-columns:
+      minmax(220px, 250px)
+      minmax(0, 1fr)
+      minmax(300px, 360px) !important;
+    gap:14px !important;
+  }
+
+  .hub-left{
+    grid-column:1 !important;
+  }
+
+  .page-main{
+    grid-column:2 !important;
+  }
+
+  .hub-right{
+    grid-column:3 !important;
+  }
+}
+
+/*
+   Critical range:
+   On smaller laptops / browser zoom / Opera sidebar / Windows scaling,
+   the 3-column layout gets tight.
+
+   Instead of letting Activity span under the sticky left menu,
+   keep Activity in column 2 only.
+*/
+@media (min-width:1025px) and (max-width:1280px){
+  body.hub .container,
+  body.hub .topnav__inner,
+  body.hub .sitefooter__inner{
+    width:calc(100% - 24px) !important;
+    max-width:100% !important;
+  }
+
+  .hub-grid{
+    grid-template-columns:minmax(210px, 230px) minmax(0, 1fr) !important;
+    gap:12px !important;
+  }
+
+  .hub-left{
+    grid-column:1 !important;
+    grid-row:1 / span 2 !important;
+    position:sticky !important;
+    top:84px !important;
+    max-height:calc(100vh - 104px);
+    overflow:auto;
+    z-index:1;
+  }
+
+  .page-main{
+    grid-column:2 !important;
+    grid-row:1 !important;
+    min-width:0 !important;
+  }
+
+  .hub-right{
+    grid-column:2 !important;
+    grid-row:2 !important;
+    min-width:0 !important;
+    position:relative !important;
+    z-index:0 !important;
+  }
+
+  .panel-card--lg{
+    padding:14px !important;
+    border-radius:22px !important;
+  }
+
+  .activity-link{
+    padding:11px !important;
+  }
+
+  .activity-row{
+    gap:10px !important;
+  }
+
+  .activity-copy,
+  .activity-icon{
+    width:38px !important;
+    height:38px !important;
+    min-width:38px !important;
+    flex-basis:38px !important;
+    border-radius:13px !important;
+  }
+}
+
+/*
+   Tablet and below:
+   Now it is safe to stack everything because sidebar is no longer sticky.
+*/
+@media (max-width:1024px){
+  .hub-grid{
+    grid-template-columns:1fr !important;
+    gap:12px !important;
+  }
+
+  .hub-left,
+  .hub-sidebar,
+  .hub-right,
+  .page-main{
+    grid-column:auto !important;
+    grid-row:auto !important;
+    position:static !important;
+    top:auto !important;
+    width:100% !important;
+    max-width:100% !important;
+    max-height:none !important;
+    overflow:visible !important;
+    transform:none !important;
+  }
+
+  .hub-sidebar__nav{
+    display:grid !important;
+    grid-template-columns:repeat(4, minmax(0, 1fr)) !important;
+    gap:10px !important;
+  }
+
+  .hub-left .hub-item{
+    min-height:58px !important;
+    padding:10px 11px !important;
+  }
+
+  .hub-left .hub-item > span:last-child{
+    min-width:0;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+}
+
+/* Smaller tablets */
+@media (max-width:760px){
+  .hub-sidebar__nav{
+    grid-template-columns:repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .panel-head-simple,
+  .panel-head{
+    align-items:flex-start !important;
+    flex-direction:column !important;
+  }
+
+  .panel-head-simple .btn,
+  .panel-head .btn{
+    width:100%;
+  }
+}
+
+/* Phones */
+@media (max-width:520px){
+  .hub-sidebar__nav{
+    grid-template-columns:1fr !important;
+  }
+
+  .activity-row{
+    gap:9px !important;
+  }
+
+  .activity-copy,
+  .activity-icon{
+    width:34px !important;
+    height:34px !important;
+    min-width:34px !important;
+    flex-basis:34px !important;
+  }
+}
